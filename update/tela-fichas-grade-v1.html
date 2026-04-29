@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIS Restaurante — Fichas Tecnicas</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F4F2;--surface:#fff;--border:#D3D1C7;--border-h:#B4B2A9;
+  --text:#2C2C2A;--text-2:#5F5E5A;--text-3:#888780;
+  --azul:#185FA5;--azul-l:#E6F1FB;--azul-b:#B5D4F4;
+  --verde:#1B6B2C;--verde-l:#EAF3DE;--verde-b:#C0DD97;
+  --verm:#A32D2D;--verm-l:#FCEBEB;
+  --ambar:#854F0B;--ambar-l:#FAEEDA;
+  --roxo:#534AB7;--roxo-l:#EEEDFE;
+  --radius:10px;--radius-s:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:192px;background:#fff;border-right:0.5px solid var(--border);padding:18px 0;display:flex;flex-direction:column}
+.sidebar-logo{padding:0 16px 14px;font-size:13px;font-weight:600;color:var(--azul);border-bottom:0.5px solid var(--border);margin-bottom:8px}
+.s-sec{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text-3);padding:8px 16px 4px;text-transform:uppercase}
+.s-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;color:var(--text-2);cursor:pointer;transition:background .1s}
+.s-item:hover{background:var(--bg)}
+.s-item.active{color:var(--azul);background:var(--azul-l);font-weight:500}
+.s-item svg{width:15px;height:15px;flex-shrink:0}
+.s-footer{margin-top:auto;padding:12px 16px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text-3)}
+
+.main{margin-left:192px;padding:22px 24px}
+.breadcrumb{font-size:12px;color:var(--text-3);margin-bottom:12px}
+.breadcrumb a{color:var(--azul);text-decoration:none}
+.breadcrumb span{margin:0 5px}
+
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:600;color:var(--text)}
+.page-sub{font-size:12px;color:var(--text-3);margin-top:3px}
+.btn-primary{padding:8px 18px;font-size:13px;font-weight:500;border-radius:var(--radius-s);background:var(--azul);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-primary svg{width:14px;height:14px}
+
+.filters{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+.search-wrap{flex:1;position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-3);pointer-events:none}
+.search-wrap input{width:100%;padding:8px 10px 8px 32px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-s);background:#fff;color:var(--text);font-family:inherit;transition:border-color .15s}
+.search-wrap input:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px rgba(24,95,165,.08)}
+.filter-sel{padding:8px 28px 8px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-s);background:#fff;color:var(--text);font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;min-width:148px;transition:border-color .15s}
+.filter-sel:focus{outline:none;border-color:var(--azul)}
+
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-hdr{padding:10px 16px;border-bottom:0.5px solid var(--border)}
+.card-label{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase}
+.card-count{font-size:11px;color:var(--text-3);margin-top:2px}
+
+.tbl-wrap{width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+
+col.c-cod  {width:60px}
+col.c-prod {width:170px}
+col.c-mod  {width:100px}
+col.c-grp  {width:100px}
+col.c-comp {width:82px}
+col.c-fc   {width:60px}
+col.c-ic   {width:60px}
+col.c-custo{width:82px}
+col.c-pv   {width:80px}
+col.c-data {width:110px}
+col.c-sta  {width:64px}
+col.c-obs  {width:38px}
+
+thead tr{background:var(--bg);border-bottom:0.5px solid var(--border)}
+thead th{padding:8px 7px;font-size:10px;font-weight:600;color:var(--text-3);text-align:left;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;user-select:none}
+thead th:hover{color:var(--azul)}
+thead th.sort-asc::after{content:' ▲';font-size:8px;color:var(--azul)}
+thead th.right{text-align:right}
+thead th.center{text-align:center}
+
+tbody tr{border-bottom:0.5px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:#F7F7F5}
+tbody tr:last-child{border-bottom:none}
+td{padding:8px 7px;font-size:12px;color:var(--text);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.right{text-align:right}
+td.center{text-align:center}
+td.muted{color:var(--text-3);font-size:11px}
+
+/* Produto cell */
+.prod-wrap{display:flex;flex-direction:column;gap:1px}
+.prod-nome{font-weight:500;font-size:13px;color:var(--text);display:flex;align-items:center;gap:4px;overflow:hidden}
+.prod-nome span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ver-badge{flex-shrink:0;font-size:10px;font-weight:600;color:var(--azul);background:var(--azul-l);border:0.5px solid var(--azul-b);border-radius:4px;padding:1px 5px}
+.prod-sub{font-size:10px;color:var(--text-3)}
+
+/* Componentes badge */
+.comp-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;background:var(--bg);border:0.5px solid var(--border);color:var(--text-2)}
+
+/* FC / IC */
+.fc-pos{color:var(--verde);font-weight:500}
+.fc-neg{color:var(--verm);font-weight:500}
+.fc-neu{color:var(--text-3)}
+
+/* Custo / PV */
+.custo-val{color:var(--verde);font-weight:500}
+.pv-val{color:var(--text);font-weight:500}
+
+/* Status */
+.sta-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.sta-ativa  {background:var(--verde-l);color:#27500A}
+.sta-inativa{background:#F1EFE8;color:#444441}
+
+/* Obs */
+.obs-icon{display:inline-flex;align-items:center;justify-content:center;color:var(--azul)}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:0.5px solid var(--border);font-size:12px;color:var(--text-3)}
+.pag-btns{display:flex;gap:4px}
+.pag-btn{padding:4px 10px;border:0.5px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:12px;color:var(--text-2);transition:background .1s}
+.pag-btn:hover{background:var(--bg)}
+.pag-btn.active{background:var(--azul);border-color:var(--azul);color:#fff}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">SIS Restaurante</div>
+  <div class="s-sec">Cadastros</div>
+  <div class="s-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="8" y1="5" x2="8" y2="11"/></svg>Itens
+  </div>
+  <div class="s-item active">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="8" y2="10"/></svg>Fichas Tecnicas
+  </div>
+  <div class="s-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="currentColor"/></svg>Cadastros mestres
+  </div>
+  <div class="s-sec">Operacao</div>
+  <div class="s-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/></svg>Fichas finais
+  </div>
+  <div class="s-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12L8 4L14 12z"/></svg>Custos
+  </div>
+  <div class="s-sec">Controle</div>
+  <div class="s-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="4" height="8" rx="1"/><rect x="6" y="3" width="4" height="11" rx="1"/><rect x="10" y="1" width="4" height="13" rx="1"/></svg>Importacao
+  </div>
+  <div class="s-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="currentColor"/></svg>Auditoria
+  </div>
+  <div class="s-footer">admin@sis-restaurante.com</div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb"><a href="#">Home</a><span>›</span>Fichas Tecnicas</div>
+
+  <div class="topbar">
+    <div>
+      <div class="page-title">Fichas Tecnicas</div>
+      <div class="page-sub">Receitas, montagens e composicoes do cardapio.</div>
+    </div>
+    <button class="btn-primary">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="6"/><line x1="7" y1="4" x2="7" y2="10"/><line x1="4" y1="7" x2="10" y2="7"/></svg>
+      Nova ficha
+    </button>
+  </div>
+
+  <div class="filters">
+    <div class="search-wrap">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="13.5" y2="13.5"/></svg>
+      <input type="text" placeholder="Buscar ficha..." id="busca" oninput="filtrar()">
+    </div>
+    <select class="filter-sel" id="fMod" onchange="filtrar()">
+      <option>Todas as modalidades</option>
+      <option>Delivery</option><option>Presencial</option><option>Sem modalidade</option>
+    </select>
+    <select class="filter-sel" id="fGrp" onchange="filtrar()">
+      <option>Todos os grupos</option>
+      <option>Marmitas</option><option>Pratos</option><option>Bases</option><option>Sem grupo</option>
+    </select>
+    <select class="filter-sel" id="fSta" onchange="filtrar()">
+      <option>Todos os status</option>
+      <option>Ativa</option><option>Inativa</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-label">Fichas Tecnicas</div>
+      <div class="card-count" id="count">10 fichas encontradas</div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <colgroup>
+          <col class="c-cod"><col class="c-prod"><col class="c-mod"><col class="c-grp">
+          <col class="c-comp"><col class="c-fc"><col class="c-ic">
+          <col class="c-custo"><col class="c-pv"><col class="c-data">
+          <col class="c-sta"><col class="c-obs">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Codigo</th>
+            <th class="sort-asc" title="Ordenar por produto">Produto</th>
+            <th>Modalidade</th>
+            <th>Grupo Operacional</th>
+            <th class="center">Componentes</th>
+            <th class="right">FC</th>
+            <th class="right">IC</th>
+            <th class="right" title="Ordenar por custo">Custo Total</th>
+            <th class="right" title="Ordenar por preco de venda">Preco de Venda</th>
+            <th title="Ordenar por data">Ult. Atualizacao</th>
+            <th class="center">Status</th>
+            <th class="center">Obs</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="pag-info">Mostrando 1–10 de 10 fichas</span>
+      <div class="pag-btns">
+        <button class="pag-btn" disabled>Anterior</button>
+        <button class="pag-btn active">1</button>
+        <button class="pag-btn">2</button>
+        <button class="pag-btn">...</button>
+        <button class="pag-btn">31</button>
+        <button class="pag-btn">Proximo</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const dados = [
+  {cod:'--',    nome:'Marmita Feijoada G',   ver:'V3', mod:'Delivery',     grp:'Marmitas', comp:8, fc:91, ic:73, custo:14.61, pv:37.00,  sta:'Ativa',   data:'07/04/26 15:53', obs:true},
+  {cod:'--',    nome:'Marmita Feijoada M',   ver:'V2', mod:'Delivery',     grp:'Marmitas', comp:8, fc:91, ic:73, custo:12.20, pv:32.00,  sta:'Ativa',   data:'07/04/26 15:53', obs:false},
+  {cod:'--',    nome:'Marmita Feijoada P',   ver:'V1', mod:'Delivery',     grp:'Marmitas', comp:8, fc:88, ic:71, custo:9.80,  pv:27.00,  sta:'Ativa',   data:'07/04/26 15:53', obs:false},
+  {cod:'--',    nome:'STF G',                ver:'V1', mod:'Sem modalidade',grp:'Sem grupo',comp:4, fc:100,ic:60, custo:0,     pv:null,   sta:'Ativa',   data:'07/04/26 15:53', obs:false},
+  {cod:'--',    nome:'STF M',                ver:'V1', mod:'Sem modalidade',grp:'Sem grupo',comp:4, fc:100,ic:65, custo:0,     pv:null,   sta:'Ativa',   data:'07/04/26 15:53', obs:false},
+  {cod:'--',    nome:'LGA G',                ver:'V1', mod:'Sem modalidade',grp:'Sem grupo',comp:6, fc:100,ic:49, custo:0,     pv:null,   sta:'Ativa',   data:'07/04/26 15:53', obs:true},
+  {cod:'--',    nome:'Arroz branco (base)',  ver:'V2', mod:'Sem modalidade',grp:'Bases',    comp:1, fc:100,ic:null,custo:2.58, pv:null,   sta:'Ativa',   data:'05/04/26 09:00', obs:false},
+  {cod:'FT001', nome:'Prato Executivo Grelhado', ver:'V1', mod:'Presencial',grp:'Pratos',  comp:5, fc:95, ic:82, custo:18.40, pv:52.00,  sta:'Ativa',   data:'03/04/26 11:20', obs:true},
+  {cod:'FT002', nome:'Feijoada Completa',    ver:'V3', mod:'Presencial',   grp:'Pratos',   comp:12,fc:88, ic:68, custo:32.10, pv:89.90,  sta:'Ativa',   data:'01/04/26 14:00', obs:false},
+  {cod:'FT003', nome:'Marmita Low Carb',     ver:'V1', mod:'Delivery',     grp:'Marmitas', comp:6, fc:92, ic:null,custo:11.20, pv:29.90, sta:'Inativa', data:'28/03/26 10:30', obs:false},
+];
+
+function fcColor(v) {
+  if(v===null||v===undefined) return 'fc-neu';
+  if(v>=100) return 'fc-pos';
+  if(v<100)  return 'fc-neg';
+  return 'fc-neu';
+}
+
+function fmtPct(v) {
+  if(v===null||v===undefined) return '<span class="fc-neu">—</span>';
+  const cls = v>=100?'fc-pos':'fc-neg';
+  return `<span class="${cls}">${v}%</span>`;
+}
+
+function fmtR(v) {
+  if(v===null||v===undefined||v===0&&true) return '<span style="color:var(--text-3)">—</span>';
+  return 'R$ ' + v.toFixed(2).replace('.',',');
+}
+
+function renderizar(lista) {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  if(!lista.length){
+    tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text-3)">Nenhuma ficha encontrada. Tente ajustar os filtros.</td></tr>';
+    document.getElementById('count').textContent='0 fichas encontradas';
+    return;
+  }
+  document.getElementById('count').textContent = lista.length + ' fichas encontradas';
+  lista.forEach(d => {
+    const sc = d.sta==='Ativa'?'sta-ativa':'sta-inativa';
+    const obsHtml = d.obs
+      ? `<span class="obs-icon" title="Ver observacao"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r=".5" fill="currentColor"/></svg></span>`
+      : `<span style="color:var(--text-3)">—</span>`;
+    const custoHtml = d.custo>0
+      ? `<span class="custo-val">R$ ${d.custo.toFixed(2).replace('.',',')}</span>`
+      : '<span style="color:var(--text-3)">R$ 0,00</span>';
+    const pvHtml = d.pv
+      ? `<span class="pv-val">R$ ${d.pv.toFixed(2).replace('.',',')}</span>`
+      : '<span style="color:var(--text-3)">—</span>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span style="font-size:11px;color:var(--text-3)">${d.cod}</span></td>
+      <td>
+        <div class="prod-wrap">
+          <div class="prod-nome"><span title="${d.nome}">${d.nome}</span><span class="ver-badge">${d.ver}</span></div>
+          <div class="prod-sub">${d.mod.toLowerCase()} · ${d.grp.toLowerCase()}</div>
+        </div>
+      </td>
+      <td class="muted" title="${d.mod}">${d.mod}</td>
+      <td class="muted" title="${d.grp}">${d.grp}</td>
+      <td class="center"><span class="comp-badge">${d.comp} ${d.comp===1?'item':'itens'}</span></td>
+      <td class="right">${fmtPct(d.fc)}</td>
+      <td class="right">${fmtPct(d.ic)}</td>
+      <td class="right">${custoHtml}</td>
+      <td class="right">${pvHtml}</td>
+      <td class="muted">${d.data}</td>
+      <td class="center"><span class="sta-badge ${sc}">${d.sta}</span></td>
+      <td class="center">${obsHtml}</td>`;
+    tr.addEventListener('click', () => alert('Abrindo ficha: ' + d.nome + ' ' + d.ver));
+    tbody.appendChild(tr);
+  });
+}
+
+function filtrar() {
+  const busca = document.getElementById('busca').value.toLowerCase().trim();
+  const mod   = document.getElementById('fMod').value;
+  const grp   = document.getElementById('fGrp').value;
+  const sta   = document.getElementById('fSta').value;
+  const res = dados.filter(d =>
+    (!busca || d.nome.toLowerCase().includes(busca)) &&
+    (mod==='Todas as modalidades' || d.mod===mod) &&
+    (grp==='Todos os grupos'      || d.grp===grp) &&
+    (sta==='Todos os status'      || d.sta===sta)
+  );
+  renderizar(res);
+}
+
+renderizar(dados);
+</script>
+</body>
+</html>

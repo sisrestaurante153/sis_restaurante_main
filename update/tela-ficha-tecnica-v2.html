@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIS Restaurante — Ficha Tecnica</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F4F2;--surface:#fff;--border:#D3D1C7;--border-h:#B4B2A9;
+  --text:#2C2C2A;--text-2:#5F5E5A;--text-3:#888780;
+  --azul:#185FA5;--azul-l:#E6F1FB;--azul-b:#B5D4F4;
+  --verde:#1B6B2C;--verde-l:#EAF3DE;--verde-b:#C0DD97;
+  --verm:#A32D2D;--verm-l:#FCEBEB;
+  --ambar:#854F0B;--ambar-l:#FAEEDA;
+  --radius:10px;--radius-s:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:192px;background:#fff;border-right:0.5px solid var(--border);padding:18px 0;display:flex;flex-direction:column}
+.sidebar-logo{padding:0 16px 14px;font-size:13px;font-weight:600;color:var(--azul);border-bottom:0.5px solid var(--border);margin-bottom:8px}
+.s-sec{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text-3);padding:8px 16px 4px;text-transform:uppercase}
+.s-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;color:var(--text-2);cursor:pointer}
+.s-item:hover{background:var(--bg)}
+.s-item.active{color:var(--azul);background:var(--azul-l);font-weight:500}
+.s-item svg{width:15px;height:15px;flex-shrink:0}
+.s-footer{margin-top:auto;padding:12px 16px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text-3)}
+
+.main{margin-left:192px;padding:22px 26px;max-width:1140px}
+.breadcrumb{font-size:12px;color:var(--text-3);margin-bottom:12px}
+.breadcrumb a{color:var(--azul);text-decoration:none}
+.breadcrumb span{margin:0 5px}
+
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--verde-l);color:var(--verde);font-weight:500}
+.page-sub{font-size:12px;color:var(--text-3);margin-top:3px}
+.btn-group{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 16px;font-size:13px;font-weight:500;border-radius:var(--radius-s);cursor:pointer;border:0.5px solid var(--border-h);background:#fff;color:var(--text)}
+.btn-icon{padding:7px 10px;border:0.5px solid var(--border);background:#fff;border-radius:var(--radius-s);cursor:pointer;color:var(--text-2);display:flex;align-items:center}
+.btn-primary{background:var(--azul);border-color:var(--azul);color:#fff}
+
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px}
+.card-label{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:12px}
+
+.row{display:grid;gap:12px;margin-bottom:12px}
+.row:last-child{margin-bottom:0}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:11px;font-weight:500;color:var(--text-2)}
+.f label .req{color:var(--verm)}
+.f label .opt{color:var(--text-3);font-weight:400;font-size:10px}
+.f input,.f select,.f textarea{width:100%;padding:7px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-s);background:#fff;color:var(--text);font-family:inherit;appearance:none}
+.f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px}
+.f textarea{resize:vertical;min-height:80px;line-height:1.5}
+.f .hint{font-size:11px;color:var(--text-3)}
+.calc{background:var(--verde-l)!important;color:var(--verde)!important;font-weight:500;border-color:var(--verde-b)!important;cursor:default}
+.readonly-field{background:var(--bg)!important;color:var(--text-2)!important;cursor:default}
+
+/* IDENTIFICACAO */
+.g-id1{grid-template-columns:110px 1fr 150px 175px}
+.g-id2{grid-template-columns:1fr 1fr 120px 1fr}
+
+/* ESTRUTURA GRADE */
+.grade-header{display:grid;grid-template-columns:22px 1fr 80px 60px 240px 90px 96px 28px;gap:8px;padding:8px 10px;font-size:11px;font-weight:600;color:var(--text-3);border-bottom:0.5px solid var(--border);letter-spacing:.04em;align-items:center}
+.item-row{display:grid;grid-template-columns:22px 1fr 80px 60px 240px 90px 96px 28px;gap:8px;padding:10px 10px;border-bottom:0.5px solid var(--border);align-items:center}
+.item-row:last-of-type{border-bottom:none}
+.item-row:hover{background:#FAFAF9}
+
+.drag-handle{display:flex;flex-direction:column;gap:2px;cursor:grab;opacity:.35;padding:2px}
+.drag-handle:hover{opacity:.7}
+.ddr{display:flex;gap:2px}
+.ddt{width:3px;height:3px;border-radius:50%;background:var(--text-3)}
+
+.item-meta{font-size:11px;color:var(--text-3);margin-top:3px;display:flex;gap:6px;align-items:center}
+.n-badge{font-size:10px;background:var(--azul-l);color:var(--azul);border:0.5px solid var(--azul-b);border-radius:4px;padding:1px 5px;font-weight:500}
+.e-badge{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:500}
+.e-fc{background:var(--verde-l);color:var(--verde);border:0.5px solid var(--verde-b)}
+.e-ic{background:var(--ambar-l);color:var(--ambar);border:0.5px solid #FAC775}
+
+.btn-etapa{padding:5px 10px;font-size:11px;font-weight:500;border:0.5px solid var(--azul-b);border-radius:var(--radius-s);background:var(--azul-l);color:var(--azul);cursor:pointer;white-space:nowrap}
+.btn-etapa:hover{background:#d4e8f7}
+
+.inf{display:flex;flex-direction:column;gap:2px}
+.inf label{font-size:10px;color:var(--text-3)}
+.inf input,.inf select{padding:5px 8px;font-size:12px;border:0.5px solid var(--border);border-radius:var(--radius-s);background:#fff;color:var(--text);width:100%;font-family:inherit;appearance:none}
+.inf select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:18px}
+.inf input.calc{background:var(--verde-l)!important;color:var(--verde)!important;border-color:var(--verde-b)!important}
+.inf .sub{font-size:10px;color:var(--text-3);margin-top:1px}
+
+/* Etapa cell — grid interno para alinhar tipo + peso */
+.etapa-cell{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.etapa-cell.empty{display:flex;align-items:center}
+
+/* COCCAO FINAL ROW */
+.cf-row{background:#FFFDF5;border:0.5px dashed #FAC775;border-radius:var(--radius-s);margin:8px 0 4px;padding:8px 10px;display:grid;grid-template-columns:22px auto 120px 110px 90px 1fr 28px;gap:8px;align-items:center}
+.cf-label{font-size:11px;font-weight:600;color:var(--ambar);white-space:nowrap}
+
+.del-row{background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px;border-radius:4px;display:flex;align-items:center}
+.del-row:hover{color:var(--verm);background:var(--verm-l)}
+
+/* FOOTER */
+.grade-footer{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 8px 4px}
+.btn-cf{padding:7px 14px;font-size:12px;font-weight:500;border:1.5px solid var(--azul);border-radius:var(--radius-s);background:#fff;color:var(--azul);cursor:pointer}
+.btn-cf:hover{background:var(--azul-l)}
+.btn-add{padding:7px 16px;font-size:13px;font-weight:500;border-radius:var(--radius-s);background:var(--azul);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-add:hover{background:#0C447C}
+.btn-add-sm{padding:5px 12px;font-size:12px}
+
+/* MONTAGEM */
+.btn-montagem-toggle{width:100%;margin-top:14px;padding:11px;font-size:13px;font-weight:500;border:0.5px solid var(--border);border-radius:var(--radius-s);background:#fff;color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.montagem-block{border:0.5px solid var(--verde-b);border-radius:var(--radius-s);background:var(--verde-l);padding:14px;margin-top:10px}
+.montagem-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.montagem-title{font-size:11px;font-weight:600;color:var(--verde);letter-spacing:.06em;text-transform:uppercase}
+.mont-row{display:grid;grid-template-columns:22px 1fr 80px 60px 90px 96px 28px;gap:8px;padding:6px 4px;border-bottom:0.5px solid var(--verde-b);align-items:center}
+.mont-row:last-of-type{border-bottom:none}
+.mont-hdr{display:grid;grid-template-columns:22px 1fr 80px 60px 90px 96px 28px;gap:8px;padding:4px;font-size:11px;font-weight:600;color:var(--verde);letter-spacing:.04em;border-bottom:0.5px solid var(--verde-b);margin-bottom:6px}
+
+/* FINALIZACAO */
+.g-fin{grid-template-columns:1fr 1fr}
+
+/* ── QUADRO FINAL (dark) ── */
+.qf-wrap{
+  --bg-qf:var(--surface);--surface-qf:var(--bg);--card-qf:var(--surface);
+  --border-qf:var(--border);--border-h-qf:var(--border-h);
+  --gold:#854F0B;--gold-l:#633806;--gold-dim:var(--ambar-l);
+  --gn:#1B6B2C;--gn-dim:var(--verde-l);
+  --rd:#A32D2D;--rd-dim:var(--verm-l);
+  --amb-qf:#854F0B;--amb-dim:var(--ambar-l);
+  --t:var(--text);--t2:var(--text-2);--t3:var(--text-3);
+  --radius-qf:10px;--radius-s-qf:6px;
+  font-family:inherit;
+  background:transparent;color:var(--text);
+  padding:0;margin-bottom:0;
+}
+.qf-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.qf-page-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:500}
+.qf-page-title{font-size:20px;font-weight:600;color:var(--gold-l);line-height:1.1;margin-top:2px}
+.qf-page-sub{font-size:12px;color:var(--t2);margin-top:2px}
+.ver-badge{background:var(--gold-dim);border:1px solid var(--gold);color:var(--gold-l);font-size:10px;font-weight:600;letter-spacing:.1em;padding:4px 10px;border-radius:20px}
+
+/* Strip */
+.hs{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;overflow:hidden;margin-bottom:16px}
+.hs-item{padding:14px 18px;display:flex;flex-direction:column;gap:3px;position:relative}
+.hs-item:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;bottom:20%;width:1px;background:var(--border)}
+.hs-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-weight:500}
+.hs-main{display:flex;align-items:baseline;gap:6px}
+.hs-value{font-size:18px;font-weight:500;color:var(--text)}
+.hs-unit{font-size:11px;color:var(--text-2)}
+.hs-unit-select{background:var(--surface);border:0.5px solid var(--border);border-radius:4px;color:var(--text-2);font-size:11px;padding:1px 6px;cursor:pointer;outline:none;font-family:inherit}
+.hs-note{font-size:10px;color:var(--text-3)}
+
+/* QF Cols */
+.qf-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.qf-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.qf-card:hover{border-color:var(--border-h)}
+.qf-ch{padding:12px 18px 10px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.qf-ctitle{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);font-weight:600}
+.qf-body{padding:6px 0}
+.qf-row{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;gap:12px;transition:background .15s}
+.qf-row:hover{background:rgba(255,255,255,.025)}
+.ql{font-size:12px;color:var(--text-2);flex:1;display:flex;align-items:center;gap:8px}
+.qi{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
+.qv{font-size:13px;font-weight:500;color:var(--text);text-align:right;white-space:nowrap}
+.qv.green{color:var(--verde)}
+.qv.gold{color:var(--ambar)}
+.qv.muted{color:var(--text-3);font-style:italic;font-size:11px}
+.qv.red{color:var(--verm)}
+.q-sep{height:0.5px;background:var(--border);margin:3px 18px}
+.q-hi{background:var(--ambar-l)!important;border-left:2px solid var(--ambar);margin:4px 0;padding-left:16px}
+.q-hi .ql{color:var(--text);font-weight:500}
+.q-hi .qv{font-size:14px}
+.q-hi.green-hi{background:var(--verde-l)!important;border-color:var(--verde)}
+.q-hi.amber-hi{background:var(--ambar-l)!important;border-color:var(--ambar)}
+
+/* Toggle */
+.toggle-area{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.tgl-label{font-size:11px;color:var(--text-2);font-weight:500}
+.tgl{position:relative;width:34px;height:18px;border-radius:9px;background:var(--border);transition:background .2s;flex-shrink:0}
+.tgl::after{content:'';position:absolute;left:3px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--text-3);transition:left .2s,background .2s}
+.tgl.on{background:var(--azul-l);border:1px solid var(--azul)}
+.tgl.on::after{left:19px;background:var(--azul)}
+.locked-row{opacity:.25;pointer-events:none;filter:grayscale(.5);transition:opacity .3s,filter .3s}
+.locked-row.unlocked{opacity:1;pointer-events:auto;filter:none}
+
+/* Venda inputs */
+.inp-wrap{display:flex;align-items:center;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-s);overflow:hidden;width:130px;flex-shrink:0;transition:border-color .2s}
+.inp-wrap:focus-within{border-color:var(--azul)}
+.inp-pfx{padding:0 8px;font-size:11px;color:var(--text-3);border-right:0.5px solid var(--border);height:32px;display:flex;align-items:center;background:var(--bg)}
+.inp-sfx{padding:0 8px;font-size:11px;color:var(--text-3);border-left:0.5px solid var(--border);height:32px;display:flex;align-items:center;background:var(--bg)}
+.inp-wrap input{background:transparent;border:none;outline:none;color:var(--text);font-size:13px;padding:0 10px;width:100%;height:32px;font-family:inherit}
+
+/* CMV badge */
+.cmv-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.04em;transition:all .3s}
+.cmv-badge.healthy{background:var(--verde-l);color:var(--verde);border:0.5px solid var(--verde-b)}
+.cmv-badge.warning{background:var(--ambar-l);color:var(--ambar);border:0.5px solid #FAC775}
+.cmv-badge.danger{background:var(--verm-l);color:var(--verm);border:0.5px solid #F09595}
+
+/* Margem bar */
+.bar-wrap{padding:4px 18px 12px}
+.bar-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .4s,background .4s}
+.bar-labels{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--text-3)}
+.sim-note{font-size:10px;color:var(--text-3);padding:4px 18px 10px;display:flex;align-items:center;gap:5px}
+
+/* Leitura Operacional */
+.lo-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.lo-ch{padding:12px 18px 10px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.lo-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--border)}
+.lo-cell{background:var(--surface);padding:14px 18px;display:flex;flex-direction:column;gap:4px}
+.lo-cell-full{grid-column:1/-1;background:var(--ambar-l)}
+.lo-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);font-weight:500}
+.lo-value{font-size:15px;font-weight:500;color:var(--text)}
+.lo-value.gold{color:var(--ambar)}
+.lo-value.green{color:var(--verde)}
+.lo-sub{font-size:11px;color:var(--text-3)}
+
+.tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:14px}
+.tab{padding:8px 16px;font-size:13px;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px}
+.tab.active{color:var(--azul);border-bottom-color:var(--azul);font-weight:500}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">SIS Restaurante</div>
+  <div class="s-sec">Cadastros</div>
+  <div class="s-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="8" y1="5" x2="8" y2="11"/></svg>Itens</div>
+  <div class="s-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="8" y2="10"/></svg>Fichas Tecnicas</div>
+  <div class="s-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/></svg>Cadastros mestres</div>
+  <div class="s-sec">Operacao</div>
+  <div class="s-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/></svg>Fichas finais</div>
+  <div class="s-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12L8 4L14 12z"/></svg>Custos</div>
+  <div class="s-sec">Controle</div>
+  <div class="s-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="4" height="8" rx="1"/><rect x="6" y="3" width="4" height="11" rx="1"/><rect x="10" y="1" width="4" height="13" rx="1"/></svg>Importacao</div>
+  <div class="s-footer"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e8898c858186a89b819bc59a8d9b9c899d9a89869c8dc68b8785">[email&#160;protected]</a></div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb"><a href="#">Home</a><span>›</span><a href="#">Fichas</a><span>›</span>Marmita Feijoada</div>
+
+  <div class="topbar">
+    <div>
+      <div class="page-title">MARMITA FEIJOADA <span class="badge">ativa</span></div>
+      <div class="page-sub">Edicao da ficha tecnica principal.</div>
+    </div>
+    <div class="btn-group">
+      <button class="btn-icon" title="Duplicar"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg></button>
+      <button class="btn-icon" title="Exportar"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10v3h10v-3M8 2v7M5 6l3-3 3 3"/></svg></button>
+      <button class="btn btn-primary">Salvar ficha</button>
+    </div>
+  </div>
+
+  <!-- IDENTIFICACAO — sem FC/IC/Rendimento -->
+  <div class="card">
+    <div class="card-label">Identificacao</div>
+    <div class="row g-id1">
+      <div class="f"><label>Cod. <span class="req">*</span></label><input value="MFeijoada02.3"></div>
+      <div class="f"><label>Produto <span class="req">*</span></label><input value="MARMITA FEIJOADA"></div>
+      <div class="f"><label>Data de criacao</label><input class="readonly-field" value="04/04/2026, 02:26" readonly></div>
+      <div class="f"><label>Data e hora da ultima alteracao</label><input class="readonly-field" value="07/04/2026, 01:04" readonly></div>
+    </div>
+    <div class="row g-id2">
+      <div class="f"><label>Modalidade <span class="req">*</span></label><select><option value="">Selecione...</option><option selected>Delivery</option><option>Presencial</option></select></div>
+      <div class="f"><label>Grupo operacional <span class="req">*</span></label><select><option selected>Sem grupo</option><option>Marmitas</option><option>Pratos</option></select></div>
+      <div class="f"><label>Status <span class="req">*</span></label><select><option>Ativa</option><option>Inativa</option></select></div>
+      <div class="f"><label>Custo atual da ficha</label><div style="padding:7px 12px;border:0.5px solid var(--border);border-radius:var(--radius-s);background:var(--azul-l);display:flex;align-items:baseline;gap:6px"><span style="font-size:11px;color:var(--azul)">R$</span><span style="font-size:18px;font-weight:600;color:var(--azul)">0,00</span></div></div>
+    </div>
+  </div>
+
+  <!-- ESTRUTURA -->
+  <div class="card">
+    <div class="card-label">Estrutura da Ficha</div>
+    <div class="tabs">
+      <div class="tab active">Ficha tecnica</div>
+      <div class="tab">Biblioteca de materiais</div>
+    </div>
+
+    <div class="grade-header">
+      <div></div>
+      <div>Item / Produto</div>
+      <div>Qtde usada</div>
+      <div>Unidade</div>
+      <div>Etapa</div>
+      <div style="text-align:right">Custo unit.</div>
+      <div style="text-align:right">Custo insumo</div>
+      <div></div>
+    </div>
+
+    <!-- Linha 1 — sem etapa -->
+    <div class="item-row">
+      <div class="drag-handle"><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div></div>
+      <div>
+        <div class="inf"><select><option selected>Arroz branco</option><option>Feijao</option><option>Linguica</option></select></div>
+        <div class="item-meta"><span class="n-badge">N1</span><span>Insumo</span></div>
+      </div>
+      <div class="inf"><input type="text" value="0,1500"></div>
+      <div style="font-size:13px;color:var(--text-2)">kg</div>
+      <div class="etapa-cell empty">
+        <button class="btn-etapa">+ Adicionar Etapa</button>
+      </div>
+      <div style="font-size:13px;font-weight:500;text-align:right">R$ 2,58</div>
+      <div style="font-size:13px;font-weight:500;text-align:right">R$ 0,39</div>
+      <div><button class="del-row"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M3 4l1 8h6l1-8"/></svg></button></div>
+    </div>
+
+    <!-- Linha 2 — Limpeza / Pre-Preparo -->
+    <div class="item-row">
+      <div class="drag-handle"><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div></div>
+      <div>
+        <div class="inf"><select><option selected>Feijoada</option><option>Feijao</option></select></div>
+        <div class="item-meta"><span class="n-badge">N1</span><span>Insumo</span></div>
+      </div>
+      <div class="inf"><input type="text" value="0,4000"></div>
+      <div style="font-size:13px;color:var(--text-2)">kg</div>
+      <div class="etapa-cell">
+        <div class="inf">
+          <label>Tipo de etapa</label>
+          <select><option selected>Limpeza / Pre-Preparo</option><option>Coccao / Preparo</option></select>
+        </div>
+        <div class="inf">
+          <label>Peso Limpo</label>
+          <input type="text" placeholder="Qtde Final">
+          <div class="sub" style="font-size:10px;color:var(--text-3)">FC: --  Automatico</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:500;text-align:right">R$ 24,28</div>
+      <div style="font-size:13px;color:var(--text-3);text-align:right">--</div>
+      <div><button class="del-row"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M3 4l1 8h6l1-8"/></svg></button></div>
+    </div>
+
+    <!-- Linha 3 — Coccao / Preparo -->
+    <div class="item-row">
+      <div class="drag-handle"><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div></div>
+      <div>
+        <div class="inf"><select><option selected>Feijoada</option><option>Feijao</option></select></div>
+        <div class="item-meta"><span class="n-badge">N1</span><span>Insumo</span></div>
+      </div>
+      <div class="inf"><input type="text" value="0,4000"></div>
+      <div style="font-size:13px;color:var(--text-2)">kg</div>
+      <div class="etapa-cell">
+        <div class="inf">
+          <label>Tipo de etapa</label>
+          <select><option>Limpeza / Pre-Preparo</option><option selected>Coccao / Preparo</option></select>
+        </div>
+        <div class="inf">
+          <label>Peso Pos-coccao</label>
+          <input type="text" placeholder="Qtde Final">
+          <div class="sub" style="font-size:10px;color:var(--text-3)">IC: --  Automatico</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:500;text-align:right">R$ 24,28</div>
+      <div style="font-size:13px;color:var(--text-3);text-align:right">--</div>
+      <div><button class="del-row"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M3 4l1 8h6l1-8"/></svg></button></div>
+    </div>
+
+    <!-- Coccao Final -->
+    <div class="cf-row" id="cf-row">
+      <div class="drag-handle" style="opacity:.15;cursor:default"><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div></div>
+      <div class="cf-label">Coccao / Preparo Final</div>
+      <div class="inf">
+        <label>Tipo de etapa</label>
+        <input type="text" value="Coccao / Preparo" readonly style="font-size:12px;padding:5px 8px;background:#fff;color:var(--text-2);border:0.5px solid var(--border);border-radius:var(--radius-s)">
+      </div>
+      <div class="inf">
+        <label>Rendimento da Porcao <span style="color:var(--verm)">*</span></label>
+        <input type="text" placeholder="Qtde Final" style="font-size:12px;padding:5px 8px;border:0.5px solid var(--border);border-radius:var(--radius-s)">
+        <div style="font-size:10px;color:var(--text-3)">Peso Pos-coccao</div>
+      </div>
+      <div class="inf">
+        <label>IC</label>
+        <input type="text" value="--" class="calc" style="font-size:12px;padding:5px 8px" readonly>
+        <div style="font-size:10px;color:var(--text-3)">Automatico</div>
+      </div>
+      <div></div>
+      <div><button class="del-row" onclick="document.getElementById('cf-row').style.display='none';document.getElementById('btn-cf').style.display='flex'"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M3 4l1 8h6l1-8"/></svg></button></div>
+    </div>
+
+    <div class="grade-footer">
+      <button class="btn-cf" id="btn-cf" style="display:none" onclick="document.getElementById('cf-row').style.display='grid';this.style.display='none'">Adicionar Coccao Final</button>
+      <button class="btn-add">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="5.5"/><line x1="6.5" y1="4" x2="6.5" y2="9"/><line x1="4" y1="6.5" x2="9" y2="6.5"/></svg>
+        Adicionar Itens
+      </button>
+    </div>
+
+    <!-- MONTAGEM -->
+    <div class="montagem-block">
+      <div class="montagem-hdr">
+        <div class="montagem-title">Montagem e Descartaveis</div>
+        <div style="font-size:11px;color:var(--verde)">Custos entram apenas no CMV com embalagem.</div>
+      </div>
+      <div class="mont-hdr"><div></div><div>Item</div><div>Qtde</div><div>Unidade</div><div style="text-align:right">Custo unit.</div><div style="text-align:right">Custo insumo</div><div></div></div>
+      <div class="mont-row">
+        <div class="drag-handle"><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div></div>
+        <div class="inf"><select><option selected>Marmitex PRATO n9 PRETO cx 200 c/selo</option></select></div>
+        <div class="inf"><input value="1,0000"></div>
+        <div style="font-size:12px;color:var(--text-2)">un</div>
+        <div style="font-size:12px;font-weight:500;text-align:right">R$ 1,29</div>
+        <div style="font-size:12px;font-weight:500;text-align:right">R$ 1,29</div>
+        <div><button class="del-row"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M3 4l1 8h6l1-8"/></svg></button></div>
+      </div>
+      <div class="mont-row">
+        <div class="drag-handle"><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div><div class="ddr"><div class="ddt"></div><div class="ddt"></div></div></div>
+        <div class="inf"><select><option selected>Sacola plastica branca reforcada 35x45</option></select></div>
+        <div class="inf"><input value="1,0000"></div>
+        <div style="font-size:12px;color:var(--text-2)">un</div>
+        <div style="font-size:12px;font-weight:500;text-align:right">R$ 0,10</div>
+        <div style="font-size:12px;font-weight:500;text-align:right">R$ 0,10</div>
+        <div><button class="del-row"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M3 4l1 8h6l1-8"/></svg></button></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button class="btn-add btn-add-sm">
+          <svg width="12" height="12" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="5.5"/><line x1="6.5" y1="4" x2="6.5" y2="9"/><line x1="4" y1="6.5" x2="9" y2="6.5"/></svg>
+          Adicionar item
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-montagem-toggle">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1.5"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>
+      Ocultar Montagem e Descartaveis
+    </button>
+  </div>
+
+  <!-- FINALIZACAO -->
+  <div class="card">
+    <div class="card-label">Finalizacao</div>
+    <div class="row g-fin">
+      <div class="f"><label>Modo de preparo <span class="opt">(opcional)</span></label><textarea placeholder="Descreva o passo a passo do preparo para o operador de cozinha..."></textarea></div>
+      <div class="f"><label>Observacoes da ficha <span class="opt">(opcional)</span></label><textarea placeholder="Observacoes gerais, alertas ou informacoes complementares..."></textarea></div>
+    </div>
+  </div>
+
+  <!-- QUADRO FINAL -->
+  <div class="card" style="padding:20px 24px"><div class="card-label">Quadro Final da Ficha</div><div class="qf-wrap">
+
+
+    <!-- STRIP: Rendimento + FC + IC -->
+    <div class="hs">
+      <div class="hs-item">
+        <span class="hs-label">Rendimento da Porcao <span title="Peso ou quantidade final apos todos os processos" style="cursor:help;color:var(--t3);font-size:10px">(?)</span></span>
+        <div class="hs-main">
+          <span class="hs-value" id="stripRendimento">1,000</span>
+        </div>
+        <span class="hs-note">&nbsp;</span>
+      </div>
+      <div class="hs-item">
+        <span class="hs-label">Unidade de Rendimento</span>
+        <div class="hs-main">
+          <select class="hs-unit-select" id="stripUnidade" onchange="recalcular()" style="font-size:14px;padding:2px 6px;font-weight:500">
+            <option selected>kg</option>
+            <option>un</option>
+            <option>porcao</option>
+            <option>litro</option>
+          </select>
+        </div>
+        <span class="hs-note">&nbsp;</span>
+      </div>
+      <div class="hs-item">
+        <span class="hs-label">Fator de Correcao (FC)</span>
+        <div class="hs-main">
+          <span class="hs-value" id="fcVal" style="color:var(--verde)">91</span>
+          <span class="hs-unit">%</span>
+        </div>
+        <span class="hs-note">Positivo = verde / Negativo = vermelho</span>
+      </div>
+      <div class="hs-item">
+        <span class="hs-label">Indice de Coccao (IC)</span>
+        <div class="hs-main">
+          <span class="hs-value" id="icVal" style="color:var(--verde)">90</span>
+          <span class="hs-unit">%</span>
+        </div>
+        <span class="hs-note">Positivo = verde / Negativo = vermelho</span>
+      </div>
+    </div>
+
+    <!-- COLS: Custos + Venda -->
+    <div class="qf-cols">
+
+      <!-- Custos e CMV -->
+      <div class="qf-card">
+        <div class="qf-ch">
+          <span class="qf-ctitle">Custos e CMV</span>
+          <div class="toggle-area" onclick="toggleMontagem(this)">
+            <span class="tgl-label">Montagem</span>
+            <div class="tgl" id="tglEl"></div>
+          </div>
+        </div>
+        <div class="qf-body">
+          <div class="qf-row">
+            <span class="ql"><span class="qi" style="background:rgba(201,168,76,.12);color:var(--gold)">$</span>Custo total da ficha / insumos</span>
+            <span class="qv gold">R$ 22,02</span>
+          </div>
+          <div class="qf-row">
+            <span class="ql"><span class="qi" style="background:rgba(62,207,142,.1);color:var(--gn)">÷</span>CMV sem embalagem</span>
+            <span class="qv">R$ 6,12 <span style="font-size:10px;color:var(--t3)">/kg</span></span>
+          </div>
+          <div class="q-sep"></div>
+          <div class="qf-row locked-row" id="rowEmbalagem">
+            <span class="ql"><span class="qi" style="background:rgba(245,158,11,.1);color:var(--amb-qf)">E</span>Custo embalagens e descartaveis</span>
+            <span class="qv" style="color:var(--amb-qf)">R$ 1,80</span>
+          </div>
+          <div class="qf-row q-hi locked-row" id="rowCmvEmb">
+            <span class="ql">CMV com embalagem</span>
+            <span class="qv gold">R$ 7,92 <span style="font-size:10px;color:var(--t3)">/kg</span></span>
+          </div>
+          <div class="qf-row q-hi" id="rowCmvFinal">
+            <span class="ql">CMV final aplicado</span>
+            <span class="qv gold" id="cmvFinalVal">R$ 6,12 /kg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Venda e Margem -->
+      <div class="qf-card">
+        <div class="qf-ch">
+          <span class="qf-ctitle">Venda e Margem</span>
+          <span class="cmv-badge healthy" id="cmvBadge">CMV Saudavel</span>
+        </div>
+        <div class="qf-body">
+          <div class="qf-row" style="padding-top:10px">
+            <span class="ql">Preco de venda</span>
+            <div class="inp-wrap"><span class="inp-pfx">R$</span><input type="number" id="pvInput" value="87.90" step="0.10" oninput="recalcular()"></div>
+          </div>
+          <div class="qf-row">
+            <span class="ql">Desp. variavel de venda</span>
+            <div class="inp-wrap"><input type="number" id="dvInput" value="15" step="0.5" oninput="recalcular()"><span class="inp-sfx">%PV</span></div>
+          </div>
+          <div class="q-sep"></div>
+          <div class="qf-row"><span class="ql">CMV do kg (%PV)</span><span class="qv" id="cmvPvVal">—</span></div>
+          <div class="qf-row"><span class="ql">Desp. variavel aplicada</span><span class="qv" id="dvAplicadaVal">—</span></div>
+          <div class="q-sep"></div>
+          <div class="qf-row q-hi green-hi"><span class="ql">Margem de contribuicao (R$)</span><span class="qv green" id="mcReaisVal">—</span></div>
+          <div class="qf-row q-hi green-hi" style="margin-top:2px"><span class="ql">Margem de contribuicao (%)</span><span class="qv green" id="mcPctVal">—</span></div>
+          <div class="bar-wrap">
+            <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%;background:var(--gn)"></div></div>
+            <div class="bar-labels"><span>0%</span><span id="barLabel">—</span><span>100%</span></div>
+          </div>
+          <div class="sim-note">Simulador em tempo real — altere o preco ou % de despesa acima</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leitura Operacional -->
+    <div class="lo-card">
+      <div class="lo-ch">
+        <span class="qf-ctitle">Leitura Operacional Consolidada</span>
+        <span style="font-size:10px;color:var(--t3)">Visao sintetizada para gestao</span>
+      </div>
+      <div class="lo-grid">
+        <div class="lo-cell">
+          <span class="lo-label">Preco de Referencia</span>
+          <div class="lo-value gold" id="loPreco">R$ 87,90</div>
+          <span class="lo-sub">Preco de venda configurado</span>
+        </div>
+        <div class="lo-cell">
+          <span class="lo-label">Custo Real da Ficha</span>
+          <div class="lo-value" id="loCusto">R$ 22,02</div>
+          <span class="lo-sub">Total de insumos</span>
+        </div>
+        <div class="lo-cell">
+          <span class="lo-label">Despesa Variavel</span>
+          <div class="lo-value" id="loDV">15% PV</div>
+          <span class="lo-sub">Sobre o preco de venda</span>
+        </div>
+        <div class="lo-cell">
+          <span class="lo-label">Margem de Contribuicao</span>
+          <div class="lo-value green" id="loMC">—</div>
+          <span class="lo-sub" id="loMCSub">PV menos custos e despesas variaveis</span>
+        </div>
+        <div class="lo-cell lo-cell-full">
+          <span class="lo-label">Diagnostico</span>
+          <div class="lo-value" style="font-size:13px" id="loDiag">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div></div><!-- /qf-wrap /card -->
+
+</main>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  let montagemAtivo = false;
+  const CUSTO_INSUMOS = 22.02;
+  const CUSTO_EMBALAGEM = 1.80;
+
+  function toggleMontagem(area) {
+    montagemAtivo = !montagemAtivo;
+    const el = document.getElementById('tglEl');
+    el.classList.toggle('on', montagemAtivo);
+    document.getElementById('rowEmbalagem').classList.toggle('unlocked', montagemAtivo);
+    document.getElementById('rowCmvEmb').classList.toggle('unlocked', montagemAtivo);
+    document.getElementById('rowCmvFinal').querySelector('.ql').textContent =
+      montagemAtivo ? 'CMV final aplicado (c/ emb.)' : 'CMV final aplicado';
+    recalcular();
+  }
+
+  function fmt(n) { return 'R$ ' + n.toFixed(2).replace('.', ','); }
+  function fmtPct(n) { return n.toFixed(2).replace('.', ',') + '%'; }
+
+  function recalcular() {
+    const pv = parseFloat(document.getElementById('pvInput').value) || 0;
+    const dv = parseFloat(document.getElementById('dvInput').value) || 0;
+    const custo = montagemAtivo ? CUSTO_INSUMOS + CUSTO_EMBALAGEM : CUSTO_INSUMOS;
+    const dvAplic = pv * (dv / 100);
+    const mc = pv - custo - dvAplic;
+    const mcPct = pv > 0 ? (mc / pv) * 100 : 0;
+    const cmvPvPct = pv > 0 ? (custo / pv) * 100 : 0;
+
+    document.getElementById('cmvFinalVal').textContent = fmt(custo) + ' /kg';
+    document.getElementById('cmvPvVal').textContent = fmtPct(cmvPvPct);
+    document.getElementById('dvAplicadaVal').textContent = fmt(dvAplic) + ' (' + fmtPct(dv) + ')';
+    document.getElementById('mcReaisVal').textContent = fmt(mc);
+    document.getElementById('mcPctVal').textContent = fmtPct(mcPct);
+
+    const barW = Math.max(0, Math.min(100, mcPct));
+    const bar = document.getElementById('barFill');
+    bar.style.width = barW + '%';
+    bar.style.background = mcPct > 60 ? 'var(--verde)' : mcPct > 35 ? 'var(--ambar)' : 'var(--verm)';
+    document.getElementById('barLabel').textContent = fmtPct(mcPct);
+
+    const badge = document.getElementById('cmvBadge');
+    if (cmvPvPct <= 30) { badge.className='cmv-badge healthy'; badge.textContent='CMV Saudavel'; }
+    else if (cmvPvPct <= 40) { badge.className='cmv-badge warning'; badge.textContent='CMV Atencao'; }
+    else { badge.className='cmv-badge danger'; badge.textContent='CMV Critico'; }
+
+    document.getElementById('loPreco').textContent = fmt(pv);
+    document.getElementById('loCusto').textContent = fmt(custo) + (montagemAtivo ? ' (c/ emb.)' : '');
+    document.getElementById('loDV').textContent = fmtPct(dv) + ' PV';
+    document.getElementById('loMC').textContent = fmt(mc) + ' · ' + fmtPct(mcPct);
+    document.getElementById('loMCSub').textContent = 'PV – custo' + (montagemAtivo ? ' (c/ emb.)' : '') + ' – desp. var.';
+
+    let diag = '';
+    if (pv <= 0) { diag = 'Informe o preco de venda para calcular margem e CMV.'; }
+    else if (mcPct >= 65) { diag = 'Excelente rentabilidade. Margem de ' + fmtPct(mcPct) + ' com CMV de ' + fmtPct(cmvPvPct) + ' do PV. Produto estrategico para o cardapio.'; }
+    else if (mcPct >= 45) { diag = 'Margem saudavel de ' + fmtPct(mcPct) + '. CMV em ' + fmtPct(cmvPvPct) + ' do PV — dentro da faixa operacional recomendada.'; }
+    else if (mcPct >= 25) { diag = 'Margem moderada de ' + fmtPct(mcPct) + '. Avaliar reajuste de preco ou revisao dos insumos. CMV em ' + fmtPct(cmvPvPct) + ' do PV.'; }
+    else if (mc > 0) { diag = 'Margem baixa de ' + fmtPct(mcPct) + '. Produto cobre custos mas compromete a operacao. Revisao recomendada.'; }
+    else { diag = 'Produto operando no prejuizo. Margem negativa de ' + fmtPct(mcPct) + '. Reajuste imediato necessario.'; }
+    document.getEl

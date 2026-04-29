@@ -1,0 +1,136 @@
+@layer theme, base, mui, components, utilities;
+@import "tailwindcss";
+
+:root {
+  --font-plus-jakarta-sans: "Segoe UI";
+  --background: #f8f9fa;
+  --foreground: #1a1a2e;
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --primary: #1976d2;
+  --primary-foreground: #ffffff;
+  --secondary: #3f51b5;
+  --secondary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #16a34a;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #42a5f5;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-muted: #64748b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-accent: rgba(25, 118, 210, 0.08);
+  --sidebar-accent-foreground: #1976d2;
+}
+
+@theme inline {
+  --font-sans: var(--font-plus-jakarta-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 0.5rem);
+  --radius-md: calc(var(--radius) - 0.25rem);
+  --radius-lg: var(--radius);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+}
+
+* {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  font-family: var(--font-plus-jakarta-sans), "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input,
+select,
+textarea {
+  outline: none;
+}
+
+::selection {
+  background: rgba(66, 165, 245, 0.22);
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .app-panel {
+    @apply rounded-[1rem] border border-border bg-card p-5 sm:p-6;
+  }
+
+  .app-panel-muted {
+    @apply rounded-[1rem] border border-border bg-muted/60 p-5 sm:p-6;
+  }
+
+  .app-subpanel {
+    @apply rounded-[0.875rem] border border-border bg-background p-4;
+  }
+
+  .app-filter-bar {
+    @apply rounded-[1rem] border border-border bg-card p-5 sm:p-6 flex flex-col gap-4;
+  }
+
+  .app-data-shell {
+    @apply rounded-[1rem] border border-border bg-card overflow-hidden p-0;
+  }
+
+  .app-muted-label {
+    @apply text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .app-section-title {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .app-metric-value {
+    @apply text-[clamp(1.65rem,2.8vw,2.25rem)] font-semibold tracking-tight text-foreground;
+  }
+}

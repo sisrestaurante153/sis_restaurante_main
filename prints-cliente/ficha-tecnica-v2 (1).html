@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha Técnica v2 — Quadro Final</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f1117;
+    --surface:   #181c27;
+    --card:      #1e2333;
+    --border:    #2a3048;
+    --border-h:  #3d4f7a;
+    --gold:      #c9a84c;
+    --gold-l:    #e8c96b;
+    --gold-dim:  rgba(201,168,76,.12);
+    --green:     #3ecf8e;
+    --green-dim: rgba(62,207,142,.10);
+    --red:       #f87171;
+    --red-dim:   rgba(248,113,113,.10);
+    --amber:     #f59e0b;
+    --amber-dim: rgba(245,158,11,.10);
+    --text:      #e8eaf0;
+    --text-2:    #8b92a9;
+    --text-3:    #515870;
+    --radius:    12px;
+    --radius-s:  8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    width: 100%;
+    max-width: 900px;
+    padding: 32px 24px 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .page-header-left { display: flex; flex-direction: column; gap: 4px; }
+  .page-label {
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--gold-l);
+    line-height: 1.1;
+  }
+  .page-subtitle { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+  .version-badge {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    color: var(--gold-l);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ── MAIN GRID ── */
+  .main {
+    width: 100%;
+    max-width: 900px;
+    padding: 20px 24px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── HEADER STRIP (Peso / FC / IC) ── */
+  .header-strip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: hidden;
+  }
+  .strip-item {
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    position: relative;
+  }
+  .strip-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 20%; bottom: 20%;
+    width: 1px;
+    background: var(--border);
+  }
+  .strip-label {
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .strip-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .strip-value span { font-size: 11px; color: var(--text-2); margin-left: 3px; }
+  .strip-note { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+  /* ── COLS ── */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 620px) { .cols { grid-template-columns: 1fr; } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: var(--border-h); }
+  .card-head {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-title {
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    font-weight: 600;
+  }
+  .card-body { padding: 8px 0; }
+
+  /* ── ROW ── */
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 20px;
+    gap: 12px;
+    border-radius: 0;
+    transition: background .15s;
+  }
+  .row:hover { background: rgba(255,255,255,.025); }
+  .row-label {
+    font-size: 12.5px;
+    color: var(--text-2);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .row-label .icon {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+  .row-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .row-value.green { color: var(--green); }
+  .row-value.gold  { color: var(--gold-l); }
+  .row-value.red   { color: var(--red); }
+  .row-value.dim   { color: var(--text-3); font-style: italic; font-size: 11px; }
+
+  .row-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 20px;
+    opacity: .5;
+  }
+
+  /* highlight row */
+  .row-hi {
+    background: var(--gold-dim) !important;
+    border-left: 2px solid var(--gold);
+    margin: 4px 0;
+    padding-left: 18px;
+  }
+  .row-hi .row-label { color: var(--text); font-weight: 500; }
+  .row-hi .row-value { font-size: 14px; }
+
+  .row-hi.green-hi {
+    background: var(--green-dim) !important;
+    border-color: var(--green);
+  }
+  .row-hi.red-hi {
+    background: var(--red-dim) !important;
+    border-color: var(--red);
+  }
+  .row-hi.amber-hi {
+    background: var(--amber-dim) !important;
+    border-color: var(--amber);
+  }
+
+  /* ── TOGGLE (Montagem) ── */
+  .toggle-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 20px 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle-area .toggle-label {
+    font-size: 11px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+  .toggle {
+    position: relative;
+    width: 34px; height: 18px;
+    border-radius: 9px;
+    background: var(--border);
+    transition: background .2s;
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--text-3);
+    transition: left .2s, background .2s;
+  }
+  .toggle.on { background: var(--gold-dim); border: 1px solid var(--gold); }
+  .toggle.on::after { left: 19px; background: var(--gold-l); }
+
+  .locked-row {
+    opacity: .3;
+    pointer-events: none;
+    filter: grayscale(.8);
+    transition: opacity .3s, filter .3s;
+  }
+  .locked-row.unlocked {
+    opacity: 1;
+    pointer-events: auto;
+    filter: none;
+  }
+
+  /* ── INPUT ── */
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-s);
+    overflow: hidden;
+    transition: border-color .2s;
+    width: 130px;
+    flex-shrink: 0;
+  }
+  .input-wrap:focus-within { border-color: var(--gold); }
+  .input-prefix {
+    padding: 0 8px;
+    font-size: 11px;
+    color: var(--text-3);
+    border-right: 1px solid var(--border);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    font-weight: 500;
+  }
+  .input-wrap input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 0 10px;
+    width: 100%;
+    height: 32px;
+  }
+  .input-suffix {
+    padding: 0 8px;
+    font-size: 11px;
+    color: var(--text-3);
+    border-left: 1px solid var(--border);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: var(--card);
+  }
+
+  /* ── CMV BADGE ── */
+  .cmv-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: .04em;
+    transition: all .3s;
+  }
+  .cmv-badge.healthy { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .cmv-badge.warning { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+  .cmv-badge.danger  { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red);   }
+
+  /* ── LEITURA OPERACIONAL ── */
+  .leitura-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    margin: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+  }
+  .leitura-cell {
+    background: var(--card);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .leitura-cell-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .leitura-cell-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .leitura-cell-value.gold { color: var(--gold-l); }
+  .leitura-cell-value.green { color: var(--green); }
+  .leitura-cell-sub { font-size: 11px; color: var(--text-3); }
+
+  /* ── FULL-WIDTH CARD ── */
+  .card-full { grid-column: 1 / -1; }
+
+  /* ── SIMULADOR NOTE ── */
+  .sim-note {
+    font-size: 10px;
+    color: var(--text-3);
+    padding: 6px 20px 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .sim-note::before {
+    content: '⚡';
+    font-size: 9px;
+  }
+
+  /* ── MARGEM BARRA ── */
+  .margem-bar-wrap {
+    padding: 4px 20px 14px;
+  }
+  .margem-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .margem-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width .4s ease, background .4s;
+  }
+  .margem-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-left">
+    <span class="page-label">Ficha Técnica · Quadro Final</span>
+    <span class="page-title">Formação de Preço</span>
+    <span class="page-subtitle">Visão consolidada de custo, CMV e margem de contribuição</span>
+  </div>
+  <span class="version-badge">VERSÃO 2.0</span>
+</div>
+
+<div class="main">
+
+  <!-- STRIP: dados do cabeçalho da ficha -->
+  <div class="header-strip">
+    <div class="strip-item">
+      <span class="strip-label">Peso Final</span>
+      <div class="strip-value">1.000 <span>kg</span></div>
+      <span class="strip-note">Pós-cocção / rendimento real</span>
+    </div>
+    <div class="strip-item">
+      <span class="strip-label">Fator de Correção (FC)</span>
+      <div class="strip-value">91 <span>%</span></div>
+      <span class="strip-note">Bruto → Limpo</span>
+    </div>
+    <div class="strip-item">
+      <span class="strip-label">Índice de Cocção (IC)</span>
+      <div class="strip-value">90 <span>%</span></div>
+      <span class="strip-note">Limpo → Pós-cocção</span>
+    </div>
+  </div>
+
+  <!-- COLS: Custos / Venda -->
+  <div class="cols">
+
+    <!-- CARD: CUSTOS E CMV -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Custos e CMV</span>
+        <!-- Toggle Montagem -->
+        <div class="toggle-area" onclick="toggleMontagem(this)" title="Ativar quando a ficha possui Montagem">
+          <span class="toggle-label">Montagem</span>
+          <div class="toggle" id="toggleEl"></div>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <div class="row">
+          <span class="row-label">
+            <span class="icon" style="background:rgba(201,168,76,.12);color:var(--gold)">$</span>
+            Custo total da ficha / insumos
+          </span>
+          <span class="row-value gold">R$ 22,02</span>
+        </div>
+
+        <div class="row">
+          <span class="row-label">
+            <span class="icon" style="background:rgba(62,207,142,.1);color:var(--green)">÷</span>
+            CMV sem embalagem
+          </span>
+          <span class="row-value">R$ 6,12 <span style="font-size:10px;color:var(--text-3)">/kg</span></span>
+        </div>
+
+        <div class="row-sep"></div>
+
+        <!-- Embalagem — só ativo com Montagem -->
+        <div class="row locked-row" id="rowEmbalagem">
+          <span class="row-label">
+            <span class="icon" style="background:rgba(245,158,11,.1);color:var(--amber)">📦</span>
+            Custo embalagens e descartáveis
+          </span>
+          <span class="row-value" style="color:var(--amber)">R$ 1,80</span>
+        </div>
+
+        <!-- CMV com embalagem — só ativo com Montagem -->
+        <div class="row row-hi locked-row" id="rowCmvEmb">
+          <span class="row-label">CMV com embalagem</span>
+          <span class="row-value gold">R$ 7,92 <span style="font-size:10px;color:var(--text-3)">/kg</span></span>
+        </div>
+
+        <!-- CMV sem montagem highlight -->
+        <div class="row row-hi" id="rowCmvFinal">
+          <span class="row-label">CMV final aplicado</span>
+          <span class="row-value gold" id="cmvFinalVal">R$ 6,12 /kg</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CARD: VENDA E MARGEM -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Venda e Margem</span>
+        <span class="cmv-badge healthy" id="cmvBadge">CMV ✓ Saudável</span>
+      </div>
+      <div class="card-body">
+
+        <div class="row" style="padding-top:12px">
+          <span class="row-label">Preço de venda</span>
+          <div class="input-wrap">
+            <span class="input-prefix">R$</span>
+            <input type="number" id="pvInput" value="87.90" step="0.10" oninput="recalcular()" />
+          </div>
+        </div>
+
+        <div class="row">
+          <span class="row-label">Desp. variável de venda</span>
+          <div class="input-wrap">
+            <input type="number" id="dvInput" value="15" step="0.5" oninput="recalcular()" />
+            <span class="input-suffix">%PV</span>
+          </div>
+        </div>
+
+        <div class="row-sep"></div>
+
+        <div class="row">
+          <span class="row-label">CMV do kg (%PV)</span>
+          <span class="row-value" id="cmvPvVal">—</span>
+        </div>
+
+        <div class="row">
+          <span class="row-label">Desp. variável aplicada</span>
+          <span class="row-value" id="dvAplicadaVal">—</span>
+        </div>
+
+        <div class="row-sep"></div>
+
+        <div class="row row-hi green-hi">
+          <span class="row-label">Margem de contribuição (R$)</span>
+          <span class="row-value green" id="mcReaisVal">—</span>
+        </div>
+
+        <div class="row row-hi green-hi" style="margin-top:2px">
+          <span class="row-label">Margem de contribuição (%)</span>
+          <span class="row-value green" id="mcPctVal">—</span>
+        </div>
+
+        <!-- Barra de margem -->
+        <div class="margem-bar-wrap">
+          <div class="margem-bar-track">
+            <div class="margem-bar-fill" id="margemBar" style="width:0%;background:var(--green)"></div>
+          </div>
+          <div class="margem-bar-labels">
+            <span>0%</span>
+            <span id="barLabel">—</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="sim-note">Simulador em tempo real — altere o preço ou % de despesa acima</div>
+      </div>
+    </div>
+
+  </div><!-- /cols -->
+
+  <!-- CARD: LEITURA OPERACIONAL (full width) -->
+  <div class="card card-full">
+    <div class="card-head">
+      <span class="card-title">Leitura Operacional Consolidada</span>
+      <span style="font-size:10px;color:var(--text-3)">Visão sintetizada para gestão</span>
+    </div>
+    <div class="leitura-grid">
+      <div class="leitura-cell">
+        <span class="leitura-cell-label">Preço de Referência</span>
+        <div class="leitura-cell-value gold" id="loPreco">R$ 87,90</div>
+        <span class="leitura-cell-sub">Preço de venda configurado</span>
+      </div>
+      <div class="leitura-cell">
+        <span class="leitura-cell-label">Custo Real da Ficha</span>
+        <div class="leitura-cell-value" id="loCusto">R$ 22,02</div>
+        <span class="leitura-cell-sub">Total de insumos</span>
+      </div>
+      <div class="leitura-cell">
+        <span class="leitura-cell-label">Despesa Variável</span>
+        <div class="leitura-cell-value" id="loDV">15% PV</div>
+        <span class="leitura-cell-sub">Sobre o preço de venda</span>
+      </div>
+      <div class="leitura-cell">
+        <span class="leitura-cell-label">Margem de Contribuição</span>
+        <div class="leitura-cell-value green" id="loMC">—</div>
+        <span class="leitura-cell-sub" id="loMCSub">Receita menos custos e despesas variáveis</span>
+      </div>
+      <div class="leitura-cell" style="grid-column:1/-1;background:rgba(201,168,76,.04)">
+        <span class="leitura-cell-label">Diagnóstico</span>
+        <div class="leitura-cell-value" style="font-size:13px;font-family:'DM Sans',sans-serif" id="loDiag">—</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  let montagemAtivo = false;
+
+  const CUSTO_INSUMOS = 22.02;
+  const CUSTO_EMBALAGEM = 1.80;
+
+  function toggleMontagem(area) {
+    montagemAtivo = !montagemAtivo;
+    const el = document.getElementById('toggleEl');
+    el.classList.toggle('on', montagemAtivo);
+    document.getElementById('rowEmbalagem').classList.toggle('unlocked', montagemAtivo);
+    document.getElementById('rowCmvEmb').classList.toggle('unlocked', montagemAtivo);
+    document.getElementById('rowCmvFinal').querySelector('.row-label').textContent =
+      montagemAtivo ? 'CMV final aplicado (c/ emb.)' : 'CMV final aplicado';
+    recalcular();
+  }
+
+  function fmt(n) { return 'R$ ' + n.toFixed(2).replace('.', ','); }
+  function fmtPct(n) { return n.toFixed(2).replace('.', ',') + '%'; }
+
+  function recalcular() {
+    const pv = parseFloat(document.getElementById('pvInput').value) || 0;
+    const dv = parseFloat(document.getElementById('dvInput').value) || 0;
+
+    const custo = montagemAtivo ? CUSTO_INSUMOS + CUSTO_EMBALAGEM : CUSTO_INSUMOS;
+    const cmvKg = custo; // custo por kg (peso final = 1kg para simplificação demo)
+    const dvAplic = pv * (dv / 100);
+    const mc = pv - custo - dvAplic;
+    const mcPct = pv > 0 ? (mc / pv) * 100 : 0;
+    const cmvPvPct = pv > 0 ? (custo / pv) * 100 : 0;
+
+    // CMV final
+    document.getElementById('cmvFinalVal').textContent =
+      fmt(cmvKg) + ' /kg';
+
+    // Venda e Margem
+    document.getElementById('cmvPvVal').textContent = fmtPct(cmvPvPct);
+    document.getElementById('dvAplicadaVal').textContent = fmt(dvAplic) + ' (' + fmtPct(dv) + ')';
+    document.getElementById('mcReaisVal').textContent = fmt(mc);
+    document.getElementById('mcPctVal').textContent = fmtPct(mcPct);
+
+    // Barra
+    const barW = Math.max(0, Math.min(100, mcPct));
+    const bar = document.getElementById('margemBar');
+    bar.style.width = barW + '%';
+    bar.style.background = mcPct > 60 ? 'var(--green)' : mcPct > 35 ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('barLabel').textContent = fmtPct(mcPct);
+
+    // Badge CMV
+    const badge = document.getElementById('cmvBadge');
+    if (cmvPvPct <= 30) {
+      badge.className = 'cmv-badge healthy';
+      badge.textContent = 'CMV ✓ Saudável';
+    } else if (cmvPvPct <= 40) {
+      badge.className = 'cmv-badge warning';
+      badge.textContent = 'CMV ⚠ Atenção';
+    } else {
+      badge.className = 'cmv-badge danger';
+      badge.textContent = 'CMV ✕ Crítico';
+    }
+
+    // Leitura Operacional
+    document.getElementById('loPreco').textContent = fmt(pv);
+    document.getElementById('loCusto').textContent = fmt(custo) + (montagemAtivo ? ' (c/ emb.)' : '');
+    document.getElementById('loDV').textContent = fmtPct(dv) + ' PV';
+    document.getElementById('loMC').textContent = fmt(mc) + ' · ' + fmtPct(mcPct);
+    document.getElementById('loMCSub').textContent =
+      'PV – custo' + (montagemAtivo ? ' (c/ emb.)' : '') + ' – desp. var.';
+
+    // Diagnóstico
+    let diag = '';
+    if (pv <= 0) {
+      diag = 'Informe um preço de venda para gerar o diagnóstico.';
+    } else if (mcPct >= 65) {
+      diag = `✅ Excelente rentabilidade. Margem de ${fmtPct(mcPct)} com CMV de ${fmtPct(cmvPvPct)} do PV. Produto estratégico para o cardápio.`;
+    } else if (mcPct >= 45) {
+      diag = `✅ Margem saudável de ${fmtPct(mcPct)}. CMV em ${fmtPct(cmvPvPct)} do PV — dentro da faixa operacional recomendada.`;
+    } else if (mcPct >= 25) {
+      diag = `⚠️ Margem moderada de ${fmtPct(mcPct)}. Avaliar reajuste de preço ou revisão dos insumos. CMV em ${fmtPct(cmvPvPct)} do PV.`;
+    } else if (mc > 0) {
+      diag = `🔴 Margem baixa de ${fmtPct(mcPct)}. Produto cobre custos mas compromete a operação. Revisão urgente recomendada.`;
+    } else {
+      diag = `🚨 Produto operando no prejuízo. Margem negativa de ${fmtPct(mcPct)}. Reajuste imediato de preço ou corte de custo necessário.`;
+    }
+    document.getElementById('loDiag').textContent = diag;
+  }
+
+  recalcular();
+</script>
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIS Restaurante — Cadastro de Item</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #F4F4F2;
+    --surface:  #FFFFFF;
+    --border:   #D3D1C7;
+    --border-h: #B4B2A9;
+    --text:     #2C2C2A;
+    --text-2:   #5F5E5A;
+    --text-3:   #888780;
+    --azul:     #185FA5;
+    --azul-l:   #E6F1FB;
+    --verde:    #1B6B2C;
+    --verde-l:  #EAF3DE;
+    --verm:     #A32D2D;
+    --verm-l:   #FCEBEB;
+    --radius:   10px;
+    --radius-s: 6px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: #fff; border-right: 0.5px solid var(--border); padding: 20px 0; display: flex; flex-direction: column; }
+  .sidebar-logo { padding: 0 20px 20px; font-size: 13px; font-weight: 600; color: var(--azul); border-bottom: 0.5px solid var(--border); margin-bottom: 12px; }
+  .sidebar-section { font-size: 10px; font-weight: 600; letter-spacing: .08em; color: var(--text-3); padding: 8px 20px 4px; text-transform: uppercase; }
+  .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 7px 20px; font-size: 13px; color: var(--text-2); cursor: pointer; border-radius: 0; transition: background .15s; }
+  .sidebar-item:hover { background: var(--bg); }
+  .sidebar-item.active { color: var(--azul); background: var(--azul-l); font-weight: 500; }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text-2); }
+
+  /* MAIN */
+  .main { margin-left: 200px; padding: 28px 32px; max-width: 960px; }
+
+  /* TOPBAR */
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .page-title { font-size: 22px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--verde-l); color: var(--verde); font-weight: 500; }
+  .page-sub { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .btn-group { display: flex; gap: 8px; }
+  .btn { padding: 8px 18px; font-size: 13px; font-weight: 500; border-radius: var(--radius-s); cursor: pointer; border: 0.5px solid var(--border-h); background: #fff; color: var(--text); transition: background .15s; }
+  .btn:hover { background: var(--bg); }
+  .btn-danger { border-color: #F09595; color: var(--verm); }
+  .btn-danger:hover { background: var(--verm-l); }
+  .btn-primary { background: var(--azul); border-color: var(--azul); color: #fff; }
+  .btn-primary:hover { background: #0C447C; }
+
+  /* CARD */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+  .card-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px; }
+
+  /* GRID */
+  .row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .row:last-child { margin-bottom: 0; }
+  .g-3-a { grid-template-columns: 140px 1fr 160px; }
+  .g-2   { grid-template-columns: 1fr 1fr; }
+  .g-2-a { grid-template-columns: 2fr 1fr; }
+  .g-3   { grid-template-columns: 1fr 1fr 1fr; }
+  .g-3-b { grid-template-columns: 1fr 1fr .7fr; }
+  .g-2-b { grid-template-columns: 1fr 1fr .7fr; }
+
+  /* FIELD */
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; font-weight: 500; color: var(--text-2); }
+  .field label .req { color: var(--verm); margin-left: 1px; }
+  .field label .opt { color: var(--text-3); font-weight: 400; font-size: 10px; }
+  .field input, .field select, .field textarea {
+    padding: 8px 11px; font-size: 13px; border: 0.5px solid var(--border);
+    border-radius: var(--radius-s); background: #fff; color: var(--text);
+    font-family: inherit; appearance: none; transition: border-color .15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(24,95,165,.1);
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+  }
+  .field textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
+  .field .hint { font-size: 11px; color: var(--text-3); }
+
+  /* CALC field (somente leitura, verde) */
+  .field input.calc, .field select.calc {
+    background: var(--verde-l); color: var(--verde); font-weight: 500;
+    border-color: #C0DD97; cursor: default;
+  }
+
+  /* FORNECEDOR BLOCK */
+  .fornecedor-block { border: 0.5px solid var(--border); border-radius: var(--radius-s); padding: 16px; margin-bottom: 12px; background: #FAFAF9; }
+  .fornecedor-block + .fornecedor-block { background: #F0F7E8; border-color: #C0DD97; }
+  .forn-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; color: var(--text-3); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .forn-label span { color: var(--verde); }
+  .del-btn { font-size: 11px; color: var(--verm); cursor: pointer; border: 0.5px solid #F09595; border-radius: 4px; padding: 2px 8px; background: #fff; }
+  .del-btn:hover { background: var(--verm-l); }
+
+  /* ADD BTN */
+  .add-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--azul); cursor: pointer; padding: 4px 0; margin-top: 4px; }
+  .add-btn svg { width: 15px; height: 15px; }
+  .add-btn:hover { text-decoration: underline; }
+
+  /* FIXADO tag */
+  .tag-fixado { font-size: 10px; background: var(--verde-l); color: var(--verde); border: 0.5px solid #C0DD97; border-radius: 4px; padding: 1px 6px; font-weight: 500; margin-left: 6px; }
+
+  /* DIVIDER */
+  .divider { height: 0.5px; background: var(--border); margin: 16px 0; }
+
+  /* NOTA */
+  .nota { background: var(--azul-l); border: 0.5px solid #B5D4F4; border-left: 3px solid var(--azul); border-radius: var(--radius-s); padding: 8px 12px; font-size: 12px; color: #0C447C; margin-bottom: 14px; line-height: 1.5; }
+
+  /* BREADCRUMB */
+  .breadcrumb { font-size: 12px; color: var(--text-3); margin-bottom: 16px; }
+  .breadcrumb a { color: var(--azul); text-decoration: none; }
+  .breadcrumb span { margin: 0 6px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">SIS Restaurante</div>
+  <div class="sidebar-section">Cadastros</div>
+  <div class="sidebar-item active">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="8" y1="5" x2="8" y2="11"/></svg>
+    Itens
+  </div>
+  <div class="sidebar-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="8" y2="10"/></svg>
+    Fichas Tecnicas
+  </div>
+  <div class="sidebar-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="8" x2="10.5" y2="10.5"/></svg>
+    Cadastros mestres
+  </div>
+  <div class="sidebar-section">Operacao</div>
+  <div class="sidebar-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/></svg>
+    Fichas finais
+  </div>
+  <div class="sidebar-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="11" cy="11" r="3"/><line x1="8.5" y1="3.5" x2="12" y2="3.5"/></svg>
+    Composicao
+  </div>
+  <div class="sidebar-item">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12 L8 4 L14 12z"/></svg>
+    Custos
+  </div>
+  <div class="sidebar-footer">admin@sis-restaurante.com</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="breadcrumb">
+    <a href="#">Home</a><span>›</span><a href="#">Itens</a><span>›</span>Arroz branco
+  </div>
+
+  <div class="topbar">
+    <div>
+      <div class="page-title">
+        Arroz branco
+        <span class="badge">ativo</span>
+      </div>
+      <div class="page-sub">Edicao do item mestre.</div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-danger">Excluir item</button>
+      <button class="btn btn-primary">Salvar alteracoes</button>
+    </div>
+  </div>
+
+  <!-- BLOCO 1: IDENTIFICACAO -->
+  <div class="card">
+    <div class="card-label">Identificacao</div>
+    <div class="row g-3-a">
+      <div class="field">
+        <label>Codigo <span class="req">*</span></label>
+        <input type="text" value="LF8NHE">
+      </div>
+      <div class="field">
+        <label>Nome do item <span class="req">*</span></label>
+        <input type="text" value="Arroz branco">
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select>
+          <option selected>Ativo</option>
+          <option>Inativo</option>
+        </select>
+      </div>
+    </div>
+    <div class="row g-2">
+      <div class="field">
+        <label>Tipo <span class="req">*</span></label>
+        <select>
+          <option selected>Insumo</option>
+          <option>Pre-preparo</option>
+          <option>Embalagem</option>
+          <option>Prato</option>
+          <option>Porcao</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Categoria operacional (Secao) <span class="req">*</span></label>
+        <select>
+          <option selected>Graos</option>
+          <option>Carnes</option>
+          <option>Laticinios</option>
+          <option>Hortifruti</option>
+          <option>Descartaveis</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCO 2: COMPRAS / FORNECEDOR -->
+  <div class="card">
+    <div class="card-label">Detalhamento de Compras / Fornecedor</div>
+
+    <!-- Fornecedor 1 -->
+    <div class="fornecedor-block">
+      <div class="forn-label">Fornecedor 1 — Principal</div>
+      <div class="row g-2-a">
+        <div class="field">
+          <label>Fornecedor <span class="req">*</span></label>
+          <select>
+            <option selected>VMARKET LEGADO</option>
+            <option>Mercado livre</option>
+            <option>Atacadao</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Atualizado em</label>
+          <input type="text" value="06/04/2026">
+        </div>
+      </div>
+      <div class="row g-2">
+        <div class="field">
+          <label>Unidade de compra <span class="req">*</span></label>
+          <select>
+            <option selected>kg</option>
+            <option>un</option>
+            <option>cx</option>
+            <option>fardo</option>
+            <option>bandeja</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Unidade de uso <span class="req">*</span></label>
+          <select>
+            <option selected>kg</option>
+            <option>g</option>
+            <option>un</option>
+            <option>ml</option>
+          </select>
+        </div>
+      </div>
+      <div class="row g-3-b">
+        <div class="field">
+          <label>Quantidade de compra <span class="req">*</span></label>
+          <input type="text" value="1,0000">
+        </div>
+        <div class="field">
+          <label>Quantidade de uso <span class="req">*</span></label>
+          <input type="text" value="1,0000">
+        </div>
+        <div class="field">
+          <label>Fator de conversao</label>
+          <input type="text" value="1,0000" class="calc" readonly>
+          <span class="hint">Calculado automaticamente.</span>
+        </div>
+      </div>
+      <div class="row g-3-b">
+        <div class="field">
+          <label>Preco de compra <span class="req">*</span></label>
+          <input type="text" value="R$ 38,11">
+        </div>
+        <div class="field">
+          <label>Preco de uso</label>
+          <input type="text" value="R$ 38,11" class="calc" readonly>
+          <span class="hint">Calculado a partir da compra principal.</span>
+        </div>
+        <div></div>
+      </div>
+    </div>
+
+    <!-- Fornecedor 2 (exemplo com campos fixados) -->
+    <div class="fornecedor-block">
+      <div class="forn-label">
+        Fornecedor 2
+        <button class="del-btn">Remover</button>
+      </div>
+      <div class="row g-2-a">
+        <div class="field">
+          <label>Fornecedor <span class="req">*</span></label>
+          <select>
+            <option selected>Atacadao</option>
+            <option>VMARKET LEGADO</option>
+            <option>Mercado livre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Atualizado em</label>
+          <input type="text" placeholder="dd/mm/aaaa">
+        </div>
+      </div>
+      <div class="row g-3-b">
+        <div class="field">
+          <label>Unidade de compra <span class="req">*</span></label>
+          <select>
+            <option selected>fardo</option>
+            <option>kg</option>
+            <option>un</option>
+            <option>cx</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>
+            Unidade de uso
+            <span class="tag-fixado">fixado do 1&#186; fornecedor</span>
+          </label>
+          <input type="text" value="kg" class="calc" readonly>
+        </div>
+        <div></div>
+      </div>
+      <div class="row g-3-b">
+        <div class="field">
+          <label>Quantidade de compra <span class="req">*</span></label>
+          <input type="text" placeholder="0,0000">
+        </div>
+        <div class="field">
+          <label>
+            Quantidade de uso
+            <span class="tag-fixado">fixado do 1&#186; fornecedor</span>
+          </label>
+          <input type="text" value="1,0000" class="calc" readonly>
+        </div>
+        <div class="field">
+          <label>Fator de conversao</label>
+          <input type="text" value="--" class="calc" readonly>
+          <span class="hint">Calculado automaticamente.</span>
+        </div>
+      </div>
+      <div class="row g-3-b">
+        <div class="field">
+          <label>Preco de compra <span class="req">*</span></label>
+          <input type="text" placeholder="R$ 0,00">
+        </div>
+        <div class="field">
+          <label>Preco de uso</label>
+          <input type="text" value="--" class="calc" readonly>
+          <span class="hint">Calculado a partir da compra principal.</span>
+        </div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="add-btn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="8" r="6.5"/>
+        <line x1="8" y1="5" x2="8" y2="11"/>
+        <line x1="5" y1="8" x2="11" y2="8"/>
+      </svg>
+      Adicionar fornecedor
+    </div>
+  </div>
+
+  <!-- BLOCO 3: OBSERVACOES -->
+  <div class="card">
+    <div class="card-label">Observacoes</div>
+    <div class="field">
+      <label>Descricao operacional <span class="opt">(opcional)</span></label>
+      <textarea placeholder="Ex.: Arroz marca Albaruska, grao longo, tipo 1. Preferir embalagem 5kg."></textarea>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>
