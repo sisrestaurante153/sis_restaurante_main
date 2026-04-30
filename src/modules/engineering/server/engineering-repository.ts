@@ -2,7 +2,7 @@ import "server-only";
 import {
   type Prisma
 } from "@/generated/prisma/client";
-import type { ItemType } from "@/generated/prisma/client";
+import type { item_type } from "@/generated/prisma/client";
 import {
   assertNoCyclesBeforeSaving,
   rebuildDependencyClosure,
@@ -151,7 +151,7 @@ function resolveAutomaticDiagnosis(input: {
 function toNormalizedName(value: string) {
   return value
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
@@ -378,22 +378,22 @@ async function ensureUnit(tx: Prisma.TransactionClient, code: string) {
   const normalized = normalizeUnitCode(code);
 
   return tx.unidadeMedida.upsert({
-    where: { codigo: normalized },
+    where: { ds_codigo: normalized },
     update: {
-      nome: buildUnitName(normalized),
-      tipo: inferUnitTypeFromCode(normalized)
+      nm_unidade: buildUnitName(normalized),
+      tp_unidade: inferUnitTypeFromCode(normalized)
     },
     create: {
-      codigo: normalized,
-      nome: buildUnitName(normalized),
-      tipo: inferUnitTypeFromCode(normalized)
+      ds_codigo: normalized,
+      nm_unidade: buildUnitName(normalized),
+      tp_unidade: inferUnitTypeFromCode(normalized)
     }
   });
 }
 
 async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) {
   const existing = await tx.modalidade.findUnique({
-    where: { id: modalityId }
+    where: { cd_modalidade: modalityId }
   });
 
   if (existing) {
@@ -402,8 +402,8 @@ async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) 
 
   return tx.modalidade.create({
     data: {
-      codigo: modalityId,
-      nome: modalityId.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())
+      ds_codigo: modalityId,
+      nm_modalidade: modalityId.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())
     }
   });
 }
@@ -411,7 +411,7 @@ async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) 
 async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: SaveFichaInput) {
   if (input.itemId) {
     return tx.item.findUniqueOrThrow({
-      where: { id: input.itemId },
+      where: { cd_item: input.itemId },
       include: {
         unidadeUsoPadrao: true
       }
@@ -420,7 +420,7 @@ async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: Sa
 
   const normalizedName = toNormalizedName(input.displayName);
   const existing = await tx.item.findUnique({
-    where: { nomeNormalizado: normalizedName },
+    where: { nm_normalizado: normalizedName },
     include: {
       unidadeUsoPadrao: true
     }
@@ -434,13 +434,13 @@ async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: Sa
 
   return tx.item.create({
     data: {
-      nome: input.displayName.trim(),
-      nomeNormalizado: normalizedName,
-      categoriaOperacional: input.groupOperational,
-      tipoPrincipal: input.itemType,
-      unidadeEstoqueId: yieldUnit.id,
-      unidadeUsoPadraoId: yieldUnit.id,
-      ativo: true
+      nm_item: input.displayName.trim(),
+      nm_normalizado: normalizedName,
+      nm_categoria_operacional: input.groupOperational,
+      tp_item: input.itemType,
+      cd_unidade_estoque: yieldUnit.cd_unidade_medida,
+      cd_unidade_uso_padrao: yieldUnit.cd_unidade_medida,
+      sn_ativo: true
     },
     include: {
       unidadeUsoPadrao: true
@@ -491,7 +491,7 @@ async function ensureStageType(
 ) {
   if (input.stageTypeId) {
     return tx.tipoEtapa.findUnique({
-      where: { id: input.stageTypeId }
+      where: { cd_tipo_etapa: input.stageTypeId }
     });
   }
 
@@ -500,29 +500,29 @@ async function ensureStageType(
   }
 
   return tx.tipoEtapa.upsert({
-    where: { codigo: input.stageTypeCode },
+    where: { ds_codigo: input.stageTypeCode },
     update: {
-      nome: resolveStageTypeName(input.stageTypeCode),
-      ativo: true
+      nm_tipo_etapa: resolveStageTypeName(input.stageTypeCode),
+      sn_ativo: true
     },
     create: {
-      codigo: input.stageTypeCode,
-      nome: resolveStageTypeName(input.stageTypeCode),
-      ativo: true
+      ds_codigo: input.stageTypeCode,
+      nm_tipo_etapa: resolveStageTypeName(input.stageTypeCode),
+      sn_ativo: true
     }
   });
 }
 
 function buildFallbackStagesFromComponents<
   T extends {
-    itemComponenteId: string;
-    itemComponente: { nome: string; tipoPrincipal: string };
-    unidadeUso: { codigo: string };
-    quantidadeBruta: { toFixed: (precision: number) => string };
-    quantidadeLimpa: { toFixed: (precision: number) => string } | null;
-    fatorCorrecao: { toFixed: (precision: number) => string } | null;
-    indiceCoccao: { toFixed: (precision: number) => string } | null;
-    observacao: string | null;
+    cd_item_componente: string;
+    itemComponente: { nm_item: string; tp_item: string };
+    unidadeUso: { ds_codigo: string };
+    vl_qtd_bruta: { toFixed: (precision: number) => string };
+    vl_qtd_limpa: { toFixed: (precision: number) => string } | null;
+    vl_fator_correcao: { toFixed: (precision: number) => string } | null;
+    vl_indice_coccao: { toFixed: (precision: number) => string } | null;
+    ds_observacao: string | null;
   }
 >(components: T[]) {
   return [
@@ -533,25 +533,25 @@ function buildFallbackStagesFromComponents<
       stageTypeCode: undefined,
       stageTypeLabel: undefined,
       outputQuantity: "",
-      correctionFactor: components[0]?.fatorCorrecao?.toFixed(6) ?? "",
-      cookingIndex: components[0]?.indiceCoccao?.toFixed(6) ?? "",
+      correctionFactor: components[0]?.vl_fator_correcao?.toFixed(6) ?? "",
+      cookingIndex: components[0]?.vl_indice_coccao?.toFixed(6) ?? "",
       notes: "",
       items: components.map((component) => ({
-        itemId: component.itemComponenteId,
-        itemName: component.itemComponente.nome,
-        componentType: component.itemComponente.tipoPrincipal === "embalagem"
+        itemId: component.cd_item_componente,
+        itemName: component.itemComponente.nm_item,
+        componentType: component.itemComponente.tp_item === "embalagem"
           ? "embalagem"
-          : component.itemComponente.tipoPrincipal === "apoio"
+          : component.itemComponente.tp_item === "apoio"
             ? "apoio"
             : "ingrediente",
-        quantityUsed: component.quantidadeBruta.toFixed(4),
-        quantityGross: component.quantidadeBruta.toFixed(4),
-        quantityNet: component.quantidadeLimpa?.toFixed(4) ?? component.quantidadeBruta.toFixed(4),
-        usageUnit: component.unidadeUso.codigo,
+        quantityUsed: component.vl_qtd_bruta.toFixed(4),
+        quantityGross: component.vl_qtd_bruta.toFixed(4),
+        quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
+        usageUnit: component.unidadeUso.ds_codigo,
         levelLabel: "N1",
-        correctionFactor: component.fatorCorrecao?.toFixed(6) ?? "",
-        cookingIndex: component.indiceCoccao?.toFixed(6) ?? "",
-        notes: component.observacao ?? ""
+        correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
+        cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
+        notes: component.ds_observacao ?? ""
       }))
     }
   ];
@@ -562,13 +562,13 @@ async function queryFicha(
   fichaId: string
 ) {
   return client.fichaTecnica.findUnique({
-    where: { id: fichaId },
+    where: { cd_ficha_tecnica: fichaId },
     include: {
       itemResultante: {
         include: {
           unidadeUsoPadrao: true,
           custosSnapshot: {
-            orderBy: { calculadoEm: "desc" },
+            orderBy: { ts_calculo: "desc" },
             take: 1
           }
         }
@@ -576,16 +576,16 @@ async function queryFicha(
       modalidade: true,
       unidadeRendimento: true,
       etapas: {
-        orderBy: { ordem: "asc" },
+        orderBy: { nr_ordem: "asc" },
         include: {
           tipoEtapa: true,
           componentes: {
-            orderBy: { ordem: "asc" },
+            orderBy: { nr_ordem: "asc" },
             include: {
               itemComponente: {
                 select: {
-                  nome: true,
-                  tipoPrincipal: true,
+                  nm_item: true,
+                  tp_item: true,
                   unidadeUsoPadrao: true
                 }
               },
@@ -595,12 +595,12 @@ async function queryFicha(
         }
       },
       componentes: {
-        orderBy: { ordem: "asc" },
+        orderBy: { nr_ordem: "asc" },
         include: {
           itemComponente: {
             select: {
-              nome: true,
-              tipoPrincipal: true,
+              nm_item: true,
+              tp_item: true,
               unidadeUsoPadrao: true
             }
           },
@@ -608,11 +608,11 @@ async function queryFicha(
         }
       },
       execucoesCalculo: {
-        orderBy: { criadoEm: "desc" },
+        orderBy: { ts_criacao: "desc" },
         take: 1,
         select: {
-          criadoEm: true,
-          metadadosJson: true
+          ts_criacao: true,
+          js_metadados: true
         }
       }
     }
@@ -620,18 +620,18 @@ async function queryFicha(
 }
 
 function mapFichaCosts(record: NonNullable<FichaRecord>) {
-  const metadata = asObject(record.execucoesCalculo[0]?.metadadosJson ?? null);
-  const usageUnit = record.itemResultante.unidadeUsoPadrao?.codigo ?? "kg";
+  const metadata = asObject(record.execucoesCalculo[0]?.js_metadados ?? null);
+  const usageUnit = record.itemResultante.unidadeUsoPadrao?.ds_codigo ?? "kg";
   const total =
     readString(metadata, "totalCost") ??
-    record.itemResultante.custosSnapshot[0]?.custoTotalAtual.toFixed(4) ??
+    record.itemResultante.custosSnapshot[0]?.vl_custo_total.toFixed(4) ??
     "0.0000";
   const rawFinalOutput = readString(metadata, "finalUsefulOutputQuantity") ?? "1.0000";
 
   return {
     direct: readString(metadata, "directCost") ?? total,
     inherited: readString(metadata, "inheritedCost") ?? "0.0000",
-    packaging: record.itemResultante.custosSnapshot[0]?.custoEmbalagemAtual?.toFixed(4) ?? "0.0000",
+    packaging: record.itemResultante.custosSnapshot[0]?.vl_custo_embalagem?.toFixed(4) ?? "0.0000",
     total,
     perKg: readString(metadata, "costPerKg") ?? total,
     perPortion: readString(metadata, "costPerPortion"),
@@ -640,11 +640,11 @@ function mapFichaCosts(record: NonNullable<FichaRecord>) {
 }
 
 function mapExpandedRows(record: NonNullable<FichaRecord>) {
-  const metadata = asObject(record.execucoesCalculo[0]?.metadadosJson ?? null);
+  const metadata = asObject(record.execucoesCalculo[0]?.js_metadados ?? null);
   const rows = readArray(metadata, "expandedBreakdown");
   const fichaName = resolveFichaDisplayName({
-    displayName: record.nomeExibicao,
-    canonicalName: record.itemResultante.nome
+    displayName: record.nm_exibicao,
+    canonicalName: record.itemResultante.nm_item
   });
 
   return rows
@@ -658,13 +658,13 @@ function mapExpandedRows(record: NonNullable<FichaRecord>) {
       const itemName = typeof typedRow.itemName === "string" ? typedRow.itemName : "";
       const totalCost = typeof typedRow.totalCost === "string" ? typedRow.totalCost : "0.0000";
 
-      const matchedComponent = record.componentes.find((component) => path.startsWith(component.itemComponente.nome));
-      const componentType = matchedComponent?.tipoComponente ?? "ingrediente";
-      const usageUnit = matchedComponent?.unidadeUso.codigo ?? matchedComponent?.itemComponente.unidadeUsoPadrao?.codigo ?? "un";
+      const matchedComponent = record.componentes.find((component) => path.startsWith(component.itemComponente.nm_item));
+      const componentType = matchedComponent?.tp_componente ?? "ingrediente";
+      const usageUnit = matchedComponent?.unidadeUso.ds_codigo ?? matchedComponent?.itemComponente.unidadeUsoPadrao?.ds_codigo ?? "un";
 
       return {
-        id: `${record.id}-${index}`,
-        fichaId: record.id,
+        id: `${record.cd_ficha_tecnica}-${index}`,
+        fichaId: record.cd_ficha_tecnica,
         fichaName,
         path,
         depth: Math.max(1, path.split(" > ").length),
@@ -680,27 +680,27 @@ function mapExpandedRows(record: NonNullable<FichaRecord>) {
 
 function mapStageRows(record: NonNullable<FichaRecord>) {
   const explicitStages = record.etapas.map((stage) => ({
-    id: stage.id,
-    name: stage.nome,
-    stageTypeId: stage.tipoEtapaId ?? undefined,
-    stageTypeCode: stage.tipoEtapa?.codigo ?? undefined,
-    stageTypeLabel: stage.tipoEtapa?.nome ?? undefined,
-    outputQuantity: stage.pesoSaida?.toFixed(4) ?? "",
-    correctionFactor: stage.fatorCorrecao?.toFixed(6) ?? "",
-    cookingIndex: stage.indiceCoccao?.toFixed(6) ?? "",
-    notes: stage.observacao ?? "",
+    id: stage.cd_ficha_etapa,
+    name: stage.nm_etapa,
+    stageTypeId: stage.cd_tipo_etapa ?? undefined,
+    stageTypeCode: stage.tipoEtapa?.ds_codigo ?? undefined,
+    stageTypeLabel: stage.tipoEtapa?.nm_tipo_etapa ?? undefined,
+    outputQuantity: stage.vl_peso_saida?.toFixed(4) ?? "",
+    correctionFactor: stage.vl_fator_correcao?.toFixed(6) ?? "",
+    cookingIndex: stage.vl_indice_coccao?.toFixed(6) ?? "",
+    notes: stage.ds_observacao ?? "",
     items: stage.componentes.map((component, index) => ({
-      itemId: component.itemComponenteId,
-      itemName: component.itemComponente.nome,
-      componentType: component.tipoComponente,
-      quantityUsed: component.quantidadeBruta.toFixed(4),
-      quantityGross: component.quantidadeBruta.toFixed(4),
-      quantityNet: component.quantidadeLimpa?.toFixed(4) ?? component.quantidadeBruta.toFixed(4),
-      usageUnit: component.unidadeUso.codigo,
+      itemId: component.cd_item_componente,
+      itemName: component.itemComponente.nm_item,
+      componentType: component.tp_componente,
+      quantityUsed: component.vl_qtd_bruta.toFixed(4),
+      quantityGross: component.vl_qtd_bruta.toFixed(4),
+      quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
+      usageUnit: component.unidadeUso.ds_codigo,
       levelLabel: `N${index + 1}`,
-      correctionFactor: component.fatorCorrecao?.toFixed(6) ?? "",
-      cookingIndex: component.indiceCoccao?.toFixed(6) ?? "",
-      notes: component.observacao ?? ""
+      correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
+      cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
+      notes: component.ds_observacao ?? ""
     }))
   }));
 
@@ -709,9 +709,9 @@ function mapStageRows(record: NonNullable<FichaRecord>) {
 
 function mapFichaListRow(record: NonNullable<FichaRecord>) {
   const costs = mapFichaCosts(record);
-  const totalGross = record.componentes.reduce((sum, component) => sum + Number(component.quantidadeBruta.toFixed(4)), 0);
+  const totalGross = record.componentes.reduce((sum, component) => sum + Number(component.vl_qtd_bruta.toFixed(4)), 0);
   const totalNet = record.componentes.reduce(
-    (sum, component) => sum + Number((component.quantidadeLimpa ?? component.quantidadeBruta).toFixed(4)),
+    (sum, component) => sum + Number((component.vl_qtd_limpa ?? component.vl_qtd_bruta).toFixed(4)),
     0
   );
   const indicators = buildFichaIndicators({
@@ -720,16 +720,16 @@ function mapFichaListRow(record: NonNullable<FichaRecord>) {
     finalOutput: costs.finalOutput
   });
   const displayName = resolveFichaDisplayName({
-    displayName: record.nomeExibicao,
-    canonicalName: record.itemResultante.nome
+    displayName: record.nm_exibicao,
+    canonicalName: record.itemResultante.nm_item
   });
 
-  const salePriceNumber = record.precoVenda ? Number(record.precoVenda) : 0;
+  const salePriceNumber = record.vl_preco_venda ? Number(record.vl_preco_venda) : 0;
   const totalInputCostNumber = Number(costs.total) || 0;
   const packagingCostNumber = Number(costs.packaging) || 0;
   const costRealNumber = totalInputCostNumber + packagingCostNumber;
   const variableExpensePercentNumber = normalizePercentInput(
-    record.despesaVariavelPercentual ? Number(record.despesaVariavelPercentual) : null
+    record.vl_pct_despesa_variavel ? Number(record.vl_pct_despesa_variavel) : null
   );
   const contributionMarginPercent =
     salePriceNumber > 0 && variableExpensePercentNumber !== null
@@ -737,28 +737,28 @@ function mapFichaListRow(record: NonNullable<FichaRecord>) {
       : null;
 
   return {
-    id: record.id,
-    itemId: record.itemResultanteId,
-    code: record.itemResultante.codigoInterno ?? "--",
+    id: record.cd_ficha_tecnica,
+    itemId: record.cd_item_resultante,
+    code: record.itemResultante.ds_codigo_interno ?? "--",
     itemName: displayName,
-    itemType: record.itemResultante.tipoPrincipal,
-    version: record.versao,
-    modalityLabel: record.modalidade?.nome ?? "Sem modalidade",
-    groupOperational: record.itemResultante.categoriaOperacional ?? "Sem grupo",
-    status: record.status,
+    itemType: record.itemResultante.tp_item,
+    version: record.nr_versao,
+    modalityLabel: record.modalidade?.nm_modalidade ?? "Sem modalidade",
+    groupOperational: record.itemResultante.nm_categoria_operacional ?? "Sem grupo",
+    status: record.tp_status,
     correctionFactor: indicators.correctionFactor,
     cookingIndex: indicators.cookingIndex,
     totalCost: costs.total,
-    sellingPrice: record.precoVenda?.toFixed(4) ?? null,
+    sellingPrice: record.vl_preco_venda?.toFixed(4) ?? null,
     contributionMarginPercent: contributionMarginPercent !== null ? contributionMarginPercent.toFixed(4) : null,
-    updatedAt: record.atualizadaEm.toISOString(),
+    updatedAt: record.ts_atualizacao.toISOString(),
     componentCount: record.componentes.length,
-    notes: record.observacoes ?? ""
+    notes: record.ds_observacoes ?? ""
   };
 }
 
 function mapFichaDetail(record: NonNullable<FichaRecord>) {
-  const usageUnit = record.itemResultante.unidadeUsoPadrao?.codigo ?? "kg";
+  const usageUnit = record.itemResultante.unidadeUsoPadrao?.ds_codigo ?? "kg";
   const stages = mapStageRows(record);
   const flattenedComponents = stages.flatMap((stage) =>
     stage.items.map((item) => ({
@@ -769,8 +769,8 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   );
   const componentMetrics = record.componentes.reduce(
     (summary, component) => {
-      summary.totalGross += Number(component.quantidadeBruta.toFixed(4));
-      summary.totalNet += Number((component.quantidadeLimpa ?? component.quantidadeBruta).toFixed(4));
+      summary.totalGross += Number(component.vl_qtd_bruta.toFixed(4));
+      summary.totalNet += Number((component.vl_qtd_limpa ?? component.vl_qtd_bruta).toFixed(4));
       return summary;
     },
     { totalGross: 0, totalNet: 0 }
@@ -781,8 +781,8 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   const packagingCost = Number(costs.packaging ?? "0");
   const costWithoutPackaging = Math.max(totalCost - packagingCost, 0);
   const displayName = resolveFichaDisplayName({
-    displayName: record.nomeExibicao,
-    canonicalName: record.itemResultante.nome
+    displayName: record.nm_exibicao,
+    canonicalName: record.itemResultante.nm_item
   });
   const indicators = buildFichaIndicators({
     totalGross: componentMetrics.totalGross.toFixed(4),
@@ -791,32 +791,32 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   });
 
   return {
-    id: record.id,
-    itemId: record.itemResultanteId,
+    id: record.cd_ficha_tecnica,
+    itemId: record.cd_item_resultante,
     itemName: displayName,
-    canonicalItemName: record.itemResultante.nome,
-    itemType: record.itemResultante.tipoPrincipal,
-    groupOperational: record.itemResultante.categoriaOperacional ?? "Sem grupo",
+    canonicalItemName: record.itemResultante.nm_item,
+    itemType: record.itemResultante.tp_item,
+    groupOperational: record.itemResultante.nm_categoria_operacional ?? "Sem grupo",
     modality: {
-      id: record.modalidade?.id ?? "",
-      label: record.modalidade?.nome ?? "Sem modalidade"
+      id: record.modalidade?.cd_modalidade ?? "",
+      label: record.modalidade?.nm_modalidade ?? "Sem modalidade"
     },
-    version: record.versao,
-    status: record.status,
-    yieldMode: record.modoRendimento,
-    percentLoss: record.percentualPerda?.toFixed(4) ?? null,
-    finalWeight: record.pesoFinalInformado
-      ? denormalizeQuantityFromCanonical(record.pesoFinalInformado.toString(), usageUnit).toFixed(4)
+    version: record.nr_versao,
+    status: record.tp_status,
+    yieldMode: record.tp_modo_rendimento,
+    percentLoss: record.vl_pct_perda?.toFixed(4) ?? null,
+    finalWeight: record.vl_peso_final
+      ? denormalizeQuantityFromCanonical(record.vl_peso_final.toString(), usageUnit).toFixed(4)
       : null,
-    portions: record.rendimentoPorcoes?.toFixed(4) ?? null,
-    preparationMode: record.modoPreparo ?? "",
-    notes: record.observacoes ?? "",
-    createdAt: record.criadaEm.toISOString(),
-    updatedAt: record.atualizadaEm.toISOString(),
-    createdAtLabel: formatDateTimeLabel(record.criadaEm),
-    updatedAtLabel: formatDateTimeLabel(record.atualizadaEm),
+    portions: record.vl_rendimento_porcoes?.toFixed(4) ?? null,
+    preparationMode: record.ds_modo_preparo ?? "",
+    notes: record.ds_observacoes ?? "",
+    createdAt: record.ts_criacao.toISOString(),
+    updatedAt: record.ts_atualizacao.toISOString(),
+    createdAtLabel: formatDateTimeLabel(record.ts_criacao),
+    updatedAtLabel: formatDateTimeLabel(record.ts_atualizacao),
     usageUnit,
-    yieldUnitCode: record.unidadeRendimento?.codigo ?? usageUnit,
+    yieldUnitCode: record.unidadeRendimento?.ds_codigo ?? usageUnit,
     stages,
     components: flattenedComponents,
     expandedRows: mapExpandedRows(record),
@@ -832,10 +832,10 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
         finalOutput > 0 ? (costWithoutPackaging / finalOutput).toFixed(4) : null,
       cmvPerKg: costs.perKg,
       costReal: (totalCost + packagingCost).toFixed(4),
-      lastCalculatedAt: record.execucoesCalculo[0]?.criadoEm.toISOString() ?? record.atualizadaEm.toISOString()
+      lastCalculatedAt: record.execucoesCalculo[0]?.ts_criacao.toISOString() ?? record.ts_atualizacao.toISOString()
     },
     sheetSummary: buildCommercialSummary({
-      itemType: record.itemResultante.tipoPrincipal,
+      itemType: record.itemResultante.tp_item,
       totalGross: componentMetrics.totalGross.toFixed(4),
       totalNet: componentMetrics.totalNet.toFixed(4),
       postCookingWeight: costs.finalOutput,
@@ -846,9 +846,9 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
         finalOutput > 0 ? (costWithoutPackaging / finalOutput).toFixed(4) : null,
       cmvPerKg: costs.perKg,
       packagingCost: costs.packaging,
-      salePrice: record.precoVenda?.toFixed(4) ?? null,
-      variableExpensePercent: record.despesaVariavelPercentual?.toFixed(4) ?? null,
-      preparationModePreview: record.modoPreparo ?? ""
+      salePrice: record.vl_preco_venda?.toFixed(4) ?? null,
+      variableExpensePercent: record.vl_pct_despesa_variavel?.toFixed(4) ?? null,
+      preparationModePreview: record.ds_modo_preparo ?? ""
     })
   };
 }
@@ -864,26 +864,26 @@ async function listFichasWithPrisma(input: ListFichasInput) {
   const query = input.query.trim();
   const typedQuery =
     query && ["insumo", "pre_preparo", "intermediario", "produto_pronto", "prato", "porcao", "marmita", "combo", "embalagem", "apoio"].includes(query)
-      ? (query as ItemType)
+      ? (query as item_type)
       : null;
   const where: Prisma.FichaTecnicaWhereInput = {
     AND: [
-      input.status && input.status !== "all" ? { status: input.status } : {},
+      input.status && input.status !== "all" ? { tp_status: input.status } : {},
       query
         ? {
             OR: [
               {
                 itemResultante: {
-                  nome: { contains: query, mode: "insensitive" }
+                  nm_item: { contains: query, mode: "insensitive" }
                 }
               },
               {
-                nomeExibicao: { contains: query, mode: "insensitive" }
+                nm_exibicao: { contains: query, mode: "insensitive" }
               },
               ...(typedQuery
                 ? [{
                 itemResultante: {
-                  tipoPrincipal: {
+                  tp_item: {
                     equals: typedQuery
                   }
                 }
@@ -900,29 +900,29 @@ async function listFichasWithPrisma(input: ListFichasInput) {
       prisma.fichaTecnica.count({ where }),
       prisma.fichaTecnica.findMany({
         where,
-        orderBy: [{ atualizadaEm: "desc" }, { versao: "desc" }],
+        orderBy: [{ ts_atualizacao: "desc" }, { nr_versao: "desc" }],
         skip: (Math.max(input.page, 1) - 1) * input.pageSize,
         take: input.pageSize,
         include: {
           itemResultante: {
             include: {
               custosSnapshot: {
-                orderBy: { calculadoEm: "desc" },
+                orderBy: { ts_calculo: "desc" },
                 take: 1
               }
             }
           },
           modalidade: true,
           etapas: {
-            orderBy: { ordem: "asc" },
+            orderBy: { nr_ordem: "asc" },
             include: {
               componentes: {
-                orderBy: { ordem: "asc" },
+                orderBy: { nr_ordem: "asc" },
                 include: {
                   itemComponente: {
                     select: {
-                      nome: true,
-                      tipoPrincipal: true,
+                      nm_item: true,
+                      tp_item: true,
                       unidadeUsoPadrao: true
                     }
                   },
@@ -932,12 +932,12 @@ async function listFichasWithPrisma(input: ListFichasInput) {
             }
           },
           componentes: {
-            orderBy: { ordem: "asc" },
+            orderBy: { nr_ordem: "asc" },
             include: {
               itemComponente: {
                 select: {
-                  nome: true,
-                  tipoPrincipal: true,
+                  nm_item: true,
+                  tp_item: true,
                   unidadeUsoPadrao: true
                 }
               },
@@ -945,11 +945,11 @@ async function listFichasWithPrisma(input: ListFichasInput) {
             }
           },
           execucoesCalculo: {
-            orderBy: { criadoEm: "desc" },
+            orderBy: { ts_criacao: "desc" },
             take: 1,
             select: {
-              criadoEm: true,
-              metadadosJson: true
+              ts_criacao: true,
+              js_metadados: true
             }
           }
         }
@@ -996,7 +996,7 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
       const modality = await ensureModality(tx, input.modalityId);
       const item = await resolveCanonicalFichaItem(tx, input);
       const yieldUnit = await ensureUnit(tx, input.yieldUnitCode);
-      const resultUsageUnit = item.unidadeUsoPadrao?.codigo ?? "kg";
+      const resultUsageUnit = item.unidadeUsoPadrao?.ds_codigo ?? "kg";
       const normalizedFinalWeight =
         input.yieldMode === "peso_final" && input.finalWeight
           ? normalizeQuantityToCanonical(input.finalWeight, resultUsageUnit).toString()
@@ -1004,77 +1004,77 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
 
       await assertNoCyclesBeforeSaving(
         tx,
-        item.id,
+        item.cd_item,
         input.components.map((component) => component.itemId)
       );
 
       const existing = input.id
         ? await tx.fichaTecnica.findUnique({
-            where: { id: input.id }
+            where: { cd_ficha_tecnica: input.id }
           })
         : null;
 
       const highestVersion = await tx.fichaTecnica.aggregate({
-        where: { itemResultanteId: item.id },
-        _max: { versao: true }
+        where: { cd_item_resultante: item.cd_item },
+        _max: { nr_versao: true }
       });
 
       if (input.status === "ativa") {
         await tx.fichaTecnica.updateMany({
           where: {
-            itemResultanteId: item.id,
-            status: "ativa",
-            id: existing?.id ? { not: existing.id } : undefined
+            cd_item_resultante: item.cd_item,
+            tp_status: "ativa",
+            cd_ficha_tecnica: existing?.cd_ficha_tecnica ? { not: existing.cd_ficha_tecnica } : undefined
           },
           data: {
-            status: "inativa"
+            tp_status: "inativa"
           }
         });
       }
 
       const ficha = existing
         ? await tx.fichaTecnica.update({
-            where: { id: existing.id },
+            where: { cd_ficha_tecnica: existing.cd_ficha_tecnica },
             data: {
-              modalidadeId: modality.id,
-              nomeExibicao: input.displayName.trim(),
-              unidadeRendimentoId: yieldUnit.id,
-              status: input.status,
-              modoRendimento: input.yieldMode,
-              percentualPerda: input.yieldMode === "percentual_perda" ? input.percentLoss : null,
-              pesoFinalInformado: normalizedFinalWeight,
-              rendimentoPorcoes: input.portions,
-              precoVenda: input.salePrice || null,
-              despesaVariavelPercentual: input.variableExpensePercent || null,
-              modoPreparo: input.preparationMode,
-              observacoes: input.notes
+              cd_modalidade: modality.cd_modalidade,
+              nm_exibicao: input.displayName.trim(),
+              cd_unidade_rendimento: yieldUnit.cd_unidade_medida,
+              tp_status: input.status,
+              tp_modo_rendimento: input.yieldMode,
+              vl_pct_perda: input.yieldMode === "percentual_perda" ? input.percentLoss : null,
+              vl_peso_final: normalizedFinalWeight,
+              vl_rendimento_porcoes: input.portions,
+              vl_preco_venda: input.salePrice || null,
+              vl_pct_despesa_variavel: input.variableExpensePercent || null,
+              ds_modo_preparo: input.preparationMode,
+              ds_observacoes: input.notes
             }
           })
         : await tx.fichaTecnica.create({
             data: {
-              itemResultanteId: item.id,
-              modalidadeId: modality.id,
-              nomeExibicao: input.displayName.trim(),
-              unidadeRendimentoId: yieldUnit.id,
-              versao: (highestVersion._max.versao ?? 0) + 1,
-              status: input.status,
-              modoRendimento: input.yieldMode,
-              percentualPerda: input.yieldMode === "percentual_perda" ? input.percentLoss : null,
-              pesoFinalInformado: normalizedFinalWeight,
-              rendimentoPorcoes: input.portions,
-              precoVenda: input.salePrice || null,
-              despesaVariavelPercentual: input.variableExpensePercent || null,
-              modoPreparo: input.preparationMode,
-              observacoes: input.notes
+              cd_item_resultante: item.cd_item,
+              cd_modalidade: modality.cd_modalidade,
+              nm_exibicao: input.displayName.trim(),
+              cd_unidade_rendimento: yieldUnit.cd_unidade_medida,
+              nr_versao: (highestVersion._max.nr_versao ?? 0) + 1,
+              tp_status: input.status,
+              tp_modo_rendimento: input.yieldMode,
+              vl_pct_perda: input.yieldMode === "percentual_perda" ? input.percentLoss : null,
+              vl_peso_final: normalizedFinalWeight,
+              vl_rendimento_porcoes: input.portions,
+              vl_preco_venda: input.salePrice || null,
+              vl_pct_despesa_variavel: input.variableExpensePercent || null,
+              ds_modo_preparo: input.preparationMode,
+              ds_observacoes: input.notes
             }
           });
 
       await tx.fichaEtapa.deleteMany({
-        where: { fichaTecnicaId: ficha.id }
+        where: { cd_ficha_tecnica: ficha.cd_ficha_tecnica }
       });
 
       await tx.fichaComponente.deleteMany({
-        where: { fichaTecnicaId: ficha.id }
+        where: { cd_ficha_tecnica: ficha.cd_ficha_tecnica }
       });
 
       let componentOrder = 0;
@@ -1083,16 +1083,16 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
         const stageType = await ensureStageType(tx, stage);
         const createdStage = await tx.fichaEtapa.create({
           data: {
-            fichaTecnicaId: ficha.id,
-            tipoEtapaId: stageType?.id ?? null,
-            ordem: stageIndex + 1,
-            nome: normalizeStageName(stage.name, stageIndex + 1),
-            pesoEntrada: stage.items.reduce((sum, itemRow) => sum + Number(itemRow.quantityUsed || "0"), 0).toString(),
-            pesoSaida: stage.outputQuantity || null,
-            fatorCorrecao: stage.correctionFactor || null,
-            indiceCoccao: stage.cookingIndex || null,
-            valorTotalSnapshot: null,
-            observacao: stage.notes || null
+            cd_ficha_tecnica: ficha.cd_ficha_tecnica,
+            cd_tipo_etapa: stageType?.cd_tipo_etapa ?? null,
+            nr_ordem: stageIndex + 1,
+            nm_etapa: normalizeStageName(stage.name, stageIndex + 1),
+            vl_peso_entrada: stage.items.reduce((sum, itemRow) => sum + Number(itemRow.quantityUsed || "0"), 0).toString(),
+            vl_peso_saida: stage.outputQuantity || null,
+            vl_fator_correcao: stage.correctionFactor || null,
+            vl_indice_coccao: stage.cookingIndex || null,
+            vl_total_snapshot: null,
+            ds_observacao: stage.notes || null
           }
         });
 
@@ -1101,17 +1101,17 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
           componentOrder += 1;
           await tx.fichaComponente.create({
             data: {
-              fichaTecnicaId: ficha.id,
-              fichaEtapaId: createdStage.id,
-              itemComponenteId: itemRow.itemId,
-              tipoComponente: itemRow.componentType,
-              ordem: componentOrder,
-              quantidadeBruta: itemRow.quantityUsed,
-              quantidadeLimpa: itemRow.quantityUsed,
-              unidadeUsoId: usageUnit.id,
-              fatorCorrecao: stage.correctionFactor || null,
-              indiceCoccao: stage.cookingIndex || null,
-              observacao: itemRow.notes || null
+              cd_ficha_tecnica: ficha.cd_ficha_tecnica,
+              cd_ficha_etapa: createdStage.cd_ficha_etapa,
+              cd_item_componente: itemRow.itemId,
+              tp_componente: itemRow.componentType,
+              nr_ordem: componentOrder,
+              vl_qtd_bruta: itemRow.quantityUsed,
+              vl_qtd_limpa: itemRow.quantityUsed,
+              cd_unidade_uso: usageUnit.cd_unidade_medida,
+              vl_fator_correcao: stage.correctionFactor || null,
+              vl_indice_coccao: stage.cookingIndex || null,
+              ds_observacao: itemRow.notes || null
             }
           });
         }
@@ -1122,10 +1122,10 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
     });
 
     if (input.status === "ativa") {
-      await recalculateCascade(prisma, [ficha.itemResultanteId], "ficha.save.web");
+      await recalculateCascade(prisma, [ficha.cd_item_resultante], "ficha.save.web");
     }
 
-    return getFichaDetailWithPrisma(ficha.id);
+    return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica);
   } catch (error) {
     // Bug-fix 2026-04-21 (fichas-nova-server-error): previously a silent
     // `catch { return null }` here masked real Prisma errors (FK violations,
@@ -1156,26 +1156,26 @@ async function duplicateFichaWithPrisma(fichaId: string) {
       }
 
       const highestVersion = await tx.fichaTecnica.aggregate({
-        where: { itemResultanteId: source.itemResultanteId },
-        _max: { versao: true }
+        where: { cd_item_resultante: source.cd_item_resultante },
+        _max: { nr_versao: true }
       });
 
       const created = await tx.fichaTecnica.create({
         data: {
-          itemResultanteId: source.itemResultanteId,
-          nomeExibicao: source.nomeExibicao,
-          modalidadeId: source.modalidadeId,
-          unidadeRendimentoId: source.unidadeRendimentoId,
-          versao: (highestVersion._max.versao ?? 0) + 1,
-          status: "rascunho",
-          modoRendimento: source.modoRendimento,
-          percentualPerda: source.percentualPerda,
-          pesoFinalInformado: source.pesoFinalInformado,
-          rendimentoPorcoes: source.rendimentoPorcoes,
-          precoVenda: source.precoVenda,
-          despesaVariavelPercentual: source.despesaVariavelPercentual,
-          modoPreparo: source.modoPreparo,
-          observacoes: source.observacoes
+          cd_item_resultante: source.cd_item_resultante,
+          nm_exibicao: source.nm_exibicao,
+          cd_modalidade: source.cd_modalidade,
+          cd_unidade_rendimento: source.cd_unidade_rendimento,
+          nr_versao: (highestVersion._max.nr_versao ?? 0) + 1,
+          tp_status: "rascunho",
+          tp_modo_rendimento: source.tp_modo_rendimento,
+          vl_pct_perda: source.vl_pct_perda,
+          vl_peso_final: source.vl_peso_final,
+          vl_rendimento_porcoes: source.vl_rendimento_porcoes,
+          vl_preco_venda: source.vl_preco_venda,
+          vl_pct_despesa_variavel: source.vl_pct_despesa_variavel,
+          ds_modo_preparo: source.ds_modo_preparo,
+          ds_observacoes: source.ds_observacoes
         }
       });
 
@@ -1184,41 +1184,41 @@ async function duplicateFichaWithPrisma(fichaId: string) {
       for (const stage of source.etapas) {
         const createdStage = await tx.fichaEtapa.create({
           data: {
-            fichaTecnicaId: created.id,
-            tipoEtapaId: stage.tipoEtapaId,
-            ordem: stage.ordem,
-            nome: stage.nome,
-            pesoEntrada: stage.pesoEntrada,
-            pesoSaida: stage.pesoSaida,
-            fatorCorrecao: stage.fatorCorrecao,
-            indiceCoccao: stage.indiceCoccao,
-            valorTotalSnapshot: stage.valorTotalSnapshot,
-            observacao: stage.observacao
+            cd_ficha_tecnica: created.cd_ficha_tecnica,
+            cd_tipo_etapa: stage.cd_tipo_etapa,
+            nr_ordem: stage.nr_ordem,
+            nm_etapa: stage.nm_etapa,
+            vl_peso_entrada: stage.vl_peso_entrada,
+            vl_peso_saida: stage.vl_peso_saida,
+            vl_fator_correcao: stage.vl_fator_correcao,
+            vl_indice_coccao: stage.vl_indice_coccao,
+            vl_total_snapshot: stage.vl_total_snapshot,
+            ds_observacao: stage.ds_observacao
           }
         });
 
-        stageIdMap.set(stage.id, createdStage.id);
+        stageIdMap.set(stage.cd_ficha_etapa, createdStage.cd_ficha_etapa);
       }
 
       for (const component of source.componentes) {
         await tx.fichaComponente.create({
           data: {
-            fichaTecnicaId: created.id,
-            fichaEtapaId: component.fichaEtapaId ? stageIdMap.get(component.fichaEtapaId) ?? null : null,
-            itemComponenteId: component.itemComponenteId,
-            tipoComponente: component.tipoComponente,
-            ordem: component.ordem,
-            quantidadeBruta: component.quantidadeBruta,
-            quantidadeLimpa: component.quantidadeLimpa,
-            unidadeUsoId: component.unidadeUsoId,
-            fatorCorrecao: component.fatorCorrecao,
-            indiceCoccao: component.indiceCoccao,
-            observacao: component.observacao
+            cd_ficha_tecnica: created.cd_ficha_tecnica,
+            cd_ficha_etapa: component.cd_ficha_etapa ? stageIdMap.get(component.cd_ficha_etapa) ?? null : null,
+            cd_item_componente: component.cd_item_componente,
+            tp_componente: component.tp_componente,
+            nr_ordem: component.nr_ordem,
+            vl_qtd_bruta: component.vl_qtd_bruta,
+            vl_qtd_limpa: component.vl_qtd_limpa,
+            cd_unidade_uso: component.cd_unidade_uso,
+            vl_fator_correcao: component.vl_fator_correcao,
+            vl_indice_coccao: component.vl_indice_coccao,
+            ds_observacao: component.ds_observacao
           }
         });
       }
 
-      return created.id;
+      return created.cd_ficha_tecnica;
     });
 
     return getFichaDetailWithPrisma(duplicated);
@@ -1238,9 +1238,9 @@ async function inactivateFichaWithPrisma(fichaId: string) {
   try {
     const ficha = await prisma.$transaction(async (tx) => {
       const updated = await tx.fichaTecnica.update({
-        where: { id: fichaId },
+        where: { cd_ficha_tecnica: fichaId },
         data: {
-          status: "inativa"
+          tp_status: "inativa"
         }
       });
 
@@ -1248,8 +1248,8 @@ async function inactivateFichaWithPrisma(fichaId: string) {
       return updated;
     });
 
-    await recalculateCascade(prisma, [ficha.itemResultanteId], "ficha.inactivate.web");
-    return getFichaDetailWithPrisma(ficha.id);
+    await recalculateCascade(prisma, [ficha.cd_item_resultante], "ficha.inactivate.web");
+    return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica);
   } catch {
     return null;
   }
@@ -1265,27 +1265,27 @@ async function listCompositionRowsWithPrisma() {
 
   try {
     const fichas = await prisma.fichaTecnica.findMany({
-      orderBy: { atualizadaEm: "desc" },
+      orderBy: { ts_atualizacao: "desc" },
         include: {
           itemResultante: {
             include: {
               custosSnapshot: {
-                orderBy: { calculadoEm: "desc" },
+                orderBy: { ts_calculo: "desc" },
                 take: 1
               }
             }
           },
           modalidade: true,
           etapas: {
-            orderBy: { ordem: "asc" },
+            orderBy: { nr_ordem: "asc" },
             include: {
               componentes: {
-                orderBy: { ordem: "asc" },
+                orderBy: { nr_ordem: "asc" },
                 include: {
                   itemComponente: {
                     select: {
-                      nome: true,
-                      tipoPrincipal: true,
+                      nm_item: true,
+                      tp_item: true,
                       unidadeUsoPadrao: true
                     }
                   },
@@ -1295,12 +1295,12 @@ async function listCompositionRowsWithPrisma() {
             }
           },
           componentes: {
-            orderBy: { ordem: "asc" },
+            orderBy: { nr_ordem: "asc" },
           include: {
             itemComponente: {
               select: {
-                nome: true,
-                tipoPrincipal: true,
+                nm_item: true,
+                tp_item: true,
                 unidadeUsoPadrao: true
               }
             },
@@ -1308,11 +1308,11 @@ async function listCompositionRowsWithPrisma() {
           }
         },
         execucoesCalculo: {
-          orderBy: { criadoEm: "desc" },
+          orderBy: { ts_criacao: "desc" },
           take: 1,
           select: {
-            criadoEm: true,
-            metadadosJson: true
+            ts_criacao: true,
+            js_metadados: true
           }
         }
       }
@@ -1334,23 +1334,23 @@ async function listCostSummariesWithPrisma() {
 
   try {
     const fichas = await prisma.fichaTecnica.findMany({
-      orderBy: { atualizadaEm: "desc" },
+      orderBy: { ts_atualizacao: "desc" },
       include: {
         itemResultante: {
           include: {
             custosSnapshot: {
-              orderBy: { calculadoEm: "desc" },
+              orderBy: { ts_calculo: "desc" },
               take: 1
             }
           }
         },
         componentes: {
-          orderBy: { ordem: "asc" },
+          orderBy: { nr_ordem: "asc" },
           include: {
             itemComponente: {
               select: {
-                nome: true,
-                tipoPrincipal: true,
+                nm_item: true,
+                tp_item: true,
                 unidadeUsoPadrao: true
               }
             },
@@ -1358,11 +1358,11 @@ async function listCostSummariesWithPrisma() {
           }
         },
         execucoesCalculo: {
-          orderBy: { criadoEm: "desc" },
+          orderBy: { ts_criacao: "desc" },
           take: 1,
           select: {
-            criadoEm: true,
-            metadadosJson: true
+            ts_criacao: true,
+            js_metadados: true
           }
         }
       }
@@ -1401,28 +1401,28 @@ async function listAssemblyScenariosWithPrisma() {
     const fichas = await prisma.fichaTecnica.findMany({
       where: {
         itemResultante: {
-          tipoPrincipal: {
+          tp_item: {
             in: ["prato", "porcao", "marmita", "combo"]
           }
         }
       },
-      orderBy: { atualizadaEm: "desc" },
+      orderBy: { ts_atualizacao: "desc" },
       include: {
         itemResultante: {
           include: {
             custosSnapshot: {
-              orderBy: { calculadoEm: "desc" },
+              orderBy: { ts_calculo: "desc" },
               take: 1
             }
           }
         },
         componentes: {
-          orderBy: { ordem: "asc" },
+          orderBy: { nr_ordem: "asc" },
           include: {
             itemComponente: {
               select: {
-                nome: true,
-                tipoPrincipal: true,
+                nm_item: true,
+                tp_item: true,
                 unidadeUsoPadrao: true
               }
             },
@@ -1430,11 +1430,11 @@ async function listAssemblyScenariosWithPrisma() {
           }
         },
         execucoesCalculo: {
-          orderBy: { criadoEm: "desc" },
+          orderBy: { ts_criacao: "desc" },
           take: 1,
           select: {
-            criadoEm: true,
-            metadadosJson: true
+            ts_criacao: true,
+            js_metadados: true
           }
         }
       }
@@ -1622,14 +1622,14 @@ export function getEngineeringRepository() {
       if (prisma) {
         try {
           const rows = await prisma.modalidade.findMany({
-            where: { ativo: true },
-            orderBy: { nome: "asc" }
+            where: { sn_ativo: true },
+            orderBy: { nm_modalidade: "asc" }
           });
 
           if (rows.length > 0) {
             return rows.map((row) => ({
-              id: row.id,
-              label: row.nome
+              id: row.cd_modalidade,
+              label: row.nm_modalidade
             }));
           }
         } catch {

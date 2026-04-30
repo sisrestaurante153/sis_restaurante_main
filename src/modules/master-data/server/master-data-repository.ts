@@ -1,5 +1,5 @@
 import "server-only";
-import type { ItemType, UnidadeTipo, Prisma } from "@/generated/prisma/client";
+import type { item_type, unidade_tipo, Prisma } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import {
   createDemoId,
@@ -12,7 +12,7 @@ import {
 } from "@/modules/platform/server/demo-data";
 import { getServerEnv } from "@/modules/platform/server/env";
 
-const ITEM_TYPE_LABELS: Record<ItemType, string> = {
+const ITEM_TYPE_LABELS: Record<item_type, string> = {
   insumo: "Insumo",
   pre_preparo: "Pre-preparo",
   intermediario: "Intermediario",
@@ -25,7 +25,7 @@ const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   apoio: "Apoio"
 };
 
-const UNIT_TYPE_LABELS: Record<UnidadeTipo, string> = {
+const UNIT_TYPE_LABELS: Record<unidade_tipo, string> = {
   massa: "massa",
   volume: "volume",
   contagem: "contagem"
@@ -40,7 +40,7 @@ const DEFAULT_SUPPLIERS = [
   "Fornecedor Centro"
 ] as const;
 
-const DEFAULT_UNITS: Array<{ code: string; name: string; measureType: UnidadeTipo }> = [
+const DEFAULT_UNITS: Array<{ code: string; name: string; measureType: unidade_tipo }> = [
   { code: "kg", name: "Quilograma", measureType: "massa" },
   { code: "g", name: "Grama", measureType: "massa" },
   { code: "l", name: "Litro", measureType: "volume" },
@@ -76,7 +76,7 @@ const DEFAULT_STAGE_TYPES = [
   { code: "montagem", name: "Montagem" }
 ] as const;
 
-function toDemoMeasureType(value: UnidadeTipo): DemoUnit["measureType"] {
+function toDemoMeasureType(value: unidade_tipo): DemoUnit["measureType"] {
   return UNIT_TYPE_LABELS[value] as DemoUnit["measureType"];
 }
 
@@ -91,13 +91,13 @@ function sortByName<T extends { name: string }>(rows: T[]) {
 async function ensureItemTypeRegistry(tx: Prisma.TransactionClient) {
   for (const [code, name] of Object.entries(ITEM_TYPE_LABELS)) {
     await tx.tipoItemCadastro.upsert({
-      where: { codigo: code as ItemType },
+      where: { tp_codigo: code as item_type },
       update: {
-        nome: name
+        nm_tipo_item: name
       },
       create: {
-        codigo: code as ItemType,
-        nome: name
+        tp_codigo: code as item_type,
+        nm_tipo_item: name
       }
     });
   }
@@ -116,8 +116,8 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
   if (supplierCount === 0) {
     await tx.fornecedor.createMany({
       data: DEFAULT_SUPPLIERS.map((name) => ({
-        nome: name,
-        ativo: true
+        nm_fornecedor: name,
+        sn_ativo: true
       })),
       skipDuplicates: true
     });
@@ -126,10 +126,10 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
   if (unitCount === 0) {
     await tx.unidadeMedida.createMany({
       data: DEFAULT_UNITS.map((unit) => ({
-        codigo: unit.code,
-        nome: unit.name,
-        tipo: unit.measureType,
-        ativo: true
+        ds_codigo: unit.code,
+        nm_unidade: unit.name,
+        tp_unidade: unit.measureType,
+        sn_ativo: true
       })),
       skipDuplicates: true
     });
@@ -138,9 +138,9 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
   if (categoryCount === 0) {
     await tx.categoriaOperacional.createMany({
       data: DEFAULT_OPERATIONAL_CATEGORIES.map((name) => ({
-        codigo: toNormalizedName(name),
-        nome: name,
-        ativo: true
+        ds_codigo: toNormalizedName(name),
+        nm_categoria: name,
+        sn_ativo: true
       })),
       skipDuplicates: true
     });
@@ -149,9 +149,9 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
   if (modalityCount === 0) {
     await tx.modalidade.createMany({
       data: DEFAULT_MODALITIES.map((modality) => ({
-        codigo: modality.code,
-        nome: modality.name,
-        ativo: true
+        ds_codigo: modality.code,
+        nm_modalidade: modality.name,
+        sn_ativo: true
       })),
       skipDuplicates: true
     });
@@ -194,14 +194,14 @@ async function listItemTypesWithPrisma() {
     });
 
     const rows = await prisma.tipoItemCadastro.findMany({
-      orderBy: { nome: "asc" }
+      orderBy: { nm_tipo_item: "asc" }
     });
 
     return rows.map((row) => ({
-      id: row.id,
-      code: row.codigo,
-      name: row.nome,
-      active: row.ativo
+      id: row.cd_tipo_item,
+      code: row.tp_codigo,
+      name: row.nm_tipo_item,
+      active: row.sn_ativo
     }));
   } catch {
     return null;
@@ -220,14 +220,14 @@ async function listOperationalCategoriesWithPrisma() {
     });
 
     const rows = await prisma.categoriaOperacional.findMany({
-      orderBy: { nome: "asc" }
+      orderBy: { nm_categoria: "asc" }
     });
 
     return rows.map((row) => ({
-      id: row.id,
-      code: row.codigo,
-      name: row.nome,
-      active: row.ativo
+      id: row.cd_categoria,
+      code: row.ds_codigo,
+      name: row.nm_categoria,
+      active: row.sn_ativo
     }));
   } catch {
     return null;
@@ -246,13 +246,13 @@ async function listSuppliersWithPrisma() {
     });
 
     const rows = await prisma.fornecedor.findMany({
-      orderBy: { nome: "asc" }
+      orderBy: { nm_fornecedor: "asc" }
     });
 
     return rows.map((row) => ({
-      id: row.id,
-      name: row.nome,
-      active: row.ativo
+      id: row.cd_fornecedor,
+      name: row.nm_fornecedor,
+      active: row.sn_ativo
     }));
   } catch {
     return null;
@@ -271,15 +271,15 @@ async function listUnitsWithPrisma() {
     });
 
     const rows = await prisma.unidadeMedida.findMany({
-      orderBy: { codigo: "asc" }
+      orderBy: { ds_codigo: "asc" }
     });
 
     return rows.map((row) => ({
-      id: row.id,
-      code: row.codigo,
-      name: row.nome,
-      measureType: UNIT_TYPE_LABELS[row.tipo],
-      active: row.ativo
+      id: row.cd_unidade_medida,
+      code: row.ds_codigo,
+      name: row.nm_unidade,
+      measureType: UNIT_TYPE_LABELS[row.tp_unidade],
+      active: row.sn_ativo
     }));
   } catch {
     return null;
@@ -298,14 +298,14 @@ async function listModalitiesWithPrisma() {
     });
 
     const rows = await prisma.modalidade.findMany({
-      orderBy: { nome: "asc" }
+      orderBy: { nm_modalidade: "asc" }
     });
 
     return rows.map((row) => ({
-      id: row.id,
-      code: row.codigo,
-      name: row.nome,
-      active: row.ativo
+      id: row.cd_modalidade,
+      code: row.ds_codigo,
+      name: row.nm_modalidade,
+      active: row.sn_ativo
     }));
   } catch {
     return null;
@@ -457,18 +457,18 @@ export function getMasterDataRepository() {
         try {
           const record = input.id
             ? await prisma.categoriaOperacional.update({
-                where: { id: input.id },
-                data: { nome: name, codigo: code, ativo: input.active ?? true }
+                where: { cd_categoria: input.id },
+                data: { nm_categoria: name, ds_codigo: code, sn_ativo: input.active ?? true }
               })
             : await prisma.categoriaOperacional.create({
-                data: { nome: name, codigo: code, ativo: input.active ?? true }
+                data: { nm_categoria: name, ds_codigo: code, sn_ativo: input.active ?? true }
               });
 
           return {
-            id: record.id,
-            code: record.codigo,
-            name: record.nome,
-            active: record.ativo
+            id: record.cd_categoria,
+            code: record.ds_codigo,
+            name: record.nm_categoria,
+            active: record.sn_ativo
           };
         } catch {
           // fall back to demo storage
@@ -505,7 +505,7 @@ export function getMasterDataRepository() {
       if (prisma) {
         try {
           const linked = await prisma.itemCompra.count({
-            where: { fornecedorId: id }
+            where: { cd_fornecedor: id }
           });
 
           if (linked > 0) {
@@ -515,7 +515,7 @@ export function getMasterDataRepository() {
             };
           }
 
-          await prisma.fornecedor.delete({ where: { id } });
+          await prisma.fornecedor.delete({ where: { cd_fornecedor: id } });
           return { success: true as const };
         } catch {
           // fall back to demo storage
@@ -546,13 +546,13 @@ export function getMasterDataRepository() {
 
       if (prisma) {
         try {
-          const category = await prisma.categoriaOperacional.findUnique({ where: { id } });
+          const category = await prisma.categoriaOperacional.findUnique({ where: { cd_categoria: id } });
           if (!category) {
             return { success: false as const, reason: "Categoria nao encontrada." };
           }
 
           const linked = await prisma.item.count({
-            where: { categoriaOperacional: category.nome }
+            where: { nm_categoria_operacional: category.nm_categoria }
           });
 
           if (linked > 0) {
@@ -562,7 +562,7 @@ export function getMasterDataRepository() {
             };
           }
 
-          await prisma.categoriaOperacional.delete({ where: { id } });
+          await prisma.categoriaOperacional.delete({ where: { cd_categoria: id } });
           return { success: true as const };
         } catch {
           // fall back to demo storage
@@ -588,7 +588,7 @@ export function getMasterDataRepository() {
       return { success: true as const };
     },
 
-    async saveItemType(input: { id?: string; code: ItemType; name: string; active: boolean }) {
+    async saveItemType(input: { id?: string; code: item_type; name: string; active: boolean }) {
       const prisma = resolvePrisma();
 
       if (prisma) {
@@ -599,26 +599,26 @@ export function getMasterDataRepository() {
 
           const record = input.id
             ? await prisma.tipoItemCadastro.update({
-                where: { id: input.id },
+                where: { cd_tipo_item: input.id },
                 data: {
-                  codigo: input.code,
-                  nome: input.name.trim(),
-                  ativo: input.active
+                  tp_codigo: input.code,
+                  nm_tipo_item: input.name.trim(),
+                  sn_ativo: input.active
                 }
               })
             : await prisma.tipoItemCadastro.create({
                 data: {
-                  codigo: input.code,
-                  nome: input.name.trim(),
-                  ativo: input.active
+                  tp_codigo: input.code,
+                  nm_tipo_item: input.name.trim(),
+                  sn_ativo: input.active
                 }
               });
 
           return {
-            id: record.id,
-            code: record.codigo,
-            name: record.nome,
-            active: record.ativo
+            id: record.cd_tipo_item,
+            code: record.tp_codigo,
+            name: record.nm_tipo_item,
+            active: record.sn_ativo
           };
         } catch {
           // fall back to demo storage
@@ -732,23 +732,23 @@ export function getMasterDataRepository() {
         try {
           const record = input.id
             ? await prisma.fornecedor.update({
-                where: { id: input.id },
+                where: { cd_fornecedor: input.id },
                 data: {
-                  nome: name,
-                  ativo: input.active ?? true
+                  nm_fornecedor: name,
+                  sn_ativo: input.active ?? true
                 }
               })
             : await prisma.fornecedor.create({
                 data: {
-                  nome: name,
-                  ativo: input.active ?? true
+                  nm_fornecedor: name,
+                  sn_ativo: input.active ?? true
                 }
               });
 
           return {
-            id: record.id,
-            name: record.nome,
-            active: record.ativo
+            id: record.cd_fornecedor,
+            name: record.nm_fornecedor,
+            active: record.sn_ativo
           };
         } catch {
           // fall back to demo storage
@@ -777,7 +777,7 @@ export function getMasterDataRepository() {
       return created;
     },
 
-    async saveUnit(input: { id?: string; code: string; name: string; measureType: UnidadeTipo; active: boolean }) {
+    async saveUnit(input: { id?: string; code: string; name: string; measureType: unidade_tipo; active: boolean }) {
       const prisma = resolvePrisma();
       const code = input.code.trim().toLowerCase();
 
@@ -785,29 +785,29 @@ export function getMasterDataRepository() {
         try {
           const record = input.id
             ? await prisma.unidadeMedida.update({
-                where: { id: input.id },
+                where: { cd_unidade_medida: input.id },
                 data: {
-                  codigo: code,
-                  nome: input.name.trim(),
-                  tipo: input.measureType,
-                  ativo: input.active
+                  ds_codigo: code,
+                  nm_unidade: input.name.trim(),
+                  tp_unidade: input.measureType,
+                  sn_ativo: input.active
                 }
               })
             : await prisma.unidadeMedida.create({
                 data: {
-                  codigo: code,
-                  nome: input.name.trim(),
-                  tipo: input.measureType,
-                  ativo: input.active
+                  ds_codigo: code,
+                  nm_unidade: input.name.trim(),
+                  tp_unidade: input.measureType,
+                  sn_ativo: input.active
                 }
               });
 
           return {
-            id: record.id,
-            code: record.codigo,
-            name: record.nome,
-            measureType: UNIT_TYPE_LABELS[record.tipo],
-            active: record.ativo
+            id: record.cd_unidade_medida,
+            code: record.ds_codigo,
+            name: record.nm_unidade,
+            measureType: UNIT_TYPE_LABELS[record.tp_unidade],
+            active: record.sn_ativo
           };
         } catch {
           // fall back to demo storage
@@ -846,16 +846,16 @@ export function getMasterDataRepository() {
       if (prisma) {
         try {
           const linkedCounts = await prisma.$transaction(async (tx) => {
-            const unit = await tx.unidadeMedida.findUnique({ where: { id } });
+            const unit = await tx.unidadeMedida.findUnique({ where: { cd_unidade_medida: id } });
             if (!unit) {
               return null;
             }
 
             const [itemUsage, itemStock, purchases, components] = await Promise.all([
-              tx.item.count({ where: { unidadeUsoPadraoId: id } }),
-              tx.item.count({ where: { unidadeEstoqueId: id } }),
-              tx.itemCompra.count({ where: { unidadeCompraId: id } }),
-              tx.fichaComponente.count({ where: { unidadeUsoId: id } })
+              tx.item.count({ where: { cd_unidade_uso_padrao: id } }),
+              tx.item.count({ where: { cd_unidade_estoque: id } }),
+              tx.itemCompra.count({ where: { cd_unidade_compra: id } }),
+              tx.fichaComponente.count({ where: { cd_unidade_uso: id } })
             ]);
 
             return { itemUsage, itemStock, purchases, components };
@@ -872,7 +872,7 @@ export function getMasterDataRepository() {
             };
           }
 
-          await prisma.unidadeMedida.delete({ where: { id } });
+          await prisma.unidadeMedida.delete({ where: { cd_unidade_medida: id } });
           return { success: true as const };
         } catch {
           // fall back to demo storage
@@ -909,26 +909,26 @@ export function getMasterDataRepository() {
         try {
           const record = input.id
             ? await prisma.modalidade.update({
-                where: { id: input.id },
+                where: { cd_modalidade: input.id },
                 data: {
-                  codigo: code,
-                  nome: input.name.trim(),
-                  ativo: input.active
+                  ds_codigo: code,
+                  nm_modalidade: input.name.trim(),
+                  sn_ativo: input.active
                 }
               })
             : await prisma.modalidade.create({
                 data: {
-                  codigo: code,
-                  nome: input.name.trim(),
-                  ativo: input.active
+                  ds_codigo: code,
+                  nm_modalidade: input.name.trim(),
+                  sn_ativo: input.active
                 }
               });
 
           return {
-            id: record.id,
-            code: record.codigo,
-            name: record.nome,
-            active: record.ativo
+            id: record.cd_modalidade,
+            code: record.ds_codigo,
+            name: record.nm_modalidade,
+            active: record.sn_ativo
           };
         } catch {
           // fall back to demo storage
@@ -975,7 +975,7 @@ export function getMasterDataRepository() {
       if (prisma) {
         try {
           const linked = await prisma.fichaTecnica.count({
-            where: { modalidadeId: id }
+            where: { cd_modalidade: id }
           });
 
           if (linked > 0) {
@@ -985,7 +985,7 @@ export function getMasterDataRepository() {
             };
           }
 
-          await prisma.modalidade.delete({ where: { id } });
+          await prisma.modalidade.delete({ where: { cd_modalidade: id } });
           return { success: true as const };
         } catch {
           // fall back to demo storage
@@ -1011,13 +1011,13 @@ export function getMasterDataRepository() {
 
       if (prisma) {
         try {
-          const itemType = await prisma.tipoItemCadastro.findUnique({ where: { id } });
+          const itemType = await prisma.tipoItemCadastro.findUnique({ where: { cd_tipo_item: id } });
           if (!itemType) {
             return { success: false as const, reason: "Tipo nao encontrado." };
           }
 
           const linked = await prisma.item.count({
-            where: { tipoPrincipal: itemType.codigo }
+            where: { tp_item: itemType.tp_codigo }
           });
 
           if (linked > 0) {
@@ -1027,7 +1027,7 @@ export function getMasterDataRepository() {
             };
           }
 
-          await prisma.tipoItemCadastro.delete({ where: { id } });
+          await prisma.tipoItemCadastro.delete({ where: { cd_tipo_item: id } });
           return { success: true as const };
         } catch {
           // fall back to demo storage

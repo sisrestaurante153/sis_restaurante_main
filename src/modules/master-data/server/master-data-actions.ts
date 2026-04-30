@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import type { ItemType, UnidadeTipo } from "@/generated/prisma/client";
+import type { item_type as ItemType, unidade_tipo as UnidadeTipo } from "@/generated/prisma/client";
 import { requirePermission } from "@/modules/access/server/authorization";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 

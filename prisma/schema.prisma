@@ -8,7 +8,525 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ItemType {
+model Item {
+  cd_item                  String @id @default(cuid())
+  ds_codigo_interno        String?                     @unique(map: "item_codigo_interno_key")
+  nm_item                  String
+  nm_normalizado           String                      @unique(map: "item_nome_normalizado_key")
+  ds_descricao             String?
+  nm_categoria_operacional String?
+  tp_item                  item_type
+  cd_unidade_estoque       String?
+  cd_unidade_uso_padrao    String?
+  sn_ativo                 Boolean                     @default(true)
+  ds_observacoes           String?
+  ts_criacao               DateTime                    @default(now()) @db.Timestamptz(6)
+  ts_atualizacao           DateTime                    @default(now()) @db.Timestamptz(6)
+  cd_restaurante           String?
+  componentesCalculados    CalculoComponenteSnapshot[]
+  execucoesGatilho         CalculoExecucao[]           @relation("CalculoExecucaoGatilho")
+  execucoesCalculo         CalculoExecucao[]           @relation("CalculoExecucaoItem")
+  conversoes               ConversaoUnidade[]
+  custosSnapshot           CustoSnapshotItem[]
+  dependenciasComoAscendente  DependenciaItem[]        @relation("DependenciaAscendente")
+  dependenciasComoDescendente DependenciaItem[]        @relation("DependenciaDescendente")
+  componentesUsados        FichaComponente[]
+  fichasResultantes        FichaTecnica[]
+  stagingRows              ImportacaoStaging[]
+  unidadeEstoque           UnidadeMedida?              @relation("ItemUnidadeEstoque", fields: [cd_unidade_estoque], references: [cd_unidade_medida], onUpdate: NoAction, map: "item_unidade_estoque_id_fkey")
+  unidadeUsoPadrao         UnidadeMedida?              @relation("ItemUnidadeUsoPadrao", fields: [cd_unidade_uso_padrao], references: [cd_unidade_medida], onUpdate: NoAction, map: "item_unidade_uso_padrao_id_fkey")
+  aliases                  ItemAlias[]
+  compras                  ItemCompra[]
+
+  @@index([tp_item], map: "idx_item_tipo")
+  @@index([cd_unidade_estoque], map: "idx_item_unidade_estoque")
+  @@index([cd_unidade_uso_padrao], map: "idx_item_unidade_uso")
+  @@map("item")
+}
+
+model ItemAlias {
+  cd_alias             String @id @default(cuid())
+  cd_item              String
+  nm_alias             String
+  nm_alias_normalizado String
+  ds_origem            String
+  vl_confianca         Decimal?  @db.Decimal(5, 2)
+  cd_validador         String?
+  ts_validacao         DateTime? @db.Timestamptz(6)
+  ts_criacao           DateTime  @default(now()) @db.Timestamptz(6)
+  item                 Item      @relation(fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "item_alias_item_id_fkey")
+
+  @@unique([cd_item, nm_alias_normalizado], map: "item_alias_item_id_alias_normalizado_key")
+  @@index([nm_alias_normalizado], map: "idx_item_alias_norm")
+  @@map("item_alias")
+}
+
+model UnidadeMedida {
+  cd_unidade_medida           String @id @default(cuid())
+  ds_codigo                   String             @unique(map: "unidade_medida_codigo_key")
+  nm_unidade                  String
+  tp_unidade                  unidade_tipo
+  sn_ativo                    Boolean            @default(true)
+  ts_criacao                  DateTime           @default(now()) @db.Timestamptz(6)
+  ts_atualizacao              DateTime           @default(now()) @db.Timestamptz(6)
+  conversoesDestino           ConversaoUnidade[] @relation("ConversaoDestino")
+  conversoesOrigem            ConversaoUnidade[] @relation("ConversaoOrigem")
+  componentes                 FichaComponente[]
+  fichasComoUnidadeRendimento FichaTecnica[]
+  itensComoUnidadeEstoque     Item[]             @relation("ItemUnidadeEstoque")
+  itensComoUnidadeUsoPadrao   Item[]             @relation("ItemUnidadeUsoPadrao")
+  itensCompraUnidadeCompra    ItemCompra[]       @relation("ItemCompraUnidadeCompra")
+  itensCompraUnidadeUso       ItemCompra[]       @relation("ItemCompraUnidadeUso")
+
+  @@map("unidade_medida")
+}
+
+model ConversaoUnidade {
+  cd_conversao       String @id @default(cuid())
+  cd_item            String?
+  cd_unidade_origem  String
+  cd_unidade_destino String
+  vl_fator           Decimal       @db.Decimal(18, 6)
+  ds_observacao      String?
+  ds_origem          String?
+  ts_criacao         DateTime      @default(now()) @db.Timestamptz(6)
+  item               Item?         @relation(fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "conversao_unidade_item_id_fkey")
+  unidadeDestino     UnidadeMedida @relation("ConversaoDestino", fields: [cd_unidade_destino], references: [cd_unidade_medida], onUpdate: NoAction, map: "conversao_unidade_unidade_destino_id_fkey")
+  unidadeOrigem      UnidadeMedida @relation("ConversaoOrigem", fields: [cd_unidade_origem], references: [cd_unidade_medida], onUpdate: NoAction, map: "conversao_unidade_unidade_origem_id_fkey")
+
+  @@unique([cd_item, cd_unidade_origem, cd_unidade_destino], map: "conversao_unidade_item_id_unidade_origem_id_unidade_destino_key")
+  @@index([cd_unidade_origem, cd_unidade_destino], map: "idx_conversao_unidades")
+  @@map("conversao_unidade")
+}
+
+model Fornecedor {
+  cd_fornecedor  String @id @default(cuid())
+  nm_fornecedor  String       @unique(map: "fornecedor_nome_key")
+  ds_contato     String?
+  sn_ativo       Boolean      @default(true)
+  ts_criacao     DateTime     @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime     @default(now()) @db.Timestamptz(6)
+  compras        ItemCompra[]
+
+  @@map("fornecedor")
+}
+
+model TipoItemCadastro {
+  cd_tipo_item   String @id @default(cuid())
+  tp_codigo      item_type @unique(map: "tipo_item_cadastro_codigo_key")
+  nm_tipo_item   String
+  sn_ativo       Boolean   @default(true)
+  ts_criacao     DateTime  @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("tipo_item_cadastro")
+}
+
+model CategoriaOperacional {
+  cd_categoria   String @id @default(cuid())
+  ds_codigo      String   @unique(map: "categoria_operacional_codigo_key")
+  nm_categoria   String   @unique(map: "categoria_operacional_nome_key")
+  sn_ativo       Boolean  @default(true)
+  ts_criacao     DateTime @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("categoria_operacional")
+}
+
+model Modalidade {
+  cd_modalidade  String @id @default(cuid())
+  ds_codigo      String         @unique(map: "modalidade_codigo_key")
+  nm_modalidade  String         @unique(map: "modalidade_nome_key")
+  sn_ativo       Boolean        @default(true)
+  ts_criacao     DateTime       @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime       @default(now()) @db.Timestamptz(6)
+  fichas         FichaTecnica[]
+
+  @@map("modalidade")
+}
+
+model TipoEtapa {
+  cd_tipo_etapa  String @id @default(cuid())
+  ds_codigo      String       @unique(map: "tipo_etapa_codigo_key")
+  nm_tipo_etapa  String
+  sn_ativo       Boolean      @default(true)
+  ts_criacao     DateTime     @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime     @default(now()) @db.Timestamptz(6)
+  etapas         FichaEtapa[]
+
+  @@map("tipo_etapa")
+}
+
+model ItemCompra {
+  cd_item_compra         String @id @default(cuid())
+  cd_item                String
+  cd_fornecedor          String
+  cd_unidade_compra      String
+  cd_unidade_uso         String?
+  sn_principal           Boolean        @default(false)
+  vl_qtd_embalagem       Decimal        @db.Decimal(18, 4)
+  vl_qtd_uso             Decimal?       @db.Decimal(18, 4)
+  vl_custo_compra        Decimal        @db.Decimal(18, 4)
+  vl_custo_unitario_base Decimal        @db.Decimal(18, 6)
+  ts_atualizacao_preco   DateTime?      @db.Timestamptz(6)
+  ds_observacao          String?
+  ts_criacao             DateTime       @default(now()) @db.Timestamptz(6)
+  ts_atualizacao         DateTime       @default(now()) @db.Timestamptz(6)
+  fornecedor             Fornecedor     @relation(fields: [cd_fornecedor], references: [cd_fornecedor], onUpdate: NoAction, map: "item_compra_fornecedor_id_fkey")
+  item                   Item           @relation(fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "item_compra_item_id_fkey")
+  unidadeCompra          UnidadeMedida  @relation("ItemCompraUnidadeCompra", fields: [cd_unidade_compra], references: [cd_unidade_medida], onUpdate: NoAction, map: "item_compra_unidade_compra_id_fkey")
+  unidadeUso             UnidadeMedida? @relation("ItemCompraUnidadeUso", fields: [cd_unidade_uso], references: [cd_unidade_medida], onUpdate: NoAction, map: "item_compra_unidade_uso_id_fkey")
+
+  @@unique([cd_item, cd_fornecedor, cd_unidade_compra], map: "item_compra_item_id_fornecedor_id_unidade_compra_id_key")
+  @@index([cd_fornecedor], map: "idx_item_compra_fornecedor")
+  @@index([cd_unidade_uso], map: "idx_item_compra_unidade_uso")
+  @@map("item_compra")
+}
+
+model FichaTecnica {
+  cd_ficha_tecnica        String @id @default(cuid())
+  cd_item_resultante      String
+  nm_exibicao             String?
+  cd_modalidade           String?
+  cd_unidade_rendimento   String?
+  nr_versao               Int
+  tp_status               ficha_status
+  tp_modo_rendimento      modo_rendimento
+  vl_pct_perda            Decimal?            @db.Decimal(7, 4)
+  vl_peso_final           Decimal?            @db.Decimal(18, 4)
+  vl_rendimento_porcoes   Decimal?            @db.Decimal(18, 4)
+  vl_preco_venda          Decimal?            @db.Decimal(18, 4)
+  vl_pct_despesa_variavel Decimal?            @db.Decimal(7, 4)
+  ds_modo_preparo         String?
+  ds_observacoes          String?
+  cd_criador              String?
+  ts_criacao              DateTime            @default(now()) @db.Timestamptz(6)
+  ts_atualizacao          DateTime            @default(now()) @db.Timestamptz(6)
+  cd_restaurante          String?
+  execucoesCalculo        CalculoExecucao[]
+  componentes             FichaComponente[]
+  etapas                  FichaEtapa[]
+  criadaPor               User?               @relation(fields: [cd_criador], references: [cd_usuario], onUpdate: NoAction, map: "ficha_tecnica_criada_por_id_fkey")
+  itemResultante          Item                @relation(fields: [cd_item_resultante], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "ficha_tecnica_item_resultante_id_fkey")
+  modalidade              Modalidade?         @relation(fields: [cd_modalidade], references: [cd_modalidade], onUpdate: NoAction, map: "ficha_tecnica_modalidade_id_fkey")
+  unidadeRendimento       UnidadeMedida?      @relation(fields: [cd_unidade_rendimento], references: [cd_unidade_medida], onUpdate: NoAction, map: "ficha_tecnica_unidade_rendimento_id_fkey")
+  stagingRows             ImportacaoStaging[]
+
+  @@unique([cd_item_resultante, nr_versao], map: "ficha_tecnica_item_resultante_id_versao_key")
+  @@index([cd_item_resultante, tp_status], map: "idx_ficha_tecnica_item_status")
+  @@index([cd_modalidade], map: "idx_ficha_tecnica_modalidade")
+  @@index([cd_unidade_rendimento], map: "idx_ficha_tecnica_rendimento")
+  @@map("ficha_tecnica")
+}
+
+model FichaEtapa {
+  cd_ficha_etapa    String @id @default(cuid())
+  cd_ficha_tecnica  String
+  cd_tipo_etapa     String?
+  nr_ordem          Int
+  nm_etapa          String
+  vl_peso_entrada   Decimal?          @db.Decimal(18, 4)
+  vl_peso_saida     Decimal?          @db.Decimal(18, 4)
+  vl_fator_correcao Decimal?          @db.Decimal(18, 6)
+  vl_indice_coccao  Decimal?          @db.Decimal(18, 6)
+  vl_total_snapshot Decimal?          @db.Decimal(18, 6)
+  ds_observacao     String?
+  ts_criacao        DateTime          @default(now()) @db.Timestamptz(6)
+  ts_atualizacao    DateTime          @default(now()) @db.Timestamptz(6)
+  componentes       FichaComponente[]
+  fichaTecnica      FichaTecnica      @relation(fields: [cd_ficha_tecnica], references: [cd_ficha_tecnica], onDelete: Cascade, onUpdate: NoAction, map: "ficha_etapa_ficha_tecnica_id_fkey")
+  tipoEtapa         TipoEtapa?        @relation(fields: [cd_tipo_etapa], references: [cd_tipo_etapa], onUpdate: NoAction, map: "ficha_etapa_tipo_etapa_id_fkey")
+
+  @@unique([cd_ficha_tecnica, nr_ordem], map: "ficha_etapa_ficha_tecnica_id_ordem_key")
+  @@index([cd_tipo_etapa], map: "idx_ficha_etapa_tipo")
+  @@map("ficha_etapa")
+}
+
+model FichaComponente {
+  cd_ficha_componente        String @id @default(cuid())
+  cd_ficha_tecnica           String
+  cd_ficha_etapa             String?
+  cd_item_componente         String
+  tp_componente              tipo_componente
+  nr_ordem                   Int
+  vl_qtd_bruta               Decimal                     @db.Decimal(18, 4)
+  vl_qtd_limpa               Decimal?                    @db.Decimal(18, 4)
+  cd_unidade_uso             String
+  vl_fator_correcao          Decimal?                    @db.Decimal(18, 6)
+  vl_indice_coccao           Decimal?                    @db.Decimal(18, 6)
+  vl_custo_unitario_snapshot Decimal?                    @db.Decimal(18, 6)
+  vl_custo_total_snapshot    Decimal?                    @db.Decimal(18, 6)
+  ds_observacao              String?
+  ts_criacao                 DateTime                    @default(now()) @db.Timestamptz(6)
+  ts_atualizacao             DateTime                    @default(now()) @db.Timestamptz(6)
+  snapshotsCalculo           CalculoComponenteSnapshot[]
+  fichaEtapa                 FichaEtapa?                 @relation(fields: [cd_ficha_etapa], references: [cd_ficha_etapa], onUpdate: NoAction, map: "ficha_componente_ficha_etapa_id_fkey")
+  fichaTecnica               FichaTecnica                @relation(fields: [cd_ficha_tecnica], references: [cd_ficha_tecnica], onDelete: Cascade, onUpdate: NoAction, map: "ficha_componente_ficha_tecnica_id_fkey")
+  itemComponente             Item                        @relation(fields: [cd_item_componente], references: [cd_item], onUpdate: NoAction, map: "ficha_componente_item_componente_id_fkey")
+  unidadeUso                 UnidadeMedida               @relation(fields: [cd_unidade_uso], references: [cd_unidade_medida], onUpdate: NoAction, map: "ficha_componente_unidade_uso_id_fkey")
+
+  @@unique([cd_ficha_tecnica, nr_ordem], map: "ficha_componente_ficha_tecnica_id_ordem_key")
+  @@index([cd_ficha_etapa], map: "idx_ficha_comp_etapa")
+  @@index([cd_item_componente], map: "idx_ficha_comp_item")
+  @@map("ficha_componente")
+}
+
+model CustoSnapshotItem {
+  cd_snapshot_custo   String @id @default(cuid())
+  cd_item             String
+  cd_calculo_execucao String?
+  vl_custo_unitario   Decimal          @db.Decimal(18, 6)
+  vl_custo_kg_uso     Decimal?         @db.Decimal(18, 6)
+  vl_custo_embalagem  Decimal?         @db.Decimal(18, 6)
+  vl_custo_total      Decimal          @db.Decimal(18, 6)
+  ts_calculo          DateTime         @default(now()) @db.Timestamptz(6)
+  ds_origem_recalculo String?
+  calculoExecucao     CalculoExecucao? @relation(fields: [cd_calculo_execucao], references: [cd_calculo], onUpdate: NoAction, map: "custo_snapshot_item_calculo_execucao_id_fkey")
+  item                Item             @relation(fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "custo_snapshot_item_item_id_fkey")
+
+  @@index([cd_calculo_execucao], map: "idx_custo_snap_calculo")
+  @@index([cd_item, ts_calculo], map: "idx_custo_snap_item")
+  @@map("custo_snapshot_item")
+}
+
+model DependenciaItem {
+  cd_dependencia      String @id @default(cuid())
+  cd_item_ascendente  String
+  cd_item_descendente String
+  nr_profundidade     Int
+  sn_relacao_direta   Boolean  @default(false)
+  ts_criacao          DateTime @default(now()) @db.Timestamptz(6)
+  itemAscendente      Item     @relation("DependenciaAscendente", fields: [cd_item_ascendente], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "dependencia_item_item_ascendente_id_fkey")
+  itemDescendente     Item     @relation("DependenciaDescendente", fields: [cd_item_descendente], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "dependencia_item_item_descendente_id_fkey")
+
+  @@unique([cd_item_ascendente, cd_item_descendente], map: "dependencia_item_item_ascendente_id_item_descendente_id_key")
+  @@index([cd_item_ascendente, nr_profundidade], map: "idx_dep_ascendente")
+  @@index([cd_item_descendente, nr_profundidade], map: "idx_dep_descendente")
+  @@map("dependencia_item")
+}
+
+model User {
+  cd_usuario             String @id @default(cuid())
+  nm_usuario             String
+  ds_email               String               @unique(map: "usuario_email_key")
+  ds_senha_hash          String?
+  sn_ativo               Boolean              @default(true)
+  ts_criacao             DateTime             @default(now()) @db.Timestamptz(6)
+  ts_atualizacao         DateTime             @default(now()) @db.Timestamptz(6)
+  cd_restaurante         String?
+  auditorias             Auditoria[]
+  fichasCriadas          FichaTecnica[]
+  importacoesSolicitadas ImportacaoExecucao[]
+  roles                  UserRole[]
+
+  @@map("usuario")
+}
+
+model Role {
+  cd_role        String @id @default(cuid())
+  ds_codigo      String           @unique(map: "role_codigo_key")
+  nm_role        String
+  ds_descricao   String?
+  ts_criacao     DateTime         @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime         @default(now()) @db.Timestamptz(6)
+  permissoes     RolePermission[]
+  usuarios       UserRole[]
+
+  @@map("role")
+}
+
+model Permission {
+  cd_permissao   String @id @default(cuid())
+  ds_codigo      String           @unique(map: "permissao_codigo_key")
+  nm_permissao   String
+  ds_descricao   String?
+  ts_criacao     DateTime         @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime         @default(now()) @db.Timestamptz(6)
+  roles          RolePermission[]
+
+  @@map("permissao")
+}
+
+model UserRole {
+  cd_usuario    String
+  cd_role       String
+  ts_atribuicao DateTime @default(now()) @db.Timestamptz(6)
+  role          Role     @relation(fields: [cd_role], references: [cd_role], onDelete: Cascade, onUpdate: NoAction, map: "usuario_role_role_id_fkey")
+  usuario       User     @relation(fields: [cd_usuario], references: [cd_usuario], onDelete: Cascade, onUpdate: NoAction, map: "usuario_role_user_id_fkey")
+
+  @@id([cd_usuario, cd_role])
+  @@map("usuario_role")
+}
+
+model RolePermission {
+  cd_role      String
+  cd_permissao String
+  ts_concessao DateTime   @default(now()) @db.Timestamptz(6)
+  permissao    Permission @relation(fields: [cd_permissao], references: [cd_permissao], onDelete: Cascade, onUpdate: NoAction, map: "role_permissao_permission_id_fkey")
+  role         Role       @relation(fields: [cd_role], references: [cd_role], onDelete: Cascade, onUpdate: NoAction, map: "role_permissao_role_id_fkey")
+
+  @@id([cd_role, cd_permissao])
+  @@map("role_permissao")
+}
+
+model Auditoria {
+  cd_auditoria String @id @default(cuid())
+  cd_usuario   String?
+  nm_entidade  String
+  cd_entidade  String
+  ds_acao      String
+  js_antes     Json?
+  js_depois    Json?
+  ts_criacao   DateTime @default(now()) @db.Timestamptz(6)
+  usuario      User?    @relation(fields: [cd_usuario], references: [cd_usuario], onUpdate: NoAction, map: "auditoria_usuario_id_fkey")
+
+  @@index([nm_entidade, cd_entidade], map: "idx_auditoria_entidade_id")
+  @@map("auditoria")
+}
+
+model ImportacaoExecucao {
+  cd_importacao        String @id @default(cuid())
+  ds_origem_arquivo    String
+  ds_caminho_arquivo   String?
+  ds_mime_type         String?
+  nr_tamanho_bytes     Int?
+  ds_hash              String?
+  tp_status            importacao_status    @default(pendente)
+  ds_estagio_atual     String               @default("aguardando_worker")
+  js_resumo            Json?
+  js_resumo_amigavel   Json?
+  js_detalhes_tecnicos Json?
+  js_artefatos         Json?
+  cd_solicitante       String?
+  ts_criacao           DateTime             @default(now()) @db.Timestamptz(6)
+  ts_inicio            DateTime?            @db.Timestamptz(6)
+  ts_fim               DateTime?            @db.Timestamptz(6)
+  cd_restaurante       String?
+  conflitos            ImportacaoConflito[]
+  solicitadoPor        User?                @relation(fields: [cd_solicitante], references: [cd_usuario], onUpdate: NoAction, map: "importacao_execucao_solicitado_por_id_fkey")
+  stagingRows          ImportacaoStaging[]
+
+  @@index([cd_solicitante], map: "idx_import_exec_solic")
+  @@index([tp_status, ts_criacao], map: "idx_import_exec_status")
+  @@map("importacao_execucao")
+}
+
+model ImportacaoStaging {
+  cd_staging             String @id @default(cuid())
+  cd_importacao_execucao String
+  nm_entidade            String
+  ds_chave_externa       String
+  nm_planilha            String?
+  nr_linha               Int?
+  js_payload             Json
+  tp_status              importacao_linha_status @default(pending)
+  cd_item                String?
+  cd_ficha_tecnica       String?
+  ts_criacao             DateTime                @default(now()) @db.Timestamptz(6)
+  ts_atualizacao         DateTime                @default(now()) @db.Timestamptz(6)
+  conflitos              ImportacaoConflito[]
+  execucao               ImportacaoExecucao      @relation(fields: [cd_importacao_execucao], references: [cd_importacao], onDelete: Cascade, onUpdate: NoAction, map: "importacao_staging_execucao_id_fkey")
+  fichaTecnica           FichaTecnica?           @relation(fields: [cd_ficha_tecnica], references: [cd_ficha_tecnica], onUpdate: NoAction, map: "importacao_staging_ficha_tecnica_id_fkey")
+  item                   Item?                   @relation(fields: [cd_item], references: [cd_item], onUpdate: NoAction, map: "importacao_staging_item_id_fkey")
+
+  @@unique([cd_importacao_execucao, nm_entidade, ds_chave_externa], map: "importacao_staging_execucao_id_entidade_chave_externa_key")
+  @@index([nm_planilha, nr_linha], map: "idx_import_stg_sheet")
+  @@index([tp_status], map: "idx_import_stg_status")
+  @@map("importacao_staging")
+}
+
+model ImportacaoConflito {
+  cd_conflito            String @id @default(cuid())
+  cd_importacao_execucao String
+  cd_staging             String?
+  tp_conflito            String
+  ds_nome_bruto          String?
+  nm_normalizado         String?
+  nm_planilha            String?
+  nr_linha               Int?
+  vl_confianca           Decimal?           @db.Decimal(5, 4)
+  js_detalhes            Json?
+  sn_resolvido           Boolean            @default(false)
+  ts_criacao             DateTime           @default(now()) @db.Timestamptz(6)
+  execucao               ImportacaoExecucao @relation(fields: [cd_importacao_execucao], references: [cd_importacao], onDelete: Cascade, onUpdate: NoAction, map: "importacao_conflito_execucao_id_fkey")
+  staging                ImportacaoStaging? @relation(fields: [cd_staging], references: [cd_staging], onUpdate: NoAction, map: "importacao_conflito_staging_id_fkey")
+
+  @@index([nm_planilha, nr_linha], map: "idx_import_conflito_sheet")
+  @@index([tp_conflito, sn_resolvido], map: "idx_import_conflito_tipo")
+  @@map("importacao_conflito")
+}
+
+model CalculoExecucao {
+  cd_calculo          String @id @default(cuid())
+  cd_item             String
+  cd_ficha_tecnica    String?
+  cd_item_gatilho     String?
+  ds_motivo           String
+  vl_custo_anterior   Decimal?                    @db.Decimal(18, 6)
+  vl_custo_novo       Decimal                     @db.Decimal(18, 6)
+  vl_qtd_saida        Decimal                     @db.Decimal(18, 6)
+  js_metadados        Json?
+  ts_criacao          DateTime                    @default(now()) @db.Timestamptz(6)
+  snapshotsComponente CalculoComponenteSnapshot[]
+  fichaTecnica        FichaTecnica?               @relation(fields: [cd_ficha_tecnica], references: [cd_ficha_tecnica], onUpdate: NoAction, map: "calculo_execucao_ficha_tecnica_id_fkey")
+  itemGatilho         Item?                       @relation("CalculoExecucaoGatilho", fields: [cd_item_gatilho], references: [cd_item], onUpdate: NoAction, map: "calculo_execucao_item_gatilho_id_fkey")
+  item                Item                        @relation("CalculoExecucaoItem", fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "calculo_execucao_item_id_fkey")
+  snapshotsCusto      CustoSnapshotItem[]
+
+  @@index([cd_item_gatilho], map: "idx_calc_exec_gatilho")
+  @@index([cd_item, ts_criacao], map: "idx_calc_exec_item")
+  @@map("calculo_execucao")
+}
+
+model CalculoComponenteSnapshot {
+  cd_snapshot_componente  String @id @default(cuid())
+  cd_calculo_execucao     String
+  cd_ficha_componente     String?
+  cd_item_componente      String
+  ds_caminho              String
+  nr_profundidade         Int
+  tp_componente           tipo_componente
+  vl_qtd_bruta            Decimal          @db.Decimal(18, 6)
+  vl_qtd_liquida          Decimal          @db.Decimal(18, 6)
+  vl_fator_correcao_equiv Decimal          @db.Decimal(18, 6)
+  vl_indice_coccao_equiv  Decimal?         @db.Decimal(18, 6)
+  vl_custo_direto         Decimal          @db.Decimal(18, 6)
+  vl_custo_herdado        Decimal          @db.Decimal(18, 6)
+  vl_custo_total          Decimal          @db.Decimal(18, 6)
+  vl_pct_impacto          Decimal?         @db.Decimal(18, 6)
+  ts_criacao              DateTime         @default(now()) @db.Timestamptz(6)
+  calculoExecucao         CalculoExecucao  @relation(fields: [cd_calculo_execucao], references: [cd_calculo], onDelete: Cascade, onUpdate: NoAction, map: "calculo_componente_snapshot_calculo_execucao_id_fkey")
+  fichaComponente         FichaComponente? @relation(fields: [cd_ficha_componente], references: [cd_ficha_componente], onUpdate: NoAction, map: "calculo_componente_snapshot_ficha_componente_id_fkey")
+  itemComponente          Item             @relation(fields: [cd_item_componente], references: [cd_item], onUpdate: NoAction, map: "calculo_componente_snapshot_item_componente_id_fkey")
+
+  @@index([cd_item_componente], map: "idx_calc_comp_snap_item")
+  @@index([cd_calculo_execucao, nr_profundidade], map: "idx_calc_comp_snap_prof")
+  @@map("calculo_componente_snapshot")
+}
+
+enum ficha_status {
+  rascunho
+  ativa
+  inativa
+  arquivada
+}
+
+enum importacao_linha_status {
+  pending
+  imported
+  conflict
+  skipped
+}
+
+enum importacao_status {
+  pendente
+  processando
+  concluida
+  concluida_com_conflitos
+  falha
+}
+
+enum item_type {
   insumo
   pre_preparo
   intermediario
@@ -21,533 +539,19 @@ enum ItemType {
   apoio
 }
 
-enum UnidadeTipo {
-  massa
-  volume
-  contagem
-}
-
-enum FichaStatus {
-  rascunho
-  ativa
-  inativa
-  arquivada
-}
-
-enum ModoRendimento {
+enum modo_rendimento {
   percentual_perda
   peso_final
 }
 
-enum TipoComponente {
+enum tipo_componente {
   ingrediente
   embalagem
   apoio
 }
 
-enum ImportacaoStatus {
-  pendente
-  processando
-  concluida
-  concluida_com_conflitos
-  falha
-}
-
-enum ImportacaoLinhaStatus {
-  pending
-  imported
-  conflict
-  skipped
-}
-
-model Item {
-  id                  String            @id @default(cuid())
-  codigoInterno       String?           @unique @map("codigo_interno")
-  nome                String
-  nomeNormalizado     String            @unique @map("nome_normalizado")
-  descricao           String?
-  categoriaOperacional String?          @map("categoria_operacional")
-  tipoPrincipal       ItemType          @map("tipo_principal")
-  unidadeEstoqueId    String?           @map("unidade_estoque_id")
-  unidadeUsoPadraoId  String?           @map("unidade_uso_padrao_id")
-  ativo               Boolean           @default(true)
-  observacoes         String?
-  criadoEm            DateTime          @default(now()) @map("criado_em")
-  atualizadoEm        DateTime          @updatedAt @map("atualizado_em")
-  unidadeEstoque      UnidadeMedida?    @relation("ItemUnidadeEstoque", fields: [unidadeEstoqueId], references: [id])
-  unidadeUsoPadrao    UnidadeMedida?    @relation("ItemUnidadeUsoPadrao", fields: [unidadeUsoPadraoId], references: [id])
-  aliases             ItemAlias[]
-  conversoes          ConversaoUnidade[]
-  compras             ItemCompra[]
-  fichasResultantes   FichaTecnica[]
-  componentesUsados   FichaComponente[]
-  custosSnapshot      CustoSnapshotItem[]
-  dependenciasComoAscendente DependenciaItem[] @relation("DependenciaAscendente")
-  dependenciasComoDescendente DependenciaItem[] @relation("DependenciaDescendente")
-  execucoesCalculo        CalculoExecucao[] @relation("CalculoExecucaoItem")
-  execucoesGatilho        CalculoExecucao[] @relation("CalculoExecucaoGatilho")
-  componentesCalculados   CalculoComponenteSnapshot[]
-  stagingRows         ImportacaoStaging[]
-
-  @@index([tipoPrincipal])
-  @@index([unidadeEstoqueId])
-  @@index([unidadeUsoPadraoId])
-  @@map("item")
-}
-
-model ItemAlias {
-  id              String    @id @default(cuid())
-  itemId          String    @map("item_id")
-  alias           String
-  aliasNormalizado String   @map("alias_normalizado")
-  origem          String
-  confianca       Decimal?  @db.Decimal(5, 2)
-  validadoPor     String?   @map("validado_por")
-  validadoEm      DateTime? @map("validado_em")
-  criadoEm        DateTime  @default(now()) @map("criado_em")
-  item            Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-  @@unique([itemId, aliasNormalizado])
-  @@index([aliasNormalizado])
-  @@map("item_alias")
-}
-
-model UnidadeMedida {
-  id                  String             @id @default(cuid())
-  codigo              String             @unique
-  nome                String
-  tipo                UnidadeTipo
-  ativo               Boolean            @default(true)
-  criadoEm            DateTime           @default(now()) @map("criado_em")
-  atualizadoEm        DateTime           @updatedAt @map("atualizado_em")
-  conversoesOrigem    ConversaoUnidade[] @relation("ConversaoOrigem")
-  conversoesDestino   ConversaoUnidade[] @relation("ConversaoDestino")
-  itensCompraUnidadeCompra ItemCompra[]  @relation("ItemCompraUnidadeCompra")
-  itensCompraUnidadeUso    ItemCompra[]  @relation("ItemCompraUnidadeUso")
-  componentes         FichaComponente[]
-  itensComoUnidadeEstoque Item[]         @relation("ItemUnidadeEstoque")
-  itensComoUnidadeUsoPadrao Item[]       @relation("ItemUnidadeUsoPadrao")
-  fichasComoUnidadeRendimento FichaTecnica[] @relation("FichaUnidadeRendimento")
-
-  @@map("unidade_medida")
-}
-
-model ConversaoUnidade {
-  id               String        @id @default(cuid())
-  itemId           String?       @map("item_id")
-  unidadeOrigemId  String        @map("unidade_origem_id")
-  unidadeDestinoId String        @map("unidade_destino_id")
-  fator            Decimal       @db.Decimal(18, 6)
-  observacao       String?
-  origem           String?
-  criadoEm         DateTime      @default(now()) @map("criado_em")
-  item             Item?         @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  unidadeOrigem    UnidadeMedida @relation("ConversaoOrigem", fields: [unidadeOrigemId], references: [id])
-  unidadeDestino   UnidadeMedida @relation("ConversaoDestino", fields: [unidadeDestinoId], references: [id])
-
-  @@unique([itemId, unidadeOrigemId, unidadeDestinoId])
-  @@index([unidadeOrigemId, unidadeDestinoId])
-  @@map("conversao_unidade")
-}
-
-model Fornecedor {
-  id           String       @id @default(cuid())
-  nome         String       @unique
-  contato      String?
-  ativo        Boolean      @default(true)
-  criadoEm     DateTime     @default(now()) @map("criado_em")
-  atualizadoEm DateTime     @updatedAt @map("atualizado_em")
-  compras      ItemCompra[]
-
-  @@map("fornecedor")
-}
-
-model TipoItemCadastro {
-  id           String    @id @default(cuid())
-  codigo       ItemType  @unique
-  nome         String
-  ativo        Boolean   @default(true)
-  criadoEm     DateTime  @default(now()) @map("criado_em")
-  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
-
-  @@map("tipo_item_cadastro")
-}
-
-model CategoriaOperacional {
-  id           String    @id @default(cuid())
-  codigo       String    @unique
-  nome         String    @unique
-  ativo        Boolean   @default(true)
-  criadoEm     DateTime  @default(now()) @map("criado_em")
-  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
-
-  @@map("categoria_operacional")
-}
-
-model Modalidade {
-  id           String         @id @default(cuid())
-  codigo       String         @unique
-  nome         String         @unique
-  ativo        Boolean        @default(true)
-  criadoEm     DateTime       @default(now()) @map("criado_em")
-  atualizadoEm DateTime       @updatedAt @map("atualizado_em")
-  fichas       FichaTecnica[]
-
-  @@map("modalidade")
-}
-
-model TipoEtapa {
-  id           String       @id @default(cuid())
-  codigo       String       @unique
-  nome         String
-  ativo        Boolean      @default(true)
-  criadoEm     DateTime     @default(now()) @map("criado_em")
-  atualizadoEm DateTime     @updatedAt @map("atualizado_em")
-  etapas       FichaEtapa[]
-
-  @@map("tipo_etapa")
-}
-
-model ItemCompra {
-  id                     String         @id @default(cuid())
-  itemId                 String         @map("item_id")
-  fornecedorId           String         @map("fornecedor_id")
-  unidadeCompraId        String         @map("unidade_compra_id")
-  unidadeUsoId           String?        @map("unidade_uso_id")
-  principal              Boolean        @default(false)
-  quantidadePorEmbalagem Decimal        @db.Decimal(18, 4) @map("quantidade_por_embalagem")
-  quantidadeUso          Decimal?       @db.Decimal(18, 4) @map("quantidade_uso")
-  custoCompra            Decimal        @db.Decimal(18, 4) @map("custo_compra")
-  custoUnitarioBase      Decimal        @db.Decimal(18, 6) @map("custo_unitario_base")
-  dataAtualizacaoPreco   DateTime?      @map("data_atualizacao_preco")
-  observacao             String?
-  criadoEm               DateTime       @default(now()) @map("criado_em")
-  atualizadoEm           DateTime       @updatedAt @map("atualizado_em")
-  item                   Item           @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  fornecedor             Fornecedor     @relation(fields: [fornecedorId], references: [id])
-  unidadeCompra          UnidadeMedida  @relation("ItemCompraUnidadeCompra", fields: [unidadeCompraId], references: [id])
-  unidadeUso             UnidadeMedida? @relation("ItemCompraUnidadeUso", fields: [unidadeUsoId], references: [id])
-
-  @@unique([itemId, fornecedorId, unidadeCompraId])
-  @@index([fornecedorId])
-  @@index([unidadeUsoId])
-  @@map("item_compra")
-}
-
-model FichaTecnica {
-  id                 String         @id @default(cuid())
-  itemResultanteId   String         @map("item_resultante_id")
-  nomeExibicao       String?        @map("nome_exibicao")
-  modalidadeId       String?        @map("modalidade_id")
-  unidadeRendimentoId String?       @map("unidade_rendimento_id")
-  versao             Int
-  status             FichaStatus
-  modoRendimento     ModoRendimento @map("modo_rendimento")
-  percentualPerda    Decimal?       @db.Decimal(7, 4) @map("percentual_perda")
-  pesoFinalInformado Decimal?       @db.Decimal(18, 4) @map("peso_final_informado")
-  rendimentoPorcoes  Decimal?       @db.Decimal(18, 4) @map("rendimento_porcoes")
-  precoVenda         Decimal?       @db.Decimal(18, 4) @map("preco_venda")
-  despesaVariavelPercentual Decimal? @db.Decimal(7, 4) @map("despesa_variavel_percentual")
-  modoPreparo        String?        @map("modo_preparo")
-  observacoes        String?
-  criadaPorId        String?        @map("criada_por_id")
-  criadaEm           DateTime       @default(now()) @map("criada_em")
-  atualizadaEm       DateTime       @updatedAt @map("atualizada_em")
-  itemResultante     Item           @relation(fields: [itemResultanteId], references: [id], onDelete: Cascade)
-  modalidade         Modalidade?    @relation(fields: [modalidadeId], references: [id], onDelete: SetNull)
-  unidadeRendimento  UnidadeMedida? @relation("FichaUnidadeRendimento", fields: [unidadeRendimentoId], references: [id], onDelete: SetNull)
-  criadaPor          User?          @relation(fields: [criadaPorId], references: [id])
-  componentes        FichaComponente[]
-  etapas             FichaEtapa[]
-  execucoesCalculo   CalculoExecucao[]
-  stagingRows        ImportacaoStaging[]
-
-  @@unique([itemResultanteId, versao])
-  @@index([itemResultanteId, status])
-  @@index([modalidadeId])
-  @@index([unidadeRendimentoId])
-  @@map("ficha_tecnica")
-}
-
-model FichaEtapa {
-  id                 String           @id @default(cuid())
-  fichaTecnicaId     String           @map("ficha_tecnica_id")
-  tipoEtapaId        String?          @map("tipo_etapa_id")
-  ordem              Int
-  nome               String
-  pesoEntrada        Decimal?         @db.Decimal(18, 4) @map("peso_entrada")
-  pesoSaida          Decimal?         @db.Decimal(18, 4) @map("peso_saida")
-  fatorCorrecao      Decimal?         @db.Decimal(18, 6) @map("fator_correcao")
-  indiceCoccao       Decimal?         @db.Decimal(18, 6) @map("indice_coccao")
-  valorTotalSnapshot Decimal?         @db.Decimal(18, 6) @map("valor_total_snapshot")
-  observacao         String?
-  criadoEm           DateTime         @default(now()) @map("criado_em")
-  atualizadoEm       DateTime         @updatedAt @map("atualizado_em")
-  fichaTecnica       FichaTecnica     @relation(fields: [fichaTecnicaId], references: [id], onDelete: Cascade)
-  tipoEtapa          TipoEtapa?       @relation(fields: [tipoEtapaId], references: [id], onDelete: SetNull)
-  componentes        FichaComponente[]
-
-  @@unique([fichaTecnicaId, ordem])
-  @@index([tipoEtapaId])
-  @@map("ficha_etapa")
-}
-
-model FichaComponente {
-  id                    String         @id @default(cuid())
-  fichaTecnicaId        String         @map("ficha_tecnica_id")
-  fichaEtapaId          String?        @map("ficha_etapa_id")
-  itemComponenteId      String         @map("item_componente_id")
-  tipoComponente        TipoComponente @map("tipo_componente")
-  ordem                 Int
-  quantidadeBruta       Decimal        @db.Decimal(18, 4) @map("quantidade_bruta")
-  quantidadeLimpa       Decimal?       @db.Decimal(18, 4) @map("quantidade_limpa")
-  unidadeUsoId          String         @map("unidade_uso_id")
-  fatorCorrecao         Decimal?       @db.Decimal(18, 6) @map("fator_correcao")
-  indiceCoccao          Decimal?       @db.Decimal(18, 6) @map("indice_coccao")
-  custoUnitarioSnapshot Decimal?       @db.Decimal(18, 6) @map("custo_unitario_snapshot")
-  custoTotalSnapshot    Decimal?       @db.Decimal(18, 6) @map("custo_total_snapshot")
-  observacao            String?
-  criadoEm              DateTime       @default(now()) @map("criado_em")
-  atualizadoEm          DateTime       @updatedAt @map("atualizado_em")
-  fichaTecnica          FichaTecnica   @relation(fields: [fichaTecnicaId], references: [id], onDelete: Cascade)
-  fichaEtapa            FichaEtapa?    @relation(fields: [fichaEtapaId], references: [id], onDelete: SetNull)
-  itemComponente        Item           @relation(fields: [itemComponenteId], references: [id], onDelete: Restrict)
-  unidadeUso            UnidadeMedida  @relation(fields: [unidadeUsoId], references: [id])
-  snapshotsCalculo      CalculoComponenteSnapshot[]
-
-  @@unique([fichaTecnicaId, ordem])
-  @@index([itemComponenteId])
-  @@index([fichaEtapaId])
-  @@map("ficha_componente")
-}
-
-model CustoSnapshotItem {
-  id                    String   @id @default(cuid())
-  itemId                String   @map("item_id")
-  calculoExecucaoId     String?  @map("calculo_execucao_id")
-  custoUnitarioAtual    Decimal  @db.Decimal(18, 6) @map("custo_unitario_atual")
-  custoPorKgOuUnidadeUso Decimal? @db.Decimal(18, 6) @map("custo_por_kg_ou_unidade_uso")
-  custoEmbalagemAtual   Decimal? @db.Decimal(18, 6) @map("custo_embalagem_atual")
-  custoTotalAtual       Decimal  @db.Decimal(18, 6) @map("custo_total_atual")
-  calculadoEm           DateTime @default(now()) @map("calculado_em")
-  origemRecalculo       String?  @map("origem_recalculo")
-  item                  Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  calculoExecucao       CalculoExecucao? @relation(fields: [calculoExecucaoId], references: [id], onDelete: SetNull)
-
-  @@index([itemId, calculadoEm])
-  @@index([calculoExecucaoId])
-  @@map("custo_snapshot_item")
-}
-
-model DependenciaItem {
-  id                String   @id @default(cuid())
-  itemAscendenteId  String   @map("item_ascendente_id")
-  itemDescendenteId String   @map("item_descendente_id")
-  profundidade      Int
-  relacaoDireta     Boolean  @default(false) @map("relacao_direta")
-  criadoEm          DateTime @default(now()) @map("criado_em")
-  itemAscendente    Item     @relation("DependenciaAscendente", fields: [itemAscendenteId], references: [id], onDelete: Cascade)
-  itemDescendente   Item     @relation("DependenciaDescendente", fields: [itemDescendenteId], references: [id], onDelete: Cascade)
-
-  @@unique([itemAscendenteId, itemDescendenteId])
-  @@index([itemDescendenteId, profundidade])
-  @@index([itemAscendenteId, profundidade])
-  @@map("dependencia_item")
-}
-
-model User {
-  id           String      @id @default(cuid())
-  nome         String
-  email        String      @unique
-  senhaHash    String?     @map("senha_hash")
-  ativo        Boolean     @default(true)
-  criadoEm     DateTime    @default(now()) @map("criado_em")
-  atualizadoEm DateTime    @updatedAt @map("atualizado_em")
-  fichasCriadas FichaTecnica[]
-  auditorias   Auditoria[]
-  importacoesSolicitadas ImportacaoExecucao[] @relation("ImportacaoSolicitadaPor")
-  roles        UserRole[]
-
-  @@map("usuario")
-}
-
-model Role {
-  id           String           @id @default(cuid())
-  codigo       String           @unique
-  nome         String
-  descricao    String?
-  criadaEm     DateTime         @default(now()) @map("criada_em")
-  atualizadaEm DateTime         @updatedAt @map("atualizada_em")
-  usuarios     UserRole[]
-  permissoes   RolePermission[]
-
-  @@map("role")
-}
-
-model Permission {
-  id           String           @id @default(cuid())
-  codigo       String           @unique
-  nome         String
-  descricao    String?
-  criadaEm     DateTime         @default(now()) @map("criada_em")
-  atualizadaEm DateTime         @updatedAt @map("atualizada_em")
-  roles        RolePermission[]
-
-  @@map("permissao")
-}
-
-model UserRole {
-  userId      String   @map("user_id")
-  roleId      String   @map("role_id")
-  atribuidaEm DateTime @default(now()) @map("atribuida_em")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role        Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@id([userId, roleId])
-  @@map("usuario_role")
-}
-
-model RolePermission {
-  roleId       String     @map("role_id")
-  permissionId String     @map("permission_id")
-  concedidaEm  DateTime   @default(now()) @map("concedida_em")
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@id([roleId, permissionId])
-  @@map("role_permissao")
-}
-
-model Auditoria {
-  id         String   @id @default(cuid())
-  usuarioId  String?  @map("usuario_id")
-  entidade   String
-  entidadeId String   @map("entidade_id")
-  acao       String
-  antesJson  Json?    @map("antes_json")
-  depoisJson Json?    @map("depois_json")
-  criadoEm   DateTime @default(now()) @map("criado_em")
-  usuario    User?    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
-
-  @@index([entidade, entidadeId])
-  @@map("auditoria")
-}
-
-model ImportacaoExecucao {
-  id                   String              @id @default(cuid())
-  origemArquivo        String              @map("origem_arquivo")
-  origemArquivoCaminho String?             @map("origem_arquivo_caminho")
-  mimeTypeArquivo      String?             @map("mime_type_arquivo")
-  tamanhoArquivoBytes  Int?                @map("tamanho_arquivo_bytes")
-  hashArquivo          String?             @map("hash_arquivo")
-  status               ImportacaoStatus    @default(pendente)
-  estagioAtual         String              @default("aguardando_worker") @map("estagio_atual")
-  resumoJson           Json?               @map("resumo_json")
-  resumoAmigavelJson   Json?               @map("resumo_amigavel_json")
-  detalhesTecnicosJson Json?               @map("detalhes_tecnicos_json")
-  artefatosJson        Json?               @map("artefatos_json")
-  solicitadoPorId      String?             @map("solicitado_por_id")
-  criadoEm             DateTime            @default(now()) @map("criado_em")
-  iniciadoEm           DateTime?           @map("iniciado_em")
-  finalizadoEm         DateTime?           @map("finalizado_em")
-  solicitadoPor        User?               @relation("ImportacaoSolicitadaPor", fields: [solicitadoPorId], references: [id], onDelete: SetNull)
-  stagingRows          ImportacaoStaging[]
-  conflitos            ImportacaoConflito[]
-
-  @@index([status, criadoEm])
-  @@index([solicitadoPorId])
-  @@map("importacao_execucao")
-}
-
-model ImportacaoStaging {
-  id             String               @id @default(cuid())
-  execucaoId     String               @map("execucao_id")
-  entidade       String
-  chaveExterna   String               @map("chave_externa")
-  sheetName      String?              @map("sheet_name")
-  rowNumber      Int?                 @map("row_number")
-  payloadJson    Json                 @map("payload_json")
-  status         ImportacaoLinhaStatus @default(pending)
-  itemId         String?              @map("item_id")
-  fichaTecnicaId String?              @map("ficha_tecnica_id")
-  criadoEm       DateTime             @default(now()) @map("criado_em")
-  atualizadoEm   DateTime             @updatedAt @map("atualizado_em")
-  execucao       ImportacaoExecucao   @relation(fields: [execucaoId], references: [id], onDelete: Cascade)
-  item           Item?                @relation(fields: [itemId], references: [id], onDelete: SetNull)
-  fichaTecnica   FichaTecnica?        @relation(fields: [fichaTecnicaId], references: [id], onDelete: SetNull)
-  conflitos      ImportacaoConflito[]
-
-  @@unique([execucaoId, entidade, chaveExterna])
-  @@index([sheetName, rowNumber])
-  @@index([status])
-  @@map("importacao_staging")
-}
-
-model ImportacaoConflito {
-  id             String             @id @default(cuid())
-  execucaoId     String             @map("execucao_id")
-  stagingId      String?            @map("staging_id")
-  tipo           String
-  rawName        String?            @map("raw_name")
-  normalizedName String?            @map("normalized_name")
-  sheetName      String?            @map("sheet_name")
-  rowNumber      Int?               @map("row_number")
-  confidence     Decimal?           @db.Decimal(5, 4)
-  detalhesJson   Json?              @map("detalhes_json")
-  resolvido      Boolean            @default(false)
-  criadoEm       DateTime           @default(now()) @map("criado_em")
-  execucao       ImportacaoExecucao @relation(fields: [execucaoId], references: [id], onDelete: Cascade)
-  staging        ImportacaoStaging? @relation(fields: [stagingId], references: [id], onDelete: SetNull)
-
-  @@index([tipo, resolvido])
-  @@index([sheetName, rowNumber])
-  @@map("importacao_conflito")
-}
-
-model CalculoExecucao {
-  id                String                     @id @default(cuid())
-  itemId            String                     @map("item_id")
-  fichaTecnicaId    String?                    @map("ficha_tecnica_id")
-  itemGatilhoId     String?                    @map("item_gatilho_id")
-  motivo            String
-  custoAnterior     Decimal?                   @db.Decimal(18, 6) @map("custo_anterior")
-  custoNovo         Decimal                    @db.Decimal(18, 6) @map("custo_novo")
-  quantidadeSaida   Decimal                    @db.Decimal(18, 6) @map("quantidade_saida")
-  metadadosJson     Json?                      @map("metadados_json")
-  criadoEm          DateTime                   @default(now()) @map("criado_em")
-  item              Item                       @relation("CalculoExecucaoItem", fields: [itemId], references: [id], onDelete: Cascade)
-  itemGatilho       Item?                      @relation("CalculoExecucaoGatilho", fields: [itemGatilhoId], references: [id], onDelete: SetNull)
-  fichaTecnica      FichaTecnica?              @relation(fields: [fichaTecnicaId], references: [id], onDelete: SetNull)
-  snapshotsCusto    CustoSnapshotItem[]
-  snapshotsComponente CalculoComponenteSnapshot[]
-
-  @@index([itemId, criadoEm])
-  @@index([itemGatilhoId])
-  @@map("calculo_execucao")
-}
-
-model CalculoComponenteSnapshot {
-  id                       String           @id @default(cuid())
-  calculoExecucaoId        String           @map("calculo_execucao_id")
-  fichaComponenteId        String?          @map("ficha_componente_id")
-  itemComponenteId         String           @map("item_componente_id")
-  caminho                  String
-  profundidade             Int
-  tipoComponente           TipoComponente   @map("tipo_componente")
-  quantidadeBruta          Decimal          @db.Decimal(18, 6) @map("quantidade_bruta")
-  quantidadeLiquida        Decimal          @db.Decimal(18, 6) @map("quantidade_liquida")
-  fatorCorrecaoEquivalente Decimal          @db.Decimal(18, 6) @map("fator_correcao_equivalente")
-  indiceCoccaoEquivalente  Decimal?         @db.Decimal(18, 6) @map("indice_coccao_equivalente")
-  custoDireto              Decimal          @db.Decimal(18, 6) @map("custo_direto")
-  custoHerdado             Decimal          @db.Decimal(18, 6) @map("custo_herdado")
-  custoTotal               Decimal          @db.Decimal(18, 6) @map("custo_total")
-  percentualImpacto        Decimal?         @db.Decimal(18, 6) @map("percentual_impacto")
-  criadoEm                 DateTime         @default(now()) @map("criado_em")
-  calculoExecucao          CalculoExecucao  @relation(fields: [calculoExecucaoId], references: [id], onDelete: Cascade)
-  itemComponente           Item             @relation(fields: [itemComponenteId], references: [id], onDelete: Restrict)
-  fichaComponente          FichaComponente? @relation(fields: [fichaComponenteId], references: [id], onDelete: SetNull)
-
-  @@index([calculoExecucaoId, profundidade])
-  @@index([itemComponenteId])
-  @@map("calculo_componente_snapshot")
+enum unidade_tipo {
+  massa
+  volume
+  contagem
 }

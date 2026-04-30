@@ -1,0 +1,253 @@
+
+> sis-restaurante@0.1.0 test:unit
+> vitest run src/tests/unit fichas-listing
+
+[1m[43m DEPRECATED [49m[22m [33m"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.[39m
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/felip/OneDrive/Área de Trabalho/projetos cliente/sis-restaurante[39m
+
+ [32m✓[39m src/tests/unit/dashboard-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 417[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders KPI cards, attention points and quick actions with the new labels [33m 415[2mms[22m[39m
+ [31m❯[39m src/tests/unit/engineering/fichas-listing.test.tsx [2m([22m[2m14 tests[22m[2m | [22m[31m10 failed[39m[2m)[22m[33m 523[2mms[22m[39m
+   [32m✓[39m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna code tem largura 60px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[32m 176[2mms[22m[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna itemName tem largura 170px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 32[2mms[22m[39m
+[31m     → column itemName width 0px diverges from HTML target 170px by more than 4px: expected 170 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna modalityLabel tem largura 100px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 29[2mms[22m[39m
+[31m     → column modalityLabel width 130px diverges from HTML target 100px by more than 4px: expected 30 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna groupOperational tem largura 100px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 36[2mms[22m[39m
+[31m     → column groupOperational width 170px diverges from HTML target 100px by more than 4px: expected 70 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna status tem largura 64px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 31[2mms[22m[39m
+[31m     → column status width 120px diverges from HTML target 64px by more than 4px: expected 56 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna componentCount tem largura 82px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 25[2mms[22m[39m
+[31m     → column componentCount width 130px diverges from HTML target 82px by more than 4px: expected 48 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna correctionFactor tem largura 60px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 30[2mms[22m[39m
+[31m     → column correctionFactor width 90px diverges from HTML target 60px by more than 4px: expected 30 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna cookingIndex tem largura 60px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 25[2mms[22m[39m
+[31m     → column cookingIndex width 90px diverges from HTML target 60px by more than 4px: expected 30 to be less than or equal to 4[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna totalCost tem largura 82px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 33[2mms[22m[39m
+[31m     → column totalCost width 130px diverges from HTML target 82px by more than 4px: expected 48 to be less than or equal to 4[39m
+   [32m✓[39m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna sellingPrice tem largura 80px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[32m 19[2mms[22m[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna updatedAt tem largura 110px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[39m[32m 25[2mms[22m[39m
+[31m     → column updatedAt width 160px diverges from HTML target 110px by more than 4px: expected 50 to be less than or equal to 4[39m
+   [32m✓[39m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna notes tem largura 38px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html[32m 17[2mms[22m[39m
+[31m   [31m×[31m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mitemName nao possui flex nem minWidth (largura fixa 170px conforme HTML linha 58)[39m[32m 23[2mms[22m[39m
+[31m     → expected '1.3' to be '' // Object.is equality[39m
+   [32m✓[39m Grade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mrenderiza as 12 colunas da grade de fichas[32m 21[2mms[22m[39m
+ [32m✓[39m src/tests/unit/costs-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 556[2mms[22m[39m
+   [33m[2m✓[22m[39m CostsPage[2m > [22mrenders searchable financial cards with cost breakdown and ficha links [33m 555[2mms[22m[39m
+ [32m✓[39m src/tests/unit/sidebar-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 813[2mms[22m[39m
+   [33m[2m✓[22m[39m SidebarNav[2m > [22mrenders grouped navigation sections with current route highlighted [33m 565[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1242[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsPage[2m > [22mrenders the expanded operational listing contract and wires navigation [33m 1241[2mms[22m[39m
+ [32m✓[39m src/tests/unit/fichas-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 727[2mms[22m[39m
+   [33m[2m✓[22m[39m FichasPage[2m > [22mrenders the expanded ficha listing contract with shared navigation [33m 725[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-listing.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 866[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsListingView[2m > [22mrenders exactly 15 column headers in the correct order [33m 423[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/TotaisIndicadores.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 711[2mms[22m[39m
+   [33m[2m✓[22m[39m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-03: referencePrice null renderiza "--", nunca "R$ NaN" [33m 312[2mms[22m[39m
+[90mstderr[2m | src/tests/unit/login-form.test.tsx[2m > [22m[2mLoginForm[2m > [22m[2muses the configured base path for the auth request
+[22m[39mNot implemented: navigation to another Document
+
+ [32m✓[39m src/tests/unit/engineering/FichaFlatGrid.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 824[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mGRID_TEMPLATE bate HTML: 22px 1fr 80px 60px 240px 90px 96px 28px [33m 413[2mms[22m[39m
+ [32m✓[39m src/tests/unit/login-form.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 862[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mfills seed credentials from chips and toggles password visibility [33m 592[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cadastros-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 659[2mms[22m[39m
+   [33m[2m✓[22m[39m CadastrosPage[2m > [22mrenders the master data workspace with all requested sections [33m 658[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-workspace.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 434[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportWorkspace[2m > [22mshows the selected workbook name before submitting the import [33m 433[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-api-paths.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 449[2mms[22m[39m
+   [33m[2m✓[22m[39m Import API paths[2m > [22mprefixes artifact downloads and dashboard polling with the configured base path [33m 448[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-pending-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 550[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPendingPage[2m > [22mrenders reconciliation grid, confidence indicator and resolution dialog [33m 548[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 547[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPage[2m > [22mrenders the protected import workspace with blocked upload, active execution and history [33m 546[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 949[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditPage[2m > [22mrenders filters and timeline entries for operational history [33m 948[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1122[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm[2m > [22mrenders the operational item contract (pos 08-04 identificacao enxuta) [33m 1120[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2374[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders the ficha workflow in four semantic sections with totals and finalization fields [33m 2050[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders commercial fallbacks instead of blank or NaN values when sale price or final weight are invalid [33m 323[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1491[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaDetailPage[2m > [22mrenders the editing layout without the legacy summary sidebar [33m 1489[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1108[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemDetailPage[2m > [22mrenders the item form without the legacy side cards and keeps safe-delete feedback [33m 1106[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog/ItemForm.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2172[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mrenderiza exatamente 3 blocos: Identificacao, Detalhamento de Compras/Fornecedor, Observacoes [33m 986[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 167[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cost-engine.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/tests/unit/reconciliation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/tests/unit/session.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/tests/unit/components-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3262[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders a single flat grid with per-row stage controls and footer buttons [33m 1881[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders per-row peso labels driven by the row's stage type and reveals montagem on demand [33m 791[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22madds library items into the flat grid and groups them back into stages on serialize [33m 588[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-service.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/tests/unit/master-data-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog-repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-repository.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form-schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form-schema.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog/purchases-editor.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 2860[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal sozinho: sem badge fixado, campos Unidade de uso + Qtde de uso editaveis [33m 726[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario tem Unidade de uso e Qtde de uso com aria-readonly=true (D-05 readonly) [33m 516[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mtoggle principal em secundario: reseta demais para false + exibe 'Campos fixados atualizados a partir de {nome}' (D-06) [33m 446[2mms[22m[39m
+ [32m✓[39m src/tests/unit/next-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/workspace-layout.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 165[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-routes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 228[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-data-grid-pattern.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 230[2mms[22m[39m
+ [32m✓[39m src/tests/unit/forbidden-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 358[2mms[22m[39m
+   [33m[2m✓[22m[39m ForbiddenPage[2m > [22mrenders the centered 403 state with dashboard and login actions [33m 357[2mms[22m[39m
+ [32m✓[39m src/tests/unit/page-header.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 243[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-shell-client.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 288[2mms[22m[39m
+ [32m✓[39m src/tests/unit/health-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/tests/unit/access-control.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/operational-item-import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/platform/env.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/backup-policy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/user-management.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-tecnica-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/unit-conversion.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-execution-domain.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/env.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 285[2mms[22m[39m
+ [32m✓[39m src/tests/unit/authorization-guards.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 10 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna itemName tem largura 170px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column itemName width 0px diverges from HTML target 170px by more than 4px: expected 170 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna modalityLabel tem largura 100px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column modalityLabel width 130px diverges from HTML target 100px by more than 4px: expected 30 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna groupOperational tem largura 100px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column groupOperational width 170px diverges from HTML target 100px by more than 4px: expected 70 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna status tem largura 64px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column status width 120px diverges from HTML target 64px by more than 4px: expected 56 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna componentCount tem largura 82px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column componentCount width 130px diverges from HTML target 82px by more than 4px: expected 48 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna correctionFactor tem largura 60px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column correctionFactor width 90px diverges from HTML target 60px by more than 4px: expected 30 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna cookingIndex tem largura 60px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column cookingIndex width 90px diverges from HTML target 60px by more than 4px: expected 30 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna totalCost tem largura 82px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column totalCost width 130px diverges from HTML target 82px by more than 4px: expected 48 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna updatedAt tem largura 110px (+/- 4px) alinhada ao HTML update/tela-fichas-grade-v1.html
+[31m[1mAssertionError[22m: column updatedAt width 160px diverges from HTML target 110px by more than 4px: expected 50 to be less than or equal to 4[39m
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m135:9[22m[39m
+    [90m133| [39m        [33mMath[39m[33m.[39m[34mabs[39m(width [33m-[39m targetWidth)[33m,[39m
+    [90m134| [39m        `column ${field} width ${width}px diverges from HTML target ${…
+    [90m135| [39m      )[33m.[39m[34mtoBeLessThanOrEqual[39m([34m4[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m136| [39m    }
+    [90m137| [39m  )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/fichas-listing.test.tsx[2m > [22mGrade de Fichas — larguras pixel-perfect (SPEC-4-TELAS-ESTRITO)[2m > [22mitemName nao possui flex nem minWidth (largura fixa 170px conforme HTML linha 58)
+[31m[1mAssertionError[22m: expected '1.3' to be '' // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[31m+ 1.3[39m
+
+[36m [2m❯[22m src/tests/unit/engineering/fichas-listing.test.tsx:[2m142:46[22m[39m
+    [90m140| [39m    [34mrenderFichas[39m()[33m;[39m
+    [90m141| [39m    [35mconst[39m header [33m=[39m [34mgetHeader[39m([32m"itemName"[39m)[33m;[39m
+    [90m142| [39m    [34mexpect[39m(header[33m.[39m[34mgetAttribute[39m([32m"data-flex"[39m))[33m.[39m[34mtoBe[39m([32m""[39m)[33m;[39m
+    [90m   | [39m                                             [31m^[39m
+    [90m143| [39m    [34mexpect[39m(header[33m.[39m[34mgetAttribute[39m([32m"data-min-width"[39m))[33m.[39m[34mtoBe[39m([32m""[39m)[33m;[39m
+    [90m144| [39m    [34mexpect[39m([33mNumber[39m(header[33m.[39m[34mgetAttribute[39m([32m"data-width"[39m)))[33m.[39m[34mtoBe[39m([34m170[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m54 passed[39m[22m[90m (55)[39m
+[2m      Tests [22m [1m[31m10 failed[39m[22m[2m | [22m[1m[32m163 passed[39m[22m[90m (173)[39m
+[2m   Start at [22m 22:20:48
+[2m   Duration [22m 10.39s[2m (transform 8.91s, setup 14.21s, collect 66.58s, tests 27.78s, environment 90.09s, prepare 6.83s)[22m
+

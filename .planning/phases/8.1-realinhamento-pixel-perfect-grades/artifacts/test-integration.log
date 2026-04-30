@@ -1,0 +1,32 @@
+
+> sis-restaurante@0.1.0 test:integration
+> vitest run src/tests/integration
+
+[1m[43m DEPRECATED [49m[22m [33m"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.[39m
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/felip/OneDrive/Área de Trabalho/projetos cliente/sis-restaurante[39m
+
+ [32m✓[39m src/tests/integration/prisma/migration-idempotence.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 222[2mms[22m[39m
+(node:34228) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m src/tests/integration/catalog-prisma.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 359[2mms[22m[39m
+(node:48364) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:45808) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m src/tests/integration/catalog/catalog-presenter-derivation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 352[2mms[22m[39m
+(node:46572) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m src/tests/integration/import/import-operational-d17.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 392[2mms[22m[39m
+ [32m✓[39m src/tests/integration/engineering-prisma.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 491[2mms[22m[39m
+   [33m[2m✓[22m[39m engineering prisma integration[2m > [22mrebuilds dependency closure and calculates an active ficha [33m 489[2mms[22m[39m
+ [32m✓[39m src/tests/integration/import-prisma.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 529[2mms[22m[39m
+ [32m✓[39m src/tests/integration/load-legacy-import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 719[2mms[22m[39m
+   [33m[2m✓[22m[39m load legacy import integration[2m > [22mpersists inferred unit conversion and usage cost for imported countable items [33m 452[2mms[22m[39m
+ [32m✓[39m src/tests/integration/catalog/catalog-repository-fornecedor.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 711[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m21 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 22:26:22
+[2m   Duration [22m 1.49s[2m (transform 387ms, setup 558ms, collect 2.72s, tests 3.77s, environment 1ms, prepare 699ms)[22m
+

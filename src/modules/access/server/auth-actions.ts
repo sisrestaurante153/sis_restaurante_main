@@ -2,9 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { authenticateByPassword } from "@/modules/access/server/auth-service";
-import { getAuthRepository } from "@/modules/access/server/auth-repository";
-import { clearUserSession, createUserSession, getCurrentSession } from "@/modules/access/server/session-cookie";
+import { signInWithPassword } from "@/modules/access/server/auth-service";
+import { cookies } from "next/headers";
+import { getSupabaseClient } from "@/lib/supabase";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um email valido."),
@@ -31,12 +31,7 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     };
   }
 
-  const repository = getAuthRepository();
-  const result = await authenticateByPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    findUserByEmail: repository.findUserByEmail
-  });
+  const result = await signInWithPassword(parsed.data.email, parsed.data.password);
 
   if (!result.ok) {
     return {
@@ -45,25 +40,33 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     };
   }
 
-  await createUserSession({
-    userId: result.user.id,
-    email: result.user.email,
-    name: result.user.nome,
-    roleCodes: result.user.roleCodes
+  const cookieStore = await cookies();
+  cookieStore.set("sb-access-token", result.session.access_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: result.session.expires_in,
+    path: "/",
   });
 
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
-  await clearUserSession();
+  const cookieStore = await cookies();
+  cookieStore.delete("sb-access-token");
   redirect("/login");
 }
 
 export async function redirectIfAuthenticated() {
-  const session = await getCurrentSession();
-
-  if (session) {
-    redirect("/dashboard");
+  const cookieStore = await cookies();
+  const token = cookieStore.get("sb-access-token")?.value;
+  
+  if (token) {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (user) {
+      redirect("/dashboard");
+    }
   }
 }

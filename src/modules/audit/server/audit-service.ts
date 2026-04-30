@@ -52,12 +52,12 @@ export function createAuditService(options: CreateAuditServiceOptions = {}) {
         try {
           await prisma.auditoria.create({
             data: {
-              usuarioId: input.actorId,
-              entidade: input.entity,
-              entidadeId: input.entityId,
-              acao: input.action,
-              antesJson: input.before ?? undefined,
-              depoisJson: input.after ?? undefined
+              cd_usuario: input.actorId,
+              nm_entidade: input.entity,
+              cd_entidade: input.entityId,
+              ds_acao: input.action,
+              js_antes: input.before ?? undefined,
+              js_depois: input.after ?? undefined
             }
           });
         } catch {

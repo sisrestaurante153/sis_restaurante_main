@@ -1,0 +1,166 @@
+
+> sis-restaurante@0.1.0 test:unit
+> vitest run src/tests/unit fichas-listing
+
+[1m[43m DEPRECATED [49m[22m [33m"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.[39m
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/felip/OneDrive/Área de Trabalho/projetos cliente/sis-restaurante[39m
+
+ [32m✓[39m src/tests/unit/dashboard-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 485[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders KPI cards, attention points and quick actions with the new labels [33m 484[2mms[22m[39m
+ [32m✓[39m src/tests/unit/sidebar-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 762[2mms[22m[39m
+   [33m[2m✓[22m[39m SidebarNav[2m > [22mrenders grouped navigation sections with current route highlighted [33m 486[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cadastros-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 790[2mms[22m[39m
+   [33m[2m✓[22m[39m CadastrosPage[2m > [22mrenders the master data workspace with all requested sections [33m 789[2mms[22m[39m
+ [32m✓[39m src/tests/unit/costs-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 651[2mms[22m[39m
+   [33m[2m✓[22m[39m CostsPage[2m > [22mrenders searchable financial cards with cost breakdown and ficha links [33m 649[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/fichas-listing.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 700[2mms[22m[39m
+ [32m✓[39m src/tests/unit/fichas-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 783[2mms[22m[39m
+   [33m[2m✓[22m[39m FichasPage[2m > [22mrenders the expanded ficha listing contract with shared navigation [33m 782[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1526[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsPage[2m > [22mrenders the expanded operational listing contract and wires navigation [33m 1524[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-api-paths.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 639[2mms[22m[39m
+   [33m[2m✓[22m[39m Import API paths[2m > [22mprefixes artifact downloads and dashboard polling with the configured base path [33m 638[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/TotaisIndicadores.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 961[2mms[22m[39m
+   [33m[2m✓[22m[39m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-03: referencePrice null renderiza "--", nunca "R$ NaN" [33m 397[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-pending-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 921[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPendingPage[2m > [22mrenders reconciliation grid, confidence indicator and resolution dialog [33m 919[2mms[22m[39m
+ [31m❯[39m src/tests/unit/items-listing.test.tsx [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1207[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsListingView[2m > [22mrenders exactly 15 column headers in the correct order [33m 402[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mrenders CADASTRO MESTRE label[32m 149[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mrenders Status column with Ativo and Inativo badges[32m 67[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mrenders em-dash for zero-value currency and quantity fields[32m 63[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mmarks name, baseUnitCost, usagePrice, and updatedAt as sortable[32m 45[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mrenders Categoria Operacional filter with Todas as categorias option[32m 84[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mrenders Obs tooltip with Ver observacao text when description exists[32m 40[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mitem sem ItemCompra (sem fornecedor) exibe '--' nas colunas derivadas[32m 89[2mms[22m[39m
+   [32m✓[39m ItemsListingView[2m > [22mitem com 2+ fornecedores exibe badge '+1' ao lado do nome principal[32m 53[2mms[22m[39m
+   [32m✓[39m Grade de Itens - larguras pixel-perfect residuais (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna name tem largura 162px (+/- 4px) alinhada ao HTML update/tela-itens-grade-v2.html[32m 60[2mms[22m[39m
+   [32m✓[39m Grade de Itens - larguras pixel-perfect residuais (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna description tem largura 40px (+/- 4px) alinhada ao HTML update/tela-itens-grade-v2.html[32m 70[2mms[22m[39m
+[31m   [31m×[31m Grade de Itens - larguras pixel-perfect residuais (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna name NAO possui flex (largura fixa conforme HTML linha 57)[39m[32m 83[2mms[22m[39m
+[31m     → expected '1' to be '' // Object.is equality[39m
+[90mstderr[2m | src/tests/unit/login-form.test.tsx[2m > [22m[2mLoginForm[2m > [22m[2muses the configured base path for the auth request
+[22m[39mNot implemented: navigation to another Document
+
+ [32m✓[39m src/tests/unit/login-form.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1264[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mfills seed credentials from chips and toggles password visibility [33m 727[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/FichaFlatGrid.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1250[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mGRID_TEMPLATE bate HTML: 22px 1fr 80px 60px 240px 90px 96px 28px [33m 499[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mcom Coccao Final: row label visivel, botao Adicionar Coccao Final NAO aparece [33m 522[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-workspace.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 981[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportWorkspace[2m > [22mshows the selected workbook name before submitting the import [33m 980[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1271[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPage[2m > [22mrenders the protected import workspace with blocked upload, active execution and history [33m 1265[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1161[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm[2m > [22mrenders the operational item contract (pos 08-04 identificacao enxuta) [33m 1160[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2054[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders the ficha workflow in four semantic sections with totals and finalization fields [33m 1626[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders commercial fallbacks instead of blank or NaN values when sale price or final weight are invalid [33m 427[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 987[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditPage[2m > [22mrenders filters and timeline entries for operational history [33m 986[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 2111[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaDetailPage[2m > [22mrenders the editing layout without the legacy summary sidebar [33m 2104[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 204[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-repository.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/session.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m src/tests/unit/page-header.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 282[2mms[22m[39m
+ [32m✓[39m src/tests/unit/workspace-layout.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 156[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1771[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemDetailPage[2m > [22mrenders the item form without the legacy side cards and keeps safe-delete feedback [33m 1769[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-routes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 185[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-data-grid-pattern.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 209[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cost-engine.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog-repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/tests/unit/forbidden-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 326[2mms[22m[39m
+   [33m[2m✓[22m[39m ForbiddenPage[2m > [22mrenders the centered 403 state with dashboard and login actions [33m 323[2mms[22m[39m
+ [32m✓[39m src/tests/unit/master-data-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 508[2mms[22m[39m
+   [33m[2m✓[22m[39m CompositionPage[2m > [22mrenders the composition tree view with filtering and nested rows [33m 505[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-shell-client.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 381[2mms[22m[39m
+   [33m[2m✓[22m[39m AppShellClient[2m > [22mdoes not render the expanded sidebar header copy [33m 380[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-service.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog/ItemForm.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2713[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mrenderiza exatamente 3 blocos: Identificacao, Detalhamento de Compras/Fornecedor, Observacoes [33m 1095[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mIdentificacao contem exatamente 5 campos (Codigo, Nome, Tipo, Categoria, Status) [33m 309[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mBloco Observacoes aparece APOS Detalhamento de Compras (ordem DOM) [33m 324[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form-schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form-schema.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/tests/unit/env.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/operational-item-import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/components-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3760[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders a single flat grid with per-row stage controls and footer buttons [33m 1967[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders per-row peso labels driven by the row's stage type and reveals montagem on demand [33m 1065[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22madds library items into the flat grid and groups them back into stages on serialize [33m 726[2mms[22m[39m
+ [32m✓[39m src/tests/unit/reconciliation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/access-control.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-tecnica-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/next-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/user-management.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/health-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/platform/env.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-execution-domain.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/unit-conversion.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/backup-policy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog/purchases-editor.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 3355[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal sozinho: sem badge fixado, campos Unidade de uso + Qtde de uso editaveis [33m 568[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal + secundario: badge 'fixado do 1o fornecedor' aparece 2x (Unidade uso + Qtde uso) [33m 391[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario deriva usageUnit client-side do principal (D-05) [33m 345[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario tem Unidade de uso e Qtde de uso com aria-readonly=true (D-05 readonly) [33m 737[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mPreco de uso no secundario usa seu proprio fator (D-07): 80/10=8.0000, NAO o fator do principal [33m 315[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mRemover aparece so em secundarios (principal sem botao Remover) [33m 349[2mms[22m[39m
+ [32m✓[39m src/tests/unit/authorization-guards.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/items-listing.test.tsx[2m > [22mGrade de Itens - larguras pixel-perfect residuais (SPEC-4-TELAS-ESTRITO)[2m > [22mcoluna name NAO possui flex (largura fixa conforme HTML linha 57)
+[31m[1mAssertionError[22m: expected '1' to be '' // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[31m+ 1[39m
+
+[36m [2m❯[22m src/tests/unit/items-listing.test.tsx:[2m395:22[22m[39m
+    [90m393| [39m    [90m// flex empty string means the column did not set a flex prop.[39m
+    [90m394| [39m    [35mconst[39m flexAttr [33m=[39m header[33m?.[39m[34mgetAttribute[39m([32m"data-flex"[39m) [33m??[39m [32m""[39m[33m;[39m
+    [90m395| [39m    [34mexpect[39m(flexAttr)[33m.[39m[34mtoBe[39m([32m""[39m)[33m;[39m
+    [90m   | [39m                     [31m^[39m
+    [90m396| [39m  })[33m;[39m
+    [90m397| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m54 passed[39m[22m[90m (55)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m175 passed[39m[22m[90m (176)[39m
+[2m   Start at [22m 22:21:46
+[2m   Duration [22m 7.39s[2m (transform 4.24s, setup 12.70s, collect 40.65s, tests 34.64s, environment 52.69s, prepare 6.12s)[22m
+
+
+Running 2 tests using 1 worker
+
+[PASS] ficha-grid-template: FichaFlatGrid GRID_TEMPLATE matches HTML contract | exp=22px 1fr 80px 60px 240px 90px 96px 28px | got=22px 1fr 80px 60px 240px 90px 96px 28px
+[PASS] ficha-cf-grid-template: FichaFlatGrid CF_GRID_TEMPLATE matches HTML contract | exp=22px auto 120px 110px 90px 1fr 28px | got=22px auto 120px 110px 90px 1fr 28px
+[PASS] ficha-form-loaded: Ficha form /fichas/nova loads without errors | exp=heading visible | got=visible
+[SUMMARY ficha-form] 3/3 passed, 0 failed
+  ✓  1 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:369:5 › pixel-perfect: tela-ficha-tecnica-v2.html vs /fichas/nova (10.3s)
+[PASS] contract-fichas-cols-read: Contract HTML col.c-* widths extracted | exp=>=10 col rules | got=12 cols
+[PASS] col-cod: Column c-cod -> app code width (+/- 4px) | exp=60px | got=60px
+[PASS] col-prod: Column c-prod -> app itemName width (+/- 4px) | exp=170px | got=170px
+[PASS] col-mod: Column c-mod -> app modalityLabel width (+/- 4px) | exp=100px | got=100px
+[PASS] col-grp: Column c-grp -> app groupOperational width (+/- 4px) | exp=100px | got=100px
+[PASS] col-comp: Column c-comp -> app componentCount width (+/- 4px) | exp=82px | got=82px
+[PASS] col-fc: Column c-fc -> app correctionFactor width (+/- 4px) | exp=60px | got=60px
+[PASS] col-ic: Column c-ic -> app cookingIndex width (+/- 4px) | exp=60px | got=60px
+[PASS] col-custo: Column c-custo -> app totalCost width (+/- 4px) | exp=82px | got=82px
+[PASS] col-pv: Column c-pv -> app sellingPrice width (+/- 4px) | exp=80px | got=80px
+[PASS] col-data: Column c-data -> app updatedAt width (+/- 4px) | exp=110px | got=110px
+[PASS] col-sta: Column c-sta -> app status width (+/- 4px) | exp=64px | got=64px
+[FAIL] col-obs: Column c-obs -> app notes width (+/- 4px) | exp=38px | got=50px | diff=12px (out of 4px tolerance)
+[SUMMARY fichas-grade] 12/13 passed, 1 failed
+  ✓  2 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:414:5 › pixel-perfect: tela-fichas-grade-v1.html vs /fichas (4.0s)
+
+  2 passed (18.5s)

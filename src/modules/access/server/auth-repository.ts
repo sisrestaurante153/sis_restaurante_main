@@ -2,19 +2,7 @@ import "server-only";
 import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import { getServerEnv } from "@/modules/platform/server/env";
 import { getDemoStore } from "@/modules/platform/server/demo-data";
-import { hashPassword, type AuthUserRecord } from "@/modules/access/server/auth-service";
-
-const demoPasswordHashes = new Map<string, Promise<string>>();
-
-async function getDemoPasswordHash(email: string, password: string) {
-  const cacheKey = `${email}:${password}`;
-
-  if (!demoPasswordHashes.has(cacheKey)) {
-    demoPasswordHashes.set(cacheKey, hashPassword(password));
-  }
-
-  return demoPasswordHashes.get(cacheKey)!;
-}
+import { type AuthUserRecord } from "@/modules/access/server/auth-service";
 
 export function getAuthRepository() {
   return {
@@ -26,7 +14,7 @@ export function getAuthRepository() {
         try {
           const user = await prisma.user.findUnique({
             where: {
-              email
+              ds_email: email
             },
             include: {
               roles: {
@@ -39,12 +27,10 @@ export function getAuthRepository() {
 
           if (user) {
             return {
-              id: user.id,
-              email: user.email,
-              nome: user.nome,
-              ativo: user.ativo,
-              senhaHash: user.senhaHash,
-              roleCodes: user.roles.map((assignment) => assignment.role.codigo)
+              id: user.cd_usuario,
+              email: user.ds_email,
+              nome: user.nm_usuario,
+              roleCodes: user.roles.map((assignment) => assignment.role.ds_codigo)
             };
           }
         } catch {
@@ -62,8 +48,6 @@ export function getAuthRepository() {
         id: demoUser.id,
         email: demoUser.email,
         nome: demoUser.nome,
-        ativo: demoUser.ativo,
-        senhaHash: await getDemoPasswordHash(demoUser.email, demoUser.password),
         roleCodes: demoUser.roleCodes
       };
     }

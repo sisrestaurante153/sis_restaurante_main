@@ -1,99 +1,65 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createServerSupabaseClient } from "@/lib/supabase";
 
 export interface AuthUserRecord {
   id: string;
   email: string;
   nome: string;
-  ativo: boolean;
-  senhaHash: string | null;
   roleCodes: string[];
 }
 
-interface AuthenticateByPasswordInput {
-  email: string;
-  password: string;
-  findUserByEmail: (email: string) => Promise<AuthUserRecord | null>;
-}
+export async function signInWithPassword(email: string, password: string) {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-const KEY_LENGTH = 64;
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-function assertPasswordPolicy(password: string) {
-  if (password.length < 8) {
-    throw new Error("Senha deve ter no minimo 8 caracteres.");
-  }
-}
-
-export async function hashPassword(password: string) {
-  assertPasswordPolicy(password);
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(password, salt, KEY_LENGTH).toString("hex");
-
-  return `scrypt:${salt}:${hash}`;
-}
-
-export async function verifyPassword(password: string, passwordHash: string | null | undefined) {
-  if (!passwordHash) {
-    return false;
+  if (error) {
+    return { ok: false as const, message: error.message };
   }
 
-  const [algorithm, salt, expectedHash] = passwordHash.split(":");
-
-  if (algorithm !== "scrypt" || !salt || !expectedHash) {
-    return false;
-  }
-
-  const passwordBuffer = scryptSync(password, salt, KEY_LENGTH);
-  const expectedBuffer = Buffer.from(expectedHash, "hex");
-
-  if (passwordBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(passwordBuffer, expectedBuffer);
-}
-
-export async function authenticateByPassword({
-  email,
-  password,
-  findUserByEmail
-}: AuthenticateByPasswordInput) {
-  const normalizedEmail = normalizeEmail(email);
-  const user = await findUserByEmail(normalizedEmail);
-
-  if (!user) {
-    return {
-      ok: false as const,
-      message: "Credenciais invalidas."
-    };
-  }
-
-  if (!user.ativo) {
-    return {
-      ok: false as const,
-      message: "Usuario inativo."
-    };
-  }
-
-  const isValidPassword = await verifyPassword(password, user.senhaHash);
-
-  if (!isValidPassword) {
-    return {
-      ok: false as const,
-      message: "Credenciais invalidas."
-    };
+  if (!data.user || !data.session) {
+     return { ok: false as const, message: "Falha na autenticação." };
   }
 
   return {
     ok: true as const,
     user: {
-      id: user.id,
-      email: user.email,
-      nome: user.nome,
-      roleCodes: user.roleCodes
-    }
+      id: data.user.id,
+      email: data.user.email!,
+      nome: data.user.user_metadata.nome || data.user.email!,
+      roleCodes: (data.user.app_metadata.roles as string[]) || [],
+    },
+    session: data.session
   };
+}
+
+export async function signUp(email: string, password: string, nome: string) {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { nome }
+    }
+  });
+
+  if (error) {
+    return { ok: false as const, message: error.message };
+  }
+
+  return { ok: true as const, user: data.user };
+}
+
+export async function resetPasswordForEmail(email: string) {
+  const supabase = createServerSupabaseClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.APP_URL}/reset-password`,
+  });
+
+  if (error) {
+    return { ok: false as const, message: error.message };
+  }
+
+  return { ok: true as const };
 }

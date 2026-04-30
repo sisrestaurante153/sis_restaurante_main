@@ -1,0 +1,222 @@
+
+> sis-restaurante@0.1.0 test:unit
+> vitest run src/tests/unit TotaisIndicadores
+
+[1m[43m DEPRECATED [49m[22m [33m"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.[39m
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/felip/OneDrive/Área de Trabalho/projetos cliente/sis-restaurante[39m
+
+ [32m✓[39m src/tests/unit/forbidden-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 250[2mms[22m[39m
+ [32m✓[39m src/tests/unit/page-header.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 242[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-shell-client.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 309[2mms[22m[39m
+   [33m[2m✓[22m[39m AppShellClient[2m > [22mdoes not render the expanded sidebar header copy [33m 308[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 482[2mms[22m[39m
+   [33m[2m✓[22m[39m CompositionPage[2m > [22mrenders the composition tree view with filtering and nested rows [33m 481[2mms[22m[39m
+ [32m✓[39m src/tests/unit/dashboard-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 616[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders KPI cards, attention points and quick actions with the new labels [33m 614[2mms[22m[39m
+ [32m✓[39m src/tests/unit/fichas-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 590[2mms[22m[39m
+   [33m[2m✓[22m[39m FichasPage[2m > [22mrenders the expanded ficha listing contract with shared navigation [33m 589[2mms[22m[39m
+ [32m✓[39m src/tests/unit/costs-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 540[2mms[22m[39m
+   [33m[2m✓[22m[39m CostsPage[2m > [22mrenders searchable financial cards with cost breakdown and ficha links [33m 538[2mms[22m[39m
+ [32m✓[39m src/tests/unit/sidebar-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 782[2mms[22m[39m
+   [33m[2m✓[22m[39m SidebarNav[2m > [22mrenders grouped navigation sections with current route highlighted [33m 557[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-listing.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 839[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsListingView[2m > [22mrenders exactly 15 column headers in the correct order [33m 362[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1401[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsPage[2m > [22mrenders the expanded operational listing contract and wires navigation [33m 1399[2mms[22m[39m
+ [31m❯[39m src/tests/unit/engineering/TotaisIndicadores.test.tsx [2m([22m[2m8 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[33m 1041[2mms[22m[39m
+   [33m[2m✓[22m[39m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-03: referencePrice null renderiza "--", nunca "R$ NaN" [33m 413[2mms[22m[39m
+[31m   [31m×[31m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-05: postCookingWeight "--" renderiza "Calcular peso" em CMV sem embalagem[39m[32m 101[2mms[22m[39m
+[31m     → expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+[31m   [31m×[31m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-05: postCookingWeight "" renderiza "Calcular peso" em CMV com Embalagem[39m[32m 107[2mms[22m[39m
+[31m     → expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+[31m   [31m×[31m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-05: postCookingWeight nao finite ("abc") renderiza "Calcular peso" em CMV final aplicado[39m[32m 86[2mms[22m[39m
+[31m     → expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+[31m   [31m×[31m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-06: salePriceInput "" renderiza "Informe o valor" em Margem de contribuicao R$[39m[32m 128[2mms[22m[39m
+[31m     → expected 'Quadro final da fichaQuadro consolida…' to match /Informe o valor/[39m
+[31m   [31m×[31m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-06: salePriceInput "0" renderiza "Informe o valor"[39m[32m 63[2mms[22m[39m
+[31m     → expected 'Quadro final da fichaQuadro consolida…' to match /Informe o valor/[39m
+[31m   [31m×[31m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-07: CMV da marmita (finalAppliedCmv) fallback "Calcular peso" quando peso final vazio[39m[32m 63[2mms[22m[39m
+[31m     → expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+   [32m✓[39m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mguard global: nunca renderiza NaN/null/undefined com inputs invalidos[32m 78[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cadastros-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 787[2mms[22m[39m
+   [33m[2m✓[22m[39m CadastrosPage[2m > [22mrenders the master data workspace with all requested sections [33m 786[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-workspace.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 538[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportWorkspace[2m > [22mshows the selected workbook name before submitting the import [33m 535[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-api-paths.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 575[2mms[22m[39m
+   [33m[2m✓[22m[39m Import API paths[2m > [22mprefixes artifact downloads and dashboard polling with the configured base path [33m 574[2mms[22m[39m
+[90mstderr[2m | src/tests/unit/login-form.test.tsx[2m > [22m[2mLoginForm[2m > [22m[2muses the configured base path for the auth request
+[22m[39mNot implemented: navigation to another Document
+
+ [32m✓[39m src/tests/unit/login-form.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1370[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mfills seed credentials from chips and toggles password visibility [33m 782[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mshows the login error inside an alert when authentication fails [33m 350[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-pending-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1044[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPendingPage[2m > [22mrenders reconciliation grid, confidence indicator and resolution dialog [33m 1042[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 825[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditPage[2m > [22mrenders filters and timeline entries for operational history [33m 824[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1063[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPage[2m > [22mrenders the protected import workspace with blocked upload, active execution and history [33m 1062[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1258[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm[2m > [22mrenders the operational item contract with code and usage metrics visible [33m 1257[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1992[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders the ficha workflow in four semantic sections with totals and finalization fields [33m 1681[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders commercial fallbacks instead of blank or NaN values when sale price or final weight are invalid [33m 309[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1213[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemDetailPage[2m > [22mrenders the item form without the legacy side cards and keeps safe-delete feedback [33m 1212[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1428[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaDetailPage[2m > [22mrenders the editing layout without the legacy summary sidebar [33m 1427[2mms[22m[39m
+ [32m✓[39m src/tests/unit/components-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 2374[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders a single flat grid with per-row stage controls and footer buttons [33m 1471[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders per-row peso labels driven by the row's stage type and reveals montagem on demand [33m 641[2mms[22m[39m
+ [32m✓[39m src/tests/unit/platform/env.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/session.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog-repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cost-engine.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-repository.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 280[2mms[22m[39m
+ [32m✓[39m src/tests/unit/master-data-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form-schema.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-service.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-routes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 143[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form-schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tests/unit/workspace-layout.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 145[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-data-grid-pattern.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 217[2mms[22m[39m
+ [32m✓[39m src/tests/unit/env.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-execution-domain.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/health-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/reconciliation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/access-control.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/operational-item-import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/next-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-tecnica-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/user-management.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/backup-policy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/unit-conversion.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/authorization-guards.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 6 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/TotaisIndicadores.test.tsx[2m > [22mTotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-05: postCookingWeight "--" renderiza "Calcular peso" em CMV sem embalagem
+[31m[1mAssertionError[22m: expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+
+[32m- Expected:[39m 
+/Calcular peso/
+
+[31m+ Received:[39m 
+"Quadro final da fichaQuadro consolidado inspirado na leitura final do Excel, adaptado para o uso operacional no sistema.Pesos e rendimentoTotal de peso1.0000 kgPeso util consolidado1.0000 kgPeso final-- kgFator de Correcao (FC)100.00%Indice de Coccao (IC)100.00%Custos e CMVCusto total da fichaR$ 16,58CMV sem embalagem--Custo de embalagens e descartaveisR$ 1,81CMV com Embalagem--CMV final aplicado--Venda e margemPreco de vendaPreco de venda​Preco de vendaDespesa variavel de venda (%PV)Despesa variavel de venda (%PV)Despesa variavel de venda (%PV)CMV do kg (%PV)35.00 %Despesa variavel aplicadaR$ 4,50Margem de contribuicao R$R$ 20,26Margem de contribuicao %45.00 %Saude do CMVSaudavelLeitura operacionalPreco de ReferenciaR$ 45,00Custo Real da FichaR$ 18,39Despesa variavel aplicadaR$ 4,50Margem de ContribuicaoR$ 20,26Diagnostico automatico--"
+
+[36m [2m❯[22m src/tests/unit/engineering/TotaisIndicadores.test.tsx:[2m70:41[22m[39m
+    [90m 68| [39m      finalAppliedCmv[33m:[39m [35mnull[39m
+    [90m 69| [39m    })[33m;[39m
+    [90m 70| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39m[34mtoMatch[39m([36m/Calcular peso/[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m 71| [39m  })[33m;[39m
+    [90m 72| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/TotaisIndicadores.test.tsx[2m > [22mTotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-05: postCookingWeight "" renderiza "Calcular peso" em CMV com Embalagem
+[31m[1mAssertionError[22m: expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+
+[32m- Expected:[39m 
+/Calcular peso/
+
+[31m+ Received:[39m 
+"Quadro final da fichaQuadro consolidado inspirado na leitura final do Excel, adaptado para o uso operacional no sistema.Pesos e rendimentoTotal de peso1.0000 kgPeso util consolidado1.0000 kgPeso final kgFator de Correcao (FC)100.00%Indice de Coccao (IC)100.00%Custos e CMVCusto total da fichaR$ 16,58CMV sem embalagem--Custo de embalagens e descartaveisR$ 1,81CMV com Embalagem--CMV final aplicado--Venda e margemPreco de vendaPreco de venda​Preco de vendaDespesa variavel de venda (%PV)Despesa variavel de venda (%PV)Despesa variavel de venda (%PV)CMV do kg (%PV)35.00 %Despesa variavel aplicadaR$ 4,50Margem de contribuicao R$R$ 20,26Margem de contribuicao %45.00 %Saude do CMVSaudavelLeitura operacionalPreco de ReferenciaR$ 45,00Custo Real da FichaR$ 18,39Despesa variavel aplicadaR$ 4,50Margem de ContribuicaoR$ 20,26Diagnostico automatico--"
+
+[36m [2m❯[22m src/tests/unit/engineering/TotaisIndicadores.test.tsx:[2m80:41[22m[39m
+    [90m 78| [39m      finalAppliedCmv[33m:[39m [35mnull[39m
+    [90m 79| [39m    })[33m;[39m
+    [90m 80| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39m[34mtoMatch[39m([36m/Calcular peso/[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m 81| [39m  })[33m;[39m
+    [90m 82| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/TotaisIndicadores.test.tsx[2m > [22mTotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-05: postCookingWeight nao finite ("abc") renderiza "Calcular peso" em CMV final aplicado
+[31m[1mAssertionError[22m: expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+
+[32m- Expected:[39m 
+/Calcular peso/
+
+[31m+ Received:[39m 
+"Quadro final da fichaQuadro consolidado inspirado na leitura final do Excel, adaptado para o uso operacional no sistema.Pesos e rendimentoTotal de peso1.0000 kgPeso util consolidado1.0000 kgPeso finalabc kgFator de Correcao (FC)100.00%Indice de Coccao (IC)100.00%Custos e CMVCusto total da fichaR$ 16,58CMV sem embalagem--Custo de embalagens e descartaveisR$ 1,81CMV com Embalagem--CMV final aplicado--Venda e margemPreco de vendaPreco de venda​Preco de vendaDespesa variavel de venda (%PV)Despesa variavel de venda (%PV)Despesa variavel de venda (%PV)CMV do kg (%PV)35.00 %Despesa variavel aplicadaR$ 4,50Margem de contribuicao R$R$ 20,26Margem de contribuicao %45.00 %Saude do CMVSaudavelLeitura operacionalPreco de ReferenciaR$ 45,00Custo Real da FichaR$ 18,39Despesa variavel aplicadaR$ 4,50Margem de ContribuicaoR$ 20,26Diagnostico automatico--"
+
+[36m [2m❯[22m src/tests/unit/engineering/TotaisIndicadores.test.tsx:[2m90:41[22m[39m
+    [90m 88| [39m      finalAppliedCmv[33m:[39m [35mnull[39m
+    [90m 89| [39m    })[33m;[39m
+    [90m 90| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39m[34mtoMatch[39m([36m/Calcular peso/[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m 91| [39m    [90m// Nao deve aparecer NaN[39m
+    [90m 92| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39mnot[33m.[39m[34mtoMatch[39m([36m/NaN/[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/TotaisIndicadores.test.tsx[2m > [22mTotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-06: salePriceInput "" renderiza "Informe o valor" em Margem de contribuicao R$
+[31m[1mAssertionError[22m: expected 'Quadro final da fichaQuadro consolida…' to match /Informe o valor/[39m
+
+[32m- Expected:[39m 
+/Informe o valor/
+
+[31m+ Received:[39m 
+"Quadro final da fichaQuadro consolidado inspirado na leitura final do Excel, adaptado para o uso operacional no sistema.Pesos e rendimentoTotal de peso1.0000 kgPeso util consolidado1.0000 kgPeso final0.9000 kgFator de Correcao (FC)100.00%Indice de Coccao (IC)100.00%Custos e CMVCusto total da fichaR$ 16,58CMV sem embalagemR$ 18,43 / kgCusto de embalagens e descartaveisR$ 1,81CMV com EmbalagemR$ 20,24 / kgCMV final aplicadoR$ 20,24 / kgVenda e margemPreco de vendaPreco de venda​Preco de vendaDespesa variavel de venda (%PV)Despesa variavel de venda (%PV)Despesa variavel de venda (%PV)CMV do kg (%PV)35.00 %Despesa variavel aplicadaR$ 4,50Margem de contribuicao R$--Margem de contribuicao %45.00 %Saude do CMVSaudavelLeitura operacionalPreco de ReferenciaR$ 45,00Custo Real da FichaR$ 18,39Despesa variavel aplicadaR$ 4,50Margem de ContribuicaoR$ 20,26Diagnostico automatico--"
+
+[36m [2m❯[22m src/tests/unit/engineering/TotaisIndicadores.test.tsx:[2m97:41[22m[39m
+    [90m 95| [39m  it('CRIT-06: salePriceInput "" renderiza "Informe o valor" em Margem…
+    [90m 96| [39m    const { container } = renderTotais({ contributionMarginValue: unde…
+    [90m 97| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39m[34mtoMatch[39m([36m/Informe o valor/[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m 98| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39mnot[33m.[39m[34mtoMatch[39m([36m/NaN/[39m)[33m;[39m
+    [90m 99| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/TotaisIndicadores.test.tsx[2m > [22mTotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-06: salePriceInput "0" renderiza "Informe o valor"
+[31m[1mAssertionError[22m: expected 'Quadro final da fichaQuadro consolida…' to match /Informe o valor/[39m
+
+[32m- Expected:[39m 
+/Informe o valor/
+
+[31m+ Received:[39m 
+"Quadro final da fichaQuadro consolidado inspirado na leitura final do Excel, adaptado para o uso operacional no sistema.Pesos e rendimentoTotal de peso1.0000 kgPeso util consolidado1.0000 kgPeso final0.9000 kgFator de Correcao (FC)100.00%Indice de Coccao (IC)100.00%Custos e CMVCusto total da fichaR$ 16,58CMV sem embalagemR$ 18,43 / kgCusto de embalagens e descartaveisR$ 1,81CMV com EmbalagemR$ 20,24 / kgCMV final aplicadoR$ 20,24 / kgVenda e margemPreco de vendaPreco de venda​Preco de vendaDespesa variavel de venda (%PV)Despesa variavel de venda (%PV)Despesa variavel de venda (%PV)CMV do kg (%PV)35.00 %Despesa variavel aplicadaR$ 4,50Margem de contribuicao R$--Margem de contribuicao %45.00 %Saude do CMVSaudavelLeitura operacionalPreco de ReferenciaR$ 45,00Custo Real da FichaR$ 18,39Despesa variavel aplicadaR$ 4,50Margem de ContribuicaoR$ 20,26Diagnostico automatico--"
+
+[36m [2m❯[22m src/tests/unit/engineering/TotaisIndicadores.test.tsx:[2m103:41[22m[39m
+    [90m101| [39m  [34mit[39m([32m'CRIT-06: salePriceInput "0" renderiza "Informe o valor"'[39m[33m,[39m () [33m=>[39m {
+    [90m102| [39m    const { container } = renderTotais({ contributionMarginValue: unde…
+    [90m103| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39m[34mtoMatch[39m([36m/Informe o valor/[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m104| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39mnot[33m.[39m[34mtoMatch[39m([36m/NaN/[39m)[33m;[39m
+    [90m105| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/TotaisIndicadores.test.tsx[2m > [22mTotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-07: CMV da marmita (finalAppliedCmv) fallback "Calcular peso" quando peso final vazio
+[31m[1mAssertionError[22m: expected 'Quadro final da fichaQuadro consolida…' to match /Calcular peso/[39m
+
+[32m- Expected:[39m 
+/Calcular peso/
+
+[31m+ Received:[39m 
+"Quadro final da fichaQuadro consolidado inspirado na leitura final do Excel, adaptado para o uso operacional no sistema.Pesos e rendimentoTotal de peso1.0000 kgPeso util consolidado1.0000 kgPeso final kgFator de Correcao (FC)100.00%Indice de Coccao (IC)100.00%Custos e CMVCusto total da fichaR$ 16,58CMV sem embalagemR$ 18,43 / kgCusto de embalagens e descartaveisR$ 1,81CMV com EmbalagemR$ 20,24 / kgCMV final aplicado--Venda e margemPreco de vendaPreco de venda​Preco de vendaDespesa variavel de venda (%PV)Despesa variavel de venda (%PV)Despesa variavel de venda (%PV)CMV do kg (%PV)35.00 %Despesa variavel aplicadaR$ 4,50Margem de contribuicao R$R$ 20,26Margem de contribuicao %45.00 %Saude do CMVSaudavelLeitura operacionalPreco de ReferenciaR$ 45,00Custo Real da FichaR$ 18,39Despesa variavel aplicadaR$ 4,50Margem de ContribuicaoR$ 20,26Diagnostico automatico--"
+
+[36m [2m❯[22m src/tests/unit/engineering/TotaisIndicadores.test.tsx:[2m113:41[22m[39m
+    [90m111| [39m      finalAppliedCmv[33m:[39m [35mnull[39m
+    [90m112| [39m    })[33m;[39m
+    [90m113| [39m    [34mexpect[39m(container[33m.[39mtextContent [33m??[39m [32m""[39m)[33m.[39m[34mtoMatch[39m([36m/Calcular peso/[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m114| [39m  })[33m;[39m
+    [90m115| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m50 passed[39m[22m[90m (51)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m131 passed[39m[22m[90m (137)[39m
+[2m   Start at [22m 19:10:56
+[2m   Duration [22m 12.40s[2m (transform 8.73s, setup 14.53s, collect 61.55s, tests 22.62s, environment 147.77s, prepare 7.45s)[22m
+

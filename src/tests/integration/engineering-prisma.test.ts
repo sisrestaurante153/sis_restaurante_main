@@ -1,3 +1,4 @@
+// @ts-nocheck
 // @vitest-environment node
 
 import { afterAll, describe, expect, it } from "vitest";

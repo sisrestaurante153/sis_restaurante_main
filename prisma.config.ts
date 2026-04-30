@@ -1,7 +1,9 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-const defaultDatabaseUrl =
+// Migrations usam conexão direta (sem PgBouncer)
+const migrationsUrl =
+  process.env.DIRECT_URL ??
   process.env.DATABASE_URL ??
   "postgresql://sis:sis@localhost:5432/sis_restaurante?schema=public";
 
@@ -11,6 +13,6 @@ export default defineConfig({
     path: "prisma/migrations"
   },
   datasource: {
-    url: defaultDatabaseUrl
+    url: migrationsUrl
   }
 });

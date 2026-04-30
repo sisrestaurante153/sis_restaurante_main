@@ -1,0 +1,1 @@
+RED gate: integration tests created (20 total cases); all skipped in current env due to DATABASE_URL/DB unavailable. Tests will run GREEN after Task 3 BLOCKING checkpoint (docker compose migrate) applies schema. RED fail/skip is the expected state pre-schema.

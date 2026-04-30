@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import os from "node:os";
 import process from "node:process";
 import { promisify } from "node:util";
-import { ImportacaoStatus } from "@/generated/prisma/client";
+import { importacao_status as ImportacaoStatus } from "@/generated/prisma/client";
 import {
   buildFriendlyImportFailureSummary,
   buildFriendlyImportSuccessSummary

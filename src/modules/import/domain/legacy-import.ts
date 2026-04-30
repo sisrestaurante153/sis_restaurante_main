@@ -1,30 +1,30 @@
-import { ItemType, TipoComponente } from "@/generated/prisma/client";
+import { item_type, tipo_componente } from "@/generated/prisma/client";
 
-const ITEM_TYPE_MAP: Record<string, ItemType> = {
-  insumo: ItemType.insumo,
-  pre_preparo: ItemType.pre_preparo,
-  intermediario: ItemType.intermediario,
-  produto_pronto: ItemType.produto_pronto,
-  prato: ItemType.prato,
-  porcao: ItemType.porcao,
-  marmita: ItemType.marmita,
-  combo: ItemType.combo,
-  embalagem: ItemType.embalagem,
-  apoio: ItemType.apoio
+const ITEM_TYPE_MAP: Record<string, item_type> = {
+  insumo: item_type.insumo,
+  pre_preparo: item_type.pre_preparo,
+  intermediario: item_type.intermediario,
+  produto_pronto: item_type.produto_pronto,
+  prato: item_type.prato,
+  porcao: item_type.porcao,
+  marmita: item_type.marmita,
+  combo: item_type.combo,
+  embalagem: item_type.embalagem,
+  apoio: item_type.apoio
 };
 
-const COMPONENT_TYPE_MAP: Record<string, TipoComponente> = {
-  ingredient: TipoComponente.ingrediente,
-  packaging: TipoComponente.embalagem,
-  support: TipoComponente.apoio
+const COMPONENT_TYPE_MAP: Record<string, tipo_componente> = {
+  ingredient: tipo_componente.ingrediente,
+  packaging: tipo_componente.embalagem,
+  support: tipo_componente.apoio
 };
 
-export function mapImportedItemType(value: string | null | undefined): ItemType {
-  return ITEM_TYPE_MAP[value ?? "intermediario"] ?? ItemType.intermediario;
+export function mapImportedItemType(value: string | null | undefined): item_type {
+  return ITEM_TYPE_MAP[value ?? "intermediario"] ?? item_type.intermediario;
 }
 
-export function mapImportedComponentType(value: string): TipoComponente {
-  return COMPONENT_TYPE_MAP[value] ?? TipoComponente.ingrediente;
+export function mapImportedComponentType(value: string): tipo_componente {
+  return COMPONENT_TYPE_MAP[value] ?? tipo_componente.ingrediente;
 }
 
 export function buildExternalKey(

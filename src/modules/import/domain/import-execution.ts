@@ -1,4 +1,4 @@
-import { ImportacaoStatus } from "@/generated/prisma/client";
+import { importacao_status } from "@/generated/prisma/client";
 
 export type ImportExecutionStage =
   | "aguardando_worker"
@@ -33,10 +33,10 @@ export type ImportFailureCode = "parser_python" | "prisma_load" | "storage" | "u
 
 export class ActiveImportExecutionError extends Error {
   readonly executionId: string;
-  readonly executionStatus: ImportacaoStatus;
+  readonly executionStatus: importacao_status;
   readonly fileName: string;
 
-  constructor(input: { id: string; status: ImportacaoStatus; arquivo: string }) {
+  constructor(input: { id: string; status: importacao_status; arquivo: string }) {
     super(
       `Ja existe uma importacao ativa (${input.id}) para o arquivo ${input.arquivo}. Aguarde a conclusao antes de enviar outro XLSX.`
     );
@@ -48,21 +48,21 @@ export class ActiveImportExecutionError extends Error {
 }
 
 export class InvalidImportExecutionTransitionError extends Error {
-  constructor(currentStatus: ImportacaoStatus, event: ImportExecutionEvent) {
+  constructor(currentStatus: importacao_status, event: ImportExecutionEvent) {
     super(`Transicao invalida para importacao: ${currentStatus} -> ${event}`);
     this.name = "InvalidImportExecutionTransitionError";
   }
 }
 
-export function isImportExecutionActive(status: ImportacaoStatus) {
-  return status === ImportacaoStatus.pendente || status === ImportacaoStatus.processando;
+export function isImportExecutionActive(status: importacao_status) {
+  return status === importacao_status.pendente || status === importacao_status.processando;
 }
 
 export function assertCanCreateImportExecution(
   activeExecution:
     | {
         id: string;
-        status: ImportacaoStatus;
+        status: importacao_status;
         origemArquivo: string;
       }
     | null
@@ -77,23 +77,23 @@ export function assertCanCreateImportExecution(
 }
 
 export function getNextImportExecutionStatus(
-  currentStatus: ImportacaoStatus,
+  currentStatus: importacao_status,
   event: ImportExecutionEvent
 ) {
-  if (currentStatus === ImportacaoStatus.pendente && event === "start_processing") {
-    return ImportacaoStatus.processando;
+  if (currentStatus === importacao_status.pendente && event === "start_processing") {
+    return importacao_status.processando;
   }
 
-  if (currentStatus === ImportacaoStatus.processando && event === "complete") {
-    return ImportacaoStatus.concluida;
+  if (currentStatus === importacao_status.processando && event === "complete") {
+    return importacao_status.concluida;
   }
 
-  if (currentStatus === ImportacaoStatus.processando && event === "complete_with_conflicts") {
-    return ImportacaoStatus.concluida_com_conflitos;
+  if (currentStatus === importacao_status.processando && event === "complete_with_conflicts") {
+    return importacao_status.concluida_com_conflitos;
   }
 
-  if (currentStatus === ImportacaoStatus.processando && event === "fail") {
-    return ImportacaoStatus.falha;
+  if (currentStatus === importacao_status.processando && event === "fail") {
+    return importacao_status.falha;
   }
 
   throw new InvalidImportExecutionTransitionError(currentStatus, event);

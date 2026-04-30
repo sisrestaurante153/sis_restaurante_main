@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ImportacaoStatus } from "@/generated/prisma/client";
+import { importacao_status as ImportacaoStatus } from "@/generated/prisma/client";
 import {
   InvalidImportExecutionTransitionError,
   assertCanCreateImportExecution,

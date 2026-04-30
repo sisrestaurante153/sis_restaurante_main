@@ -1,15 +1,15 @@
-import { Prisma, UnidadeTipo } from "@/generated/prisma/client";
+import { Prisma, unidade_tipo } from "@/generated/prisma/client";
 
-const UNIT_MAP: Record<string, { type: UnidadeTipo; factor: string }> = {
-  kg: { type: UnidadeTipo.massa, factor: "1" },
-  g: { type: UnidadeTipo.massa, factor: "0.001" },
-  mg: { type: UnidadeTipo.massa, factor: "0.000001" },
-  l: { type: UnidadeTipo.volume, factor: "1" },
-  ml: { type: UnidadeTipo.volume, factor: "0.001" },
-  un: { type: UnidadeTipo.contagem, factor: "1" },
-  unidade: { type: UnidadeTipo.contagem, factor: "1" },
-  "maco": { type: UnidadeTipo.contagem, factor: "1" },
-  "maço": { type: UnidadeTipo.contagem, factor: "1" }
+const UNIT_MAP: Record<string, { type: unidade_tipo; factor: string }> = {
+  kg: { type: unidade_tipo.massa, factor: "1" },
+  g: { type: unidade_tipo.massa, factor: "0.001" },
+  mg: { type: unidade_tipo.massa, factor: "0.000001" },
+  l: { type: unidade_tipo.volume, factor: "1" },
+  ml: { type: unidade_tipo.volume, factor: "0.001" },
+  un: { type: unidade_tipo.contagem, factor: "1" },
+  unidade: { type: unidade_tipo.contagem, factor: "1" },
+  "maco": { type: unidade_tipo.contagem, factor: "1" },
+  "maço": { type: unidade_tipo.contagem, factor: "1" }
 };
 
 function decimal(value: Prisma.Decimal | string | number) {
@@ -22,7 +22,7 @@ export function normalizeUnitCode(value: string) {
 
 export function inferUnitTypeFromCode(value: string) {
   const code = normalizeUnitCode(value);
-  return UNIT_MAP[code]?.type ?? UnidadeTipo.contagem;
+  return UNIT_MAP[code]?.type ?? unidade_tipo.contagem;
 }
 
 export function getCanonicalFactor(value: string) {

@@ -1,0 +1,53 @@
+
+Running 5 tests using 1 worker
+
+[PASS] contract-g3a: .g-3-a grid template read from HTML | exp=140px 1fr 160px | got=140px 1fr 160px
+[PASS] contract-g2: .g-2 grid template read from HTML | exp=1fr 1fr | got=1fr 1fr
+[PASS] contract-fornecedor-bg: .fornecedor-block+.fornecedor-block background (secondaries green) | exp=#F0F7E8 or rgb(240, 247, 232) | got=rgb(240, 247, 232)
+[PASS] contract-fornecedor-border: .fornecedor-block+.fornecedor-block border-color | exp=#C0DD97 or rgb(192, 221, 151) | got=rgb(192, 221, 151)
+[PASS] app-g3a-identificacao: Identificacao Row 1 computed grid-template-columns | exp=140px <flex> 160px | got=140px 598px 160px
+[PASS] app-g2-identificacao: Identificacao Row 2 computed grid-template-columns (1fr 1fr) | exp=equal two tracks | got=456px 456px
+[PASS] app-descricao-opcional: Label "Descricao operacional" present with "(opcional)" marker | exp=visible (opcional) | got=present
+[SUMMARY item-form] 7/7 passed, 0 failed
+  ✓  1 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:107:5 › pixel-perfect: tela-item-v1.html vs /itens/novo (8.3s)
+[PASS] contract-itens-cols-read: Contract HTML col.c-* widths extracted | exp=>=10 col rules | got=15 cols
+[PASS] col-codigo: Column c-cod -> app code width (+/- 4px) | exp=72px | got=72px
+[PASS] col-nome: Column c-nome -> app name width (+/- 4px) | exp=162px | got=162px
+[PASS] col-tipo: Column c-tipo -> app type width (+/- 4px) | exp=92px | got=90px
+[PASS] col-cat: Column c-cat -> app category width (+/- 4px) | exp=102px | got=100px
+[PASS] col-qtdc: Column c-qtdc -> app purchaseQuantity width (+/- 4px) | exp=72px | got=72px
+[PASS] col-unc: Column c-unc -> app stockUnit width (+/- 4px) | exp=54px | got=56px
+[PASS] col-precc: Column c-precc -> app baseUnitCost width (+/- 4px) | exp=74px | got=72px
+[PASS] col-fator: Column c-fator -> app conversionFactor width (+/- 4px) | exp=62px | got=60px
+[PASS] col-qtdu: Column c-qtdu -> app usageQuantity width (+/- 4px) | exp=64px | got=64px
+[PASS] col-unu: Column c-unu -> app usageUnit width (+/- 4px) | exp=50px | got=50px
+[PASS] col-precu: Column c-precu -> app usagePrice width (+/- 4px) | exp=74px | got=72px
+[PASS] col-forn: Column c-forn -> app supplierName width (+/- 4px) | exp=114px | got=110px
+[PASS] col-sta: Column c-sta -> app active width (+/- 4px) | exp=64px | got=62px
+[PASS] col-data: Column c-data -> app updatedAt width (+/- 4px) | exp=92px | got=90px
+[PASS] col-obs: Column c-obs -> app description width (+/- 4px) | exp=40px | got=40px
+[SUMMARY itens-grade] 16/16 passed, 0 failed
+  ✓  2 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:284:5 › pixel-perfect: tela-itens-grade-v2.html vs /itens (4.0s)
+[PASS] ficha-grid-template: FichaFlatGrid GRID_TEMPLATE matches HTML contract | exp=22px 1fr 80px 60px 240px 90px 96px 28px | got=22px 1fr 80px 60px 240px 90px 96px 28px
+[PASS] ficha-cf-grid-template: FichaFlatGrid CF_GRID_TEMPLATE matches HTML contract | exp=22px auto 120px 110px 90px 1fr 28px | got=22px auto 120px 110px 90px 1fr 28px
+[PASS] ficha-form-loaded: Ficha form /fichas/nova loads without errors | exp=heading visible | got=visible
+[SUMMARY ficha-form] 3/3 passed, 0 failed
+  ✓  3 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:369:5 › pixel-perfect: tela-ficha-tecnica-v2.html vs /fichas/nova (2.6s)
+[PASS] contract-fichas-cols-read: Contract HTML col.c-* widths extracted | exp=>=10 col rules | got=12 cols
+[PASS] col-cod: Column c-cod -> app code width (+/- 4px) | exp=60px | got=60px
+[PASS] col-prod: Column c-prod -> app itemName width (+/- 4px) | exp=170px | got=170px
+[PASS] col-mod: Column c-mod -> app modalityLabel width (+/- 4px) | exp=100px | got=100px
+[PASS] col-grp: Column c-grp -> app groupOperational width (+/- 4px) | exp=100px | got=100px
+[PASS] col-comp: Column c-comp -> app componentCount width (+/- 4px) | exp=82px | got=82px
+[PASS] col-fc: Column c-fc -> app correctionFactor width (+/- 4px) | exp=60px | got=60px
+[PASS] col-ic: Column c-ic -> app cookingIndex width (+/- 4px) | exp=60px | got=60px
+[PASS] col-custo: Column c-custo -> app totalCost width (+/- 4px) | exp=82px | got=82px
+[PASS] col-pv: Column c-pv -> app sellingPrice width (+/- 4px) | exp=80px | got=80px
+[PASS] col-data: Column c-data -> app updatedAt width (+/- 4px) | exp=110px | got=110px
+[PASS] col-sta: Column c-sta -> app status width (+/- 4px) | exp=64px | got=64px
+[FAIL] col-obs: Column c-obs -> app notes width (+/- 4px) | exp=38px | got=50px | diff=12px (out of 4px tolerance)
+[SUMMARY fichas-grade] 12/13 passed, 1 failed
+  ✓  4 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:414:5 › pixel-perfect: tela-fichas-grade-v1.html vs /fichas (3.2s)
+  ✓  5 [chromium] › tests\e2e\pixel-perfect-phase8.spec.ts:491:5 › pixel-perfect: capture screenshots of 4 telas (5.6s)
+
+  5 passed (27.6s)

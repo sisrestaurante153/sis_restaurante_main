@@ -1,0 +1,637 @@
+
+> sis-restaurante@0.1.0 test:unit
+> vitest run src/tests/unit ItemForm
+
+[1m[43m DEPRECATED [49m[22m [33m"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.[39m
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/felip/OneDrive/Área de Trabalho/projetos cliente/sis-restaurante[39m
+
+ [32m✓[39m src/tests/unit/dashboard-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 454[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders KPI cards, attention points and quick actions with the new labels [33m 452[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 745[2mms[22m[39m
+   [33m[2m✓[22m[39m CompositionPage[2m > [22mrenders the composition tree view with filtering and nested rows [33m 744[2mms[22m[39m
+ [32m✓[39m src/tests/unit/sidebar-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 892[2mms[22m[39m
+   [33m[2m✓[22m[39m SidebarNav[2m > [22mrenders grouped navigation sections with current route highlighted [33m 595[2mms[22m[39m
+ [32m✓[39m src/tests/unit/fichas-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 948[2mms[22m[39m
+   [33m[2m✓[22m[39m FichasPage[2m > [22mrenders the expanded ficha listing contract with shared navigation [33m 947[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 2819[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsPage[2m > [22mrenders the expanded operational listing contract and wires navigation [33m 2817[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-listing.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1000[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsListingView[2m > [22mrenders exactly 15 column headers in the correct order [33m 589[2mms[22m[39m
+ [32m✓[39m src/tests/unit/costs-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 536[2mms[22m[39m
+   [33m[2m✓[22m[39m CostsPage[2m > [22mrenders searchable financial cards with cost breakdown and ficha links [33m 534[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/TotaisIndicadores.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 752[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/FichaFlatGrid.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 885[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mGRID_TEMPLATE bate HTML: 22px 1fr 80px 60px 240px 90px 96px 28px [33m 336[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cadastros-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 930[2mms[22m[39m
+   [33m[2m✓[22m[39m CadastrosPage[2m > [22mrenders the master data workspace with all requested sections [33m 928[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-workspace.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 716[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportWorkspace[2m > [22mshows the selected workbook name before submitting the import [33m 715[2mms[22m[39m
+[90mstderr[2m | src/tests/unit/login-form.test.tsx[2m > [22m[2mLoginForm[2m > [22m[2muses the configured base path for the auth request
+[22m[39mNot implemented: navigation to another Document
+
+ [32m✓[39m src/tests/unit/login-form.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1295[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mfills seed credentials from chips and toggles password visibility [33m 701[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mshows the login error inside an alert when authentication fails [33m 342[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-api-paths.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 766[2mms[22m[39m
+   [33m[2m✓[22m[39m Import API paths[2m > [22mprefixes artifact downloads and dashboard polling with the configured base path [33m 765[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-pending-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1026[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPendingPage[2m > [22mrenders reconciliation grid, confidence indicator and resolution dialog [33m 1025[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1622[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm[2m > [22mrenders the operational item contract with code and usage metrics visible [33m 1612[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 221[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1558[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPage[2m > [22mrenders the protected import workspace with blocked upload, active execution and history [33m 1557[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1498[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditPage[2m > [22mrenders filters and timeline entries for operational history [33m 1497[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-data-grid-pattern.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 325[2mms[22m[39m
+   [33m[2m✓[22m[39m data grid pattern[2m > [22mprovides the shared listing geometry and stacked cell contract [33m 323[2mms[22m[39m
+ [32m✓[39m src/tests/unit/forbidden-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 248[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-routes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+ [32m✓[39m src/tests/unit/page-header.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 302[2mms[22m[39m
+ [32m✓[39m src/tests/unit/workspace-layout.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 188[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-repository.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog-repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cost-engine.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/tests/unit/session.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-shell-client.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 480[2mms[22m[39m
+   [33m[2m✓[22m[39m AppShellClient[2m > [22mdoes not render the expanded sidebar header copy [33m 478[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form-schema.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tests/unit/next-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2795[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders the ficha workflow in four semantic sections with totals and finalization fields [33m 2089[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders commercial fallbacks instead of blank or NaN values when sale price or final weight are invalid [33m 705[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1883[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemDetailPage[2m > [22mrenders the item form without the legacy side cards and keeps safe-delete feedback [33m 1872[2mms[22m[39m
+ [31m❯[39m src/tests/unit/catalog/ItemForm.test.tsx [2m([22m[2m7 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 3039[2mms[22m[39m
+[31m   [31m×[31m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mrenderiza exatamente 3 blocos: Identificacao, Detalhamento de Compras/Fornecedor, Observacoes[39m[33m 861[2mms[22m[39m
+[31m     → [2mexpect([22m[31melement[31m[2m).not.toBeInTheDocument()[22m
+
+[31mexpected document not to contain element, found <span
+  class="MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"
+>
+  Descricao e detalhamento operacional
+</span> instead[31m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mIdentificacao contem exatamente 5 campos (Codigo, Nome, Tipo, Categoria, Status) [33m 407[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mIdentificacao NAO contem campos de Unidade/Qtde/Preco/Fator [33m 426[2mms[22m[39m
+[31m   [31m×[31m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mBloco Observacoes aparece APOS Detalhamento de Compras (ordem DOM)[39m[33m 403[2mms[22m[39m
+[31m     → Unable to find an element with the text: /Detalhamento de Compras/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<form[31m
+      [33maction[31m=[32m"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"[31m
+      [33mclass[31m=[32m"MuiStack-root css-8mcjw0-MuiStack-root"[31m
+      [33mid[31m=[32m"item-form"[31m
+      [33mnovalidate[31m=[32m""[31m
+    [36m>[31m
+      [36m<input[31m
+        [33mname[31m=[32m"id"[31m
+        [33mtype[31m=[32m"hidden"[31m
+        [33mvalue[31m=[32m"item-1"[31m
+      [36m/>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+        [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mIdentificacao[0m
+                [36m</span>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mDados mestres para identificar o item no cadastro operacional.[0m
+                [36m</p>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiGrid-root MuiGrid-container MuiGrid-direction-xs-row MuiGrid-spacing-xs-2 css-zjhuaj-MuiGrid-root"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                [36m>[31m
+                  [36m<label[31m
+                    [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root"[31m
+                    [33mdata-shrink[31m=[32m"true"[31m
+                    [33mfor[31m=[32m"_r_36_"[31m
+                    [33mid[31m=[32m"_r_36_-label"[31m
+                  [36m>[31m
+                    [0mCodigo do item[0m
+                    [36m<span[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"MuiFormLabel-asterisk MuiInputLabel-asterisk css-1ljffdk-MuiFormLabel-asterisk"[31m
+                    [36m>[31m
+                      [0m [0m
+                      [0m*[0m
+                    [36m</span>[31m
+                  [36m</label>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl css-1blp12k-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                  [36m>[31m
+                    [36m<input[31m
+                      [33maria-describedby[31m=[32m"_r_36_-helper-text"[31m
+                      [33maria-invalid[31m=[32m"false"[31m
+                      [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input"[31m
+                      [33mid[31m=[32m"_r_36_"[31m
+                      [33mname[31m=[32m"code"[31m
+                      [33mrequired[31m=[32m""[31m
+                      [33mtype[31m=[32m"text"[31m
+                      [33mvalue[31m=[32m"LF8NHE"[31m
+                    [36m/>[31m
+                    [36m<fieldset[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"MuiOutlinedInput-notchedOutline css-18p5xg2-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"[31m
+                    [36m>[31m
+                      [36m<legend[31m
+                        [33mclass[31m=[32m"css-ex8a5f-MuiNotchedOutlined-root"[31m
+                      [36m>[31m
+                        [36m<span>[31m
+                          [0mCodigo do item[0m
+                          [0m [0m
+                          [0m*[0m
+                        [36m</span>[31m
+                      [36m</legend>[31m
+                    [36m</fieldset>[31m
+                  [36m</div>[31m
+                  [36m<p[31m
+                    [33mclass[31m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled Mui-required css-er619e-MuiFormHelperText-root"[31m
+                    [33mid[31m=[32m"_r_36_-helper-text"[31m
+                  [36m>[31m
+                    [36m<span[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"notranslate"[31m
+                    [36m>[31m
+                      [0m​[0m
+                    [36m</span>[31m
+                  [36m</p>[31m
+                [36m</div>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                [36m>[31m
+                  [36m<label[31m
+                    [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabe...[39m
+[31m   [31m×[31m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mDescricao operacional aparece dentro do bloco Observacoes marcada como (opcional)[39m[32m 297[2mms[22m[39m
+[31m     → Unable to find an element with the text: /^Observacoes$/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<form[31m
+      [33maction[31m=[32m"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"[31m
+      [33mclass[31m=[32m"MuiStack-root css-8mcjw0-MuiStack-root"[31m
+      [33mid[31m=[32m"item-form"[31m
+      [33mnovalidate[31m=[32m""[31m
+    [36m>[31m
+      [36m<input[31m
+        [33mname[31m=[32m"id"[31m
+        [33mtype[31m=[32m"hidden"[31m
+        [33mvalue[31m=[32m"item-1"[31m
+      [36m/>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+        [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mIdentificacao[0m
+                [36m</span>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mDados mestres para identificar o item no cadastro operacional.[0m
+                [36m</p>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiGrid-root MuiGrid-container MuiGrid-direction-xs-row MuiGrid-spacing-xs-2 css-zjhuaj-MuiGrid-root"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                [36m>[31m
+                  [36m<label[31m
+                    [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root"[31m
+                    [33mdata-shrink[31m=[32m"true"[31m
+                    [33mfor[31m=[32m"_r_48_"[31m
+                    [33mid[31m=[32m"_r_48_-label"[31m
+                  [36m>[31m
+                    [0mCodigo do item[0m
+                    [36m<span[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"MuiFormLabel-asterisk MuiInputLabel-asterisk css-1ljffdk-MuiFormLabel-asterisk"[31m
+                    [36m>[31m
+                      [0m [0m
+                      [0m*[0m
+                    [36m</span>[31m
+                  [36m</label>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl css-1blp12k-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                  [36m>[31m
+                    [36m<input[31m
+                      [33maria-describedby[31m=[32m"_r_48_-helper-text"[31m
+                      [33maria-invalid[31m=[32m"false"[31m
+                      [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input"[31m
+                      [33mid[31m=[32m"_r_48_"[31m
+                      [33mname[31m=[32m"code"[31m
+                      [33mrequired[31m=[32m""[31m
+                      [33mtype[31m=[32m"text"[31m
+                      [33mvalue[31m=[32m"LF8NHE"[31m
+                    [36m/>[31m
+                    [36m<fieldset[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"MuiOutlinedInput-notchedOutline css-18p5xg2-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"[31m
+                    [36m>[31m
+                      [36m<legend[31m
+                        [33mclass[31m=[32m"css-ex8a5f-MuiNotchedOutlined-root"[31m
+                      [36m>[31m
+                        [36m<span>[31m
+                          [0mCodigo do item[0m
+                          [0m [0m
+                          [0m*[0m
+                        [36m</span>[31m
+                      [36m</legend>[31m
+                    [36m</fieldset>[31m
+                  [36m</div>[31m
+                  [36m<p[31m
+                    [33mclass[31m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled Mui-required css-er619e-MuiFormHelperText-root"[31m
+                    [33mid[31m=[32m"_r_48_-helper-text"[31m
+                  [36m>[31m
+                    [36m<span[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"notranslate"[31m
+                    [36m>[31m
+                      [0m​[0m
+                    [36m</span>[31m
+                  [36m</p>[31m
+                [36m</div>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                [36m>[31m
+                  [36m<label[31m
+                    [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabe...[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mprops removidas (stockUnit/usageUnit/conversionFactor) nao quebram o render [33m 307[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mcards laterais de rastreabilidade/custos ausentes (PDFV2-ITEM-05) [33m 336[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 2568[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaDetailPage[2m > [22mrenders the editing layout without the legacy summary sidebar [33m 2566[2mms[22m[39m
+ [32m✓[39m src/tests/unit/master-data-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/tests/unit/operational-item-import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/reconciliation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-service.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/env.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-tecnica-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form-schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-execution-domain.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/platform/env.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/access-control.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/backup-policy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/unit-conversion.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog/purchases-editor.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 3642[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal sozinho: sem badge fixado, campos Unidade de uso + Qtde de uso editaveis [33m 589[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal + secundario: badge 'fixado do 1o fornecedor' aparece 2x (Unidade uso + Qtde uso) [33m 345[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario deriva usageUnit client-side do principal (D-05) [33m 321[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario tem Unidade de uso e Qtde de uso com aria-readonly=true (D-05 readonly) [33m 836[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mPreco de uso no secundario usa seu proprio fator (D-07): 80/10=8.0000, NAO o fator do principal [33m 346[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mRemover aparece so em secundarios (principal sem botao Remover) [33m 460[2mms[22m[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mtoggle principal em secundario: reseta demais para false + exibe 'Campos fixados atualizados a partir de {nome}' (D-06) [33m 399[2mms[22m[39m
+ [32m✓[39m src/tests/unit/health-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/authorization-guards.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/user-management.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/components-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3897[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders a single flat grid with per-row stage controls and footer buttons [33m 2543[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders per-row peso labels driven by the row's stage type and reveals montagem on demand [33m 995[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22madds library items into the flat grid and groups them back into stages on serialize [33m 358[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/ItemForm.test.tsx[2m > [22mItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mrenderiza exatamente 3 blocos: Identificacao, Detalhamento de Compras/Fornecedor, Observacoes
+[31m[1mError[22m: [2mexpect([22m[31melement[31m[2m).not.toBeInTheDocument()[22m
+
+[31mexpected document not to contain element, found <span
+  class="MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"
+>
+  Descricao e detalhamento operacional
+</span> instead[31m[39m
+[36m [2m❯[22m src/tests/unit/catalog/ItemForm.test.tsx:[2m70:77[22m[39m
+    [90m 68| [39m    // O HTML contrato (update/tela-item-v1.html) define 3 card-labels…
+    [90m 69| [39m    // tem um 4o FormSection "Descricao e detalhamento operacional" — …
+    [90m 70| [39m    expect(screen.queryByText(/Descricao e detalhamento operacional/i)…
+    [90m   | [39m                                                                            [31m^[39m
+    [90m 71| [39m    [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([36m/^Identificacao$/i[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+    [90m 72| [39m    expect(screen.getByText(/Detalhamento de Compras/i)).toBeInTheDocu…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/ItemForm.test.tsx[2m > [22mItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mBloco Observacoes aparece APOS Detalhamento de Compras (ordem DOM)
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: /Detalhamento de Compras/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33maction[39m=[32m"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"[39m
+      [33mclass[39m=[32m"MuiStack-root css-8mcjw0-MuiStack-root"[39m
+      [33mid[39m=[32m"item-form"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<input[39m
+        [33mname[39m=[32m"id"[39m
+        [33mtype[39m=[32m"hidden"[39m
+        [33mvalue[39m=[32m"item-1"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+        [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mIdentificacao[0m
+                [36m</span>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mDados mestres para identificar o item no cadastro operacional.[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiGrid-root MuiGrid-container MuiGrid-direction-xs-row MuiGrid-spacing-xs-2 css-zjhuaj-MuiGrid-root"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root"[39m
+                    [33mdata-shrink[39m=[32m"true"[39m
+                    [33mfor[39m=[32m"_r_36_"[39m
+                    [33mid[39m=[32m"_r_36_-label"[39m
+                  [36m>[39m
+                    [0mCodigo do item[0m
+                    [36m<span[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"MuiFormLabel-asterisk MuiInputLabel-asterisk css-1ljffdk-MuiFormLabel-asterisk"[39m
+                    [36m>[39m
+                      [0m [0m
+                      [0m*[0m
+                    [36m</span>[39m
+                  [36m</label>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl css-1blp12k-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-describedby[39m=[32m"_r_36_-helper-text"[39m
+                      [33maria-invalid[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input"[39m
+                      [33mid[39m=[32m"_r_36_"[39m
+                      [33mname[39m=[32m"code"[39m
+                      [33mrequired[39m=[32m""[39m
+                      [33mtype[39m=[32m"text"[39m
+                      [33mvalue[39m=[32m"LF8NHE"[39m
+                    [36m/>[39m
+                    [36m<fieldset[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"MuiOutlinedInput-notchedOutline css-18p5xg2-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"[39m
+                    [36m>[39m
+                      [36m<legend[39m
+                        [33mclass[39m=[32m"css-ex8a5f-MuiNotchedOutlined-root"[39m
+                      [36m>[39m
+                        [36m<span>[39m
+                          [0mCodigo do item[0m
+                          [0m [0m
+                          [0m*[0m
+                        [36m</span>[39m
+                      [36m</legend>[39m
+                    [36m</fieldset>[39m
+                  [36m</div>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled Mui-required css-er619e-MuiFormHelperText-root"[39m
+                    [33mid[39m=[32m"_r_36_-helper-text"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"notranslate"[39m
+                    [36m>[39m
+                      [0m​[0m
+                    [36m</span>[39m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabe...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/ItemForm.test.tsx:[2m107:30[22m[39m
+    [90m105| [39m  it("Bloco Observacoes aparece APOS Detalhamento de Compras (ordem DO…
+    [90m106| [39m    [34mrenderForm[39m()[33m;[39m
+    [90m107| [39m    [35mconst[39m purchases [33m=[39m screen[33m.[39m[34mgetByText[39m([36m/Detalhamento de Compras/i[39m)[33m;[39m
+    [90m   | [39m                             [31m^[39m
+    [90m108| [39m    [35mconst[39m obs [33m=[39m screen[33m.[39m[34mgetByText[39m([36m/^Observacoes$/i[39m)[33m;[39m
+    [90m109| [39m    [90m// bit 4 = Node.DOCUMENT_POSITION_FOLLOWING[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/ItemForm.test.tsx[2m > [22mItemForm — SPEC-ITEM-LAYOUT + PDFV2-ITEM-05[2m > [22mDescricao operacional aparece dentro do bloco Observacoes marcada como (opcional)
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: /^Observacoes$/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33maction[39m=[32m"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"[39m
+      [33mclass[39m=[32m"MuiStack-root css-8mcjw0-MuiStack-root"[39m
+      [33mid[39m=[32m"item-form"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<input[39m
+        [33mname[39m=[32m"id"[39m
+        [33mtype[39m=[32m"hidden"[39m
+        [33mvalue[39m=[32m"item-1"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+        [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mIdentificacao[0m
+                [36m</span>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mDados mestres para identificar o item no cadastro operacional.[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiGrid-root MuiGrid-container MuiGrid-direction-xs-row MuiGrid-spacing-xs-2 css-zjhuaj-MuiGrid-root"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root"[39m
+                    [33mdata-shrink[39m=[32m"true"[39m
+                    [33mfor[39m=[32m"_r_48_"[39m
+                    [33mid[39m=[32m"_r_48_-label"[39m
+                  [36m>[39m
+                    [0mCodigo do item[0m
+                    [36m<span[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"MuiFormLabel-asterisk MuiInputLabel-asterisk css-1ljffdk-MuiFormLabel-asterisk"[39m
+                    [36m>[39m
+                      [0m [0m
+                      [0m*[0m
+                    [36m</span>[39m
+                  [36m</label>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl css-1blp12k-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-describedby[39m=[32m"_r_48_-helper-text"[39m
+                      [33maria-invalid[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input"[39m
+                      [33mid[39m=[32m"_r_48_"[39m
+                      [33mname[39m=[32m"code"[39m
+                      [33mrequired[39m=[32m""[39m
+                      [33mtype[39m=[32m"text"[39m
+                      [33mvalue[39m=[32m"LF8NHE"[39m
+                    [36m/>[39m
+                    [36m<fieldset[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"MuiOutlinedInput-notchedOutline css-18p5xg2-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"[39m
+                    [36m>[39m
+                      [36m<legend[39m
+                        [33mclass[39m=[32m"css-ex8a5f-MuiNotchedOutlined-root"[39m
+                      [36m>[39m
+                        [36m<span>[39m
+                          [0mCodigo do item[0m
+                          [0m [0m
+                          [0m*[0m
+                        [36m</span>[39m
+                      [36m</legend>[39m
+                    [36m</fieldset>[39m
+                  [36m</div>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled Mui-required css-er619e-MuiFormHelperText-root"[39m
+                    [33mid[39m=[32m"_r_48_-helper-text"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"notranslate"[39m
+                    [36m>[39m
+                      [0m​[0m
+                    [36m</span>[39m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiGrid-root MuiGrid-direction-xs-row MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 css-h3cks1-MuiGrid-root"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabe...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/ItemForm.test.tsx:[2m117:28[22m[39m
+    [90m115| [39m  it("Descricao operacional aparece dentro do bloco Observacoes marcad…
+    [90m116| [39m    [34mrenderForm[39m()[33m;[39m
+    [90m117| [39m    [35mconst[39m heading [33m=[39m screen[33m.[39m[34mgetByText[39m([36m/^Observacoes$/i[39m)[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m118| [39m    const card = heading.closest(".MuiCard-root") ?? heading.closest("…
+    [90m119| [39m    [34mexpect[39m(card)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m154 passed[39m[22m[90m (157)[39m
+[2m   Start at [22m 20:13:34
+[2m   Duration [22m 10.63s[2m (transform 12.49s, setup 11.74s, collect 88.95s, tests 38.46s, environment 67.62s, prepare 6.21s)[22m
+

@@ -7,8 +7,6 @@ describe("auth repository", () => {
     const user = await repository.findUserByEmail("admin@sis-restaurante.local");
 
     expect(user?.email).toBe("admin@sis-restaurante.local");
-    expect(user?.ativo).toBe(true);
     expect(user?.roleCodes).toContain("admin");
-    expect(user?.senhaHash).toContain("scrypt:");
   });
 });

@@ -38,7 +38,7 @@ describe.skipIf(!runIntegration)("prisma migration idempotence (D-04)", () => {
     // o Prisma $executeRawUnsafe nao executa em single statement. Idempotencia real e provada no checkpoint Task 3 (docker run 2x).
     // Este teste confirma apenas o snapshot estavel (schema ja aplicado).
     const snap1 = await snapshotSchema();
-    const count1 = await prisma.itemCompra.count({ where: { principal: true } });
+    const count1 = await prisma.itemCompra.count({ where: { sn_principal: true } });
     expect(snap1.cols.find((c) => c.column_name === "unidade_uso_id")).toBeDefined();
     expect(snap1.cols.find((c) => c.column_name === "quantidade_uso")).toBeDefined();
     expect(count1).toBeGreaterThanOrEqual(0);

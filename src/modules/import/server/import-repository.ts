@@ -1,6 +1,6 @@
 import {
-  ImportacaoLinhaStatus,
-  ImportacaoStatus,
+  importacao_linha_status,
+  importacao_status,
   Prisma,
   type PrismaClient
 } from "@/generated/prisma/client";
@@ -27,9 +27,9 @@ type ImportExecutionPayload = Prisma.ImportacaoExecucaoGetPayload<{
   include: {
     solicitadoPor: {
       select: {
-        id: true;
-        nome: true;
-        email: true;
+        cd_usuario: true;
+        nm_usuario: true;
+        ds_email: true;
       };
     };
     _count: {
@@ -47,7 +47,7 @@ export interface ImportExecutionRecord {
   fileHash: string | null;
   mimeType: string | null;
   fileSizeBytes: number | null;
-  status: ImportacaoStatus;
+  status: importacao_status;
   currentStage: string;
   operationalSummary: Record<string, unknown> | null;
   friendlySummary: FriendlyImportSummary | null;
@@ -63,7 +63,7 @@ export interface ImportExecutionRecord {
 }
 
 interface ImportExecutionFilters {
-  status?: ImportacaoStatus;
+  status?: importacao_status;
   dateFrom?: Date;
   dateTo?: Date;
   limit?: number;
@@ -113,24 +113,24 @@ function resolvePrismaClient() {
 
 function mapImportExecution(execution: ImportExecutionPayload): ImportExecutionRecord {
   return {
-    id: execution.id,
-    originalFileName: execution.origemArquivo,
-    originalFilePath: execution.origemArquivoCaminho ?? null,
-    fileHash: execution.hashArquivo ?? null,
-    mimeType: execution.mimeTypeArquivo ?? null,
-    fileSizeBytes: execution.tamanhoArquivoBytes ?? null,
-    status: execution.status,
-    currentStage: execution.estagioAtual,
-    operationalSummary: toPlainValue<Record<string, unknown>>(execution.resumoJson),
-    friendlySummary: toPlainValue<FriendlyImportSummary>(execution.resumoAmigavelJson),
-    technicalDetails: toPlainValue<Record<string, unknown>>(execution.detalhesTecnicosJson),
-    artifacts: toPlainValue<Record<string, unknown>>(execution.artefatosJson),
-    requestedByUserId: execution.solicitadoPorId ?? null,
-    requestedByName: execution.solicitadoPor?.nome ?? null,
-    requestedByEmail: execution.solicitadoPor?.email ?? null,
-    createdAt: execution.criadoEm,
-    startedAt: execution.iniciadoEm ?? null,
-    finishedAt: execution.finalizadoEm ?? null,
+    id: execution.cd_importacao,
+    originalFileName: execution.ds_origem_arquivo,
+    originalFilePath: execution.ds_caminho_arquivo ?? null,
+    fileHash: execution.ds_hash ?? null,
+    mimeType: execution.ds_mime_type ?? null,
+    fileSizeBytes: execution.nr_tamanho_bytes ?? null,
+    status: execution.tp_status,
+    currentStage: execution.ds_estagio_atual,
+    operationalSummary: toPlainValue<Record<string, unknown>>(execution.js_resumo),
+    friendlySummary: toPlainValue<FriendlyImportSummary>(execution.js_resumo_amigavel),
+    technicalDetails: toPlainValue<Record<string, unknown>>(execution.js_detalhes_tecnicos),
+    artifacts: toPlainValue<Record<string, unknown>>(execution.js_artefatos),
+    requestedByUserId: execution.cd_solicitante ?? null,
+    requestedByName: execution.solicitadoPor?.nm_usuario ?? null,
+    requestedByEmail: execution.solicitadoPor?.ds_email ?? null,
+    createdAt: execution.ts_criacao,
+    startedAt: execution.ts_inicio ?? null,
+    finishedAt: execution.ts_fim ?? null,
     conflictCount: execution._count.conflitos
   };
 }
@@ -143,7 +143,7 @@ function mapDemoExecution(execution: DemoImportExecutionRecord): ImportExecution
     fileHash: execution.fileHash,
     mimeType: execution.mimeType,
     fileSizeBytes: execution.fileSizeBytes,
-    status: execution.status as ImportacaoStatus,
+    status: execution.status as importacao_status,
     currentStage: execution.currentStage,
     operationalSummary: execution.operationalSummary,
     friendlySummary: execution.friendlySummary,
@@ -173,9 +173,9 @@ function importExecutionInclude() {
   return {
     solicitadoPor: {
       select: {
-        id: true,
-        nome: true,
-        email: true
+        cd_usuario: true,
+        nm_usuario: true,
+        ds_email: true
       }
     },
     _count: {
@@ -189,17 +189,17 @@ function importExecutionInclude() {
 async function findActiveExecutionTx(tx: Prisma.TransactionClient) {
   return tx.importacaoExecucao.findFirst({
     where: {
-      status: {
-        in: [ImportacaoStatus.pendente, ImportacaoStatus.processando]
+      tp_status: {
+        in: [importacao_status.pendente, importacao_status.processando]
       }
     },
-    orderBy: [{ criadoEm: "asc" }]
+    orderBy: [{ ts_criacao: "asc" }]
   });
 }
 
 async function findExecutionByIdTx(tx: Prisma.TransactionClient, executionId: string) {
   return tx.importacaoExecucao.findUnique({
-    where: { id: executionId }
+    where: { cd_importacao: executionId }
   });
 }
 
@@ -232,30 +232,30 @@ async function listPendingConflictsWithPrisma(input?: { executionId?: string }) 
   try {
     const conflicts = await prisma.importacaoConflito.findMany({
       where: {
-        resolvido: false,
-        ...(input?.executionId ? { execucaoId: input.executionId } : {})
+        sn_resolvido: false,
+        ...(input?.executionId ? { cd_importacao_execucao: input.executionId } : {})
       },
-      orderBy: [{ criadoEm: "desc" }, { rowNumber: "asc" }],
+      orderBy: [{ ts_criacao: "desc" }, { nr_linha: "asc" }],
       include: {
         staging: true
       }
     });
 
     return conflicts.map((conflict) => {
-      const details = asObject(conflict.detalhesJson);
+      const details = asObject(conflict.js_detalhes);
 
       return {
-        id: conflict.id,
-        executionId: conflict.execucaoId,
-        type: conflict.tipo,
-        rawName: conflict.rawName ?? "",
-        normalizedName: conflict.normalizedName ?? "",
-        sheetName: conflict.sheetName ?? "",
-        rowNumber: conflict.rowNumber ?? 0,
-        confidence: conflict.confidence?.toFixed(4) ?? "0.0000",
+        id: conflict.cd_conflito,
+        executionId: conflict.cd_importacao_execucao,
+        type: conflict.tp_conflito,
+        rawName: conflict.ds_nome_bruto ?? "",
+        normalizedName: conflict.nm_normalizado ?? "",
+        sheetName: conflict.nm_planilha ?? "",
+        rowNumber: conflict.nr_linha ?? 0,
+        confidence: conflict.vl_confianca?.toFixed(4) ?? "0.0000",
         suggestedItemName: readString(details, "best_candidate"),
         suggestedAlias: readString(details, "raw_name"),
-        stagingStatus: conflict.staging?.status ?? "conflict"
+        stagingStatus: conflict.staging?.tp_status ?? "conflict"
       };
     });
   } catch {
@@ -281,12 +281,12 @@ async function resolveConflictWithPrisma(input: {
     return await prisma.$transaction(async (tx) => {
       const actorUser = input.actorId
         ? await tx.user.findUnique({
-            where: { id: input.actorId },
-            select: { id: true }
+            where: { cd_usuario: input.actorId },
+            select: { cd_usuario: true }
           })
         : null;
       const conflict = await tx.importacaoConflito.findUnique({
-        where: { id: input.conflictId },
+        where: { cd_conflito: input.conflictId },
         include: {
           staging: true
         }
@@ -297,24 +297,24 @@ async function resolveConflictWithPrisma(input: {
       }
 
       const item = await tx.item.findUnique({
-        where: { id: input.targetItemId }
+        where: { cd_item: input.targetItemId }
       });
 
       if (!item) {
         throw new Error(`Item ${input.targetItemId} nao encontrado.`);
       }
 
-      const aliasSource = input.alias?.trim() || conflict.rawName || conflict.normalizedName || null;
-      const conflictName = conflict.normalizedName ?? conflict.rawName;
+      const aliasSource = input.alias?.trim() || conflict.ds_nome_bruto || conflict.nm_normalizado || null;
+      const conflictName = conflict.nm_normalizado ?? conflict.ds_nome_bruto;
       const conflictsToResolve =
-        input.applyToExecutionName && conflict.execucaoId && conflictName
+        input.applyToExecutionName && conflict.cd_importacao_execucao && conflictName
           ? await tx.importacaoConflito.findMany({
               where: {
-                execucaoId: conflict.execucaoId,
-                resolvido: false,
-                OR: conflict.normalizedName
-                  ? [{ normalizedName: conflict.normalizedName }]
-                  : [{ rawName: conflict.rawName }]
+                cd_importacao_execucao: conflict.cd_importacao_execucao,
+                sn_resolvido: false,
+                OR: conflict.nm_normalizado
+                  ? [{ nm_normalizado: conflict.nm_normalizado }]
+                  : [{ ds_nome_bruto: conflict.ds_nome_bruto }]
               },
               include: {
                 staging: true
@@ -325,54 +325,54 @@ async function resolveConflictWithPrisma(input: {
       if (aliasSource) {
         await tx.itemAlias.upsert({
           where: {
-            itemId_aliasNormalizado: {
-              itemId: item.id,
-              aliasNormalizado: normalizeAliasValue(aliasSource)
+            cd_item_nm_alias_normalizado: {
+              cd_item: item.cd_item,
+              nm_alias_normalizado: normalizeAliasValue(aliasSource)
             }
           },
           update: {
-            alias: aliasSource,
-            origem: "reconciliacao_manual_ui"
+            nm_alias: aliasSource,
+            ds_origem: "reconciliacao_manual_ui"
           },
           create: {
-            itemId: item.id,
-            alias: aliasSource,
-            aliasNormalizado: normalizeAliasValue(aliasSource),
-            origem: "reconciliacao_manual_ui"
+            cd_item: item.cd_item,
+            nm_alias: aliasSource,
+            nm_alias_normalizado: normalizeAliasValue(aliasSource),
+            ds_origem: "reconciliacao_manual_ui"
           }
         });
       }
 
       const stagingIds = conflictsToResolve
-        .map((entry) => entry.stagingId)
+        .map((entry) => entry.cd_staging)
         .filter((value): value is string => Boolean(value));
 
       if (stagingIds.length > 0) {
         await tx.importacaoStaging.updateMany({
           where: {
-            id: {
+            cd_staging: {
               in: stagingIds
             }
           },
           data: {
-            itemId: item.id,
-            status: ImportacaoLinhaStatus.imported
+            cd_item: item.cd_item,
+            tp_status: importacao_linha_status.imported
           }
         });
       }
 
       for (const entry of conflictsToResolve) {
-        const currentDetails = asObject(entry.detalhesJson) ?? {};
+        const currentDetails = asObject(entry.js_detalhes) ?? {};
 
         await tx.importacaoConflito.update({
-          where: { id: entry.id },
+          where: { cd_conflito: entry.cd_conflito },
           data: {
-            resolvido: true,
-            detalhesJson: {
+            sn_resolvido: true,
+            js_detalhes: {
               ...currentDetails,
               resolucaoManual: {
-                itemId: item.id,
-                itemNome: item.nome,
+                itemId: item.cd_item,
+                itemNome: item.nm_item,
                 aliasAplicado: aliasSource,
                 aplicadaEmLote: conflictsToResolve.length > 1
               }
@@ -383,14 +383,14 @@ async function resolveConflictWithPrisma(input: {
 
       await tx.auditoria.create({
         data: {
-          usuarioId: actorUser?.id ?? null,
-          entidade: "importacao_conflito",
-          entidadeId: conflict.id,
-          acao: "import.conflict.reconciled.via_ui",
-          depoisJson: {
-            conflictId: conflict.id,
-            itemId: item.id,
-            itemNome: item.nome,
+          cd_usuario: actorUser?.cd_usuario ?? null,
+          nm_entidade: "importacao_conflito",
+          cd_entidade: conflict.cd_conflito,
+          ds_acao: "import.conflict.reconciled.via_ui",
+          js_depois: {
+            conflictId: conflict.cd_conflito,
+            itemId: item.cd_item,
+            itemNome: item.nm_item,
             aliasAplicado: aliasSource,
             resolvedConflictCount: conflictsToResolve.length,
             actorName: input.actorName
@@ -399,9 +399,9 @@ async function resolveConflictWithPrisma(input: {
       });
 
       return {
-        conflictId: conflict.id,
-        itemId: item.id,
-        itemName: item.nome,
+        conflictId: conflict.cd_conflito,
+        itemId: item.cd_item,
+        itemName: item.nm_item,
         alias: aliasSource,
         resolvedConflictCount: conflictsToResolve.length
       };
@@ -421,17 +421,17 @@ async function listImportExecutionsWithPrisma(filters?: ImportExecutionFilters) 
   try {
     const executions = await prisma.importacaoExecucao.findMany({
       where: {
-        ...(filters?.status ? { status: filters.status } : {}),
+        ...(filters?.status ? { tp_status: filters.status } : {}),
         ...(filters?.dateFrom || filters?.dateTo
           ? {
-              criadoEm: {
+              ts_criacao: {
                 ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
                 ...(filters.dateTo ? { lte: filters.dateTo } : {})
               }
             }
           : {})
       },
-      orderBy: [{ criadoEm: "desc" }],
+      orderBy: [{ ts_criacao: "desc" }],
       take: filters?.limit,
       include: importExecutionInclude()
     });
@@ -451,7 +451,7 @@ async function getImportExecutionWithPrisma(id: string) {
 
   try {
     const execution = await prisma.importacaoExecucao.findUnique({
-      where: { id },
+      where: { cd_importacao: id },
       include: importExecutionInclude()
     });
 
@@ -471,11 +471,11 @@ async function getActiveImportExecutionWithPrisma() {
   try {
     const execution = await prisma.importacaoExecucao.findFirst({
       where: {
-        status: {
-          in: [ImportacaoStatus.pendente, ImportacaoStatus.processando]
+        tp_status: {
+          in: [importacao_status.pendente, importacao_status.processando]
         }
       },
-      orderBy: [{ criadoEm: "asc" }],
+      orderBy: [{ ts_criacao: "asc" }],
       include: importExecutionInclude()
     });
 
@@ -501,27 +501,35 @@ async function createImportExecutionWithPrisma(input: {
 
   return withImportQueueLock(prisma, async (tx) => {
     const activeExecution = await findActiveExecutionTx(tx);
-    assertCanCreateImportExecution(activeExecution);
+    assertCanCreateImportExecution(
+      activeExecution
+        ? {
+            id: activeExecution.cd_importacao,
+            status: activeExecution.tp_status,
+            origemArquivo: activeExecution.ds_origem_arquivo
+          }
+        : null
+    );
     const requestingUser = input.requestedByUserId
       ? await tx.user.findUnique({
-          where: { id: input.requestedByUserId },
-          select: { id: true }
+          where: { cd_usuario: input.requestedByUserId },
+          select: { cd_usuario: true }
         })
       : null;
 
     const execution = await tx.importacaoExecucao.create({
       data: {
-        origemArquivo: input.originalFileName,
-        origemArquivoCaminho: input.originalFilePath,
-        hashArquivo: input.fileHash,
-        mimeTypeArquivo: input.mimeType ?? null,
-        tamanhoArquivoBytes: input.fileSizeBytes ?? null,
-        status: ImportacaoStatus.pendente,
-        estagioAtual: "aguardando_worker",
-        artefatosJson: toJsonInput({
+        ds_origem_arquivo: input.originalFileName,
+        ds_caminho_arquivo: input.originalFilePath,
+        ds_hash: input.fileHash,
+        ds_mime_type: input.mimeType ?? null,
+        nr_tamanho_bytes: input.fileSizeBytes ?? null,
+        tp_status: importacao_status.pendente,
+        ds_estagio_atual: "aguardando_worker",
+        js_artefatos: toJsonInput({
           originalFilePath: input.originalFilePath
         }),
-        solicitadoPorId: requestingUser?.id ?? null
+        cd_solicitante: requestingUser?.cd_usuario ?? null
       },
       include: importExecutionInclude()
     });
@@ -551,15 +559,15 @@ async function markImportExecutionProcessingWithPrisma(
     }
 
     const execution = await tx.importacaoExecucao.update({
-      where: { id: executionId },
+      where: { cd_importacao: executionId },
       data: {
-        status:
-          current.status === ImportacaoStatus.pendente
-            ? getNextImportExecutionStatus(current.status, "start_processing")
-            : current.status,
-        estagioAtual: input.stage,
-        iniciadoEm: current.iniciadoEm ?? new Date(),
-        detalhesTecnicosJson: mergePlainObject(current.detalhesTecnicosJson, input.technicalDetails)
+        tp_status:
+          current.tp_status === importacao_status.pendente
+            ? getNextImportExecutionStatus(current.tp_status, "start_processing")
+            : current.tp_status,
+        ds_estagio_atual: input.stage,
+        ts_inicio: current.ts_inicio ?? new Date(),
+        js_detalhes_tecnicos: mergePlainObject(current.js_detalhes_tecnicos, input.technicalDetails)
       },
       include: importExecutionInclude()
     });
@@ -594,21 +602,21 @@ async function markImportExecutionCompletedWithPrisma(
     const hasConflicts = (input.conflictCount ?? 0) > 0;
 
     const execution = await tx.importacaoExecucao.update({
-      where: { id: executionId },
+      where: { cd_importacao: executionId },
       data: {
-        status: getNextImportExecutionStatus(
-          current.status,
+        tp_status: getNextImportExecutionStatus(
+          current.tp_status,
           hasConflicts ? "complete_with_conflicts" : "complete"
         ),
-        estagioAtual: input.stage,
-        resumoJson:
+        ds_estagio_atual: input.stage,
+        js_resumo:
           input.operationalSummary === undefined
             ? undefined
             : toNullableJsonInput(input.operationalSummary),
-        resumoAmigavelJson: toJsonInput(input.friendlySummary),
-        detalhesTecnicosJson: mergePlainObject(current.detalhesTecnicosJson, input.technicalDetails),
-        artefatosJson: mergePlainObject(current.artefatosJson, input.artifacts),
-        finalizadoEm: new Date()
+        js_resumo_amigavel: toJsonInput(input.friendlySummary),
+        js_detalhes_tecnicos: mergePlainObject(current.js_detalhes_tecnicos, input.technicalDetails),
+        js_artefatos: mergePlainObject(current.js_artefatos, input.artifacts),
+        ts_fim: new Date()
       },
       include: importExecutionInclude()
     });
@@ -641,18 +649,18 @@ async function markImportExecutionFailedWithPrisma(
     }
 
     const execution = await tx.importacaoExecucao.update({
-      where: { id: executionId },
+      where: { cd_importacao: executionId },
       data: {
-        status: getNextImportExecutionStatus(current.status, "fail"),
-        estagioAtual: input.stage,
-        resumoJson:
+        tp_status: getNextImportExecutionStatus(current.tp_status, "fail"),
+        ds_estagio_atual: input.stage,
+        js_resumo:
           input.operationalSummary === undefined
             ? undefined
             : toNullableJsonInput(input.operationalSummary),
-        resumoAmigavelJson: toJsonInput(input.friendlySummary),
-        detalhesTecnicosJson: mergePlainObject(current.detalhesTecnicosJson, input.technicalDetails),
-        artefatosJson: mergePlainObject(current.artefatosJson, input.artifacts),
-        finalizadoEm: new Date()
+        js_resumo_amigavel: toJsonInput(input.friendlySummary),
+        js_detalhes_tecnicos: mergePlainObject(current.js_detalhes_tecnicos, input.technicalDetails),
+        js_artefatos: mergePlainObject(current.js_artefatos, input.artifacts),
+        ts_fim: new Date()
       },
       include: importExecutionInclude()
     });
@@ -701,7 +709,7 @@ function createImportExecutionInDemo(input: {
   if (activeExecution) {
     throw new ActiveImportExecutionError({
       id: activeExecution.id,
-      status: activeExecution.status as ImportacaoStatus,
+      status: activeExecution.status as importacao_status,
       arquivo: activeExecution.originalFileName
     });
   }
@@ -816,9 +824,9 @@ export function getImportRepository() {
       return updateDemoExecution(executionId, (execution) => ({
         ...execution,
         status:
-          execution.status === ImportacaoStatus.pendente
+          execution.status === importacao_status.pendente
             ? getNextImportExecutionStatus(
-                execution.status as ImportacaoStatus,
+                execution.status as importacao_status,
                 "start_processing"
               )
             : execution.status,
@@ -850,7 +858,7 @@ export function getImportRepository() {
       return updateDemoExecution(executionId, (execution) => ({
         ...execution,
         status: getNextImportExecutionStatus(
-          execution.status as ImportacaoStatus,
+          execution.status as importacao_status,
           (input.conflictCount ?? 0) > 0 ? "complete_with_conflicts" : "complete"
         ),
         currentStage: input.stage,
@@ -886,7 +894,7 @@ export function getImportRepository() {
 
       return updateDemoExecution(executionId, (execution) => ({
         ...execution,
-        status: getNextImportExecutionStatus(execution.status as ImportacaoStatus, "fail"),
+        status: getNextImportExecutionStatus(execution.status as importacao_status, "fail"),
         currentStage: input.stage,
         friendlySummary: input.friendlySummary,
         technicalDetails: {

@@ -1,5 +1,5 @@
 import "server-only";
-import { FichaStatus, type Prisma } from "@/generated/prisma/client";
+import { type Prisma } from "@/generated/prisma/client";
 import {
   mapItemDetail,
   mapItemListRow,
@@ -244,15 +244,15 @@ async function ensureUnit(tx: Prisma.TransactionClient, code: string) {
   const normalized = normalizeUnitCode(code);
 
   return tx.unidadeMedida.upsert({
-    where: { codigo: normalized },
+    where: { ds_codigo: normalized },
     update: {
-      nome: buildUnitName(normalized),
-      tipo: inferUnitTypeFromCode(normalized)
+      nm_unidade: buildUnitName(normalized),
+      tp_unidade: inferUnitTypeFromCode(normalized)
     },
     create: {
-      codigo: normalized,
-      nome: buildUnitName(normalized),
-      tipo: inferUnitTypeFromCode(normalized)
+      ds_codigo: normalized,
+      nm_unidade: buildUnitName(normalized),
+      tp_unidade: inferUnitTypeFromCode(normalized)
     }
   });
 }
@@ -262,19 +262,19 @@ async function queryItem(
   itemId: string
 ) {
   return client.item.findUnique({
-    where: { id: itemId },
+    where: { cd_item: itemId },
     include: {
       unidadeEstoque: true,
       unidadeUsoPadrao: true,
       aliases: {
-        orderBy: { alias: "asc" }
+        orderBy: { nm_alias: "asc" }
       },
       conversoes: true,
       compras: {
-        orderBy: [{ principal: "desc" }, { dataAtualizacaoPreco: "desc" }, { criadoEm: "desc" }],
+        orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
         include: {
           fornecedor: {
-            select: { nome: true }
+            select: { nm_fornecedor: true }
           },
           unidadeCompra: true,
           unidadeUso: true
@@ -282,23 +282,23 @@ async function queryItem(
       },
       fichasResultantes: {
         where: {
-          status: {
-            in: [FichaStatus.ativa, FichaStatus.rascunho, FichaStatus.inativa]
+          tp_status: {
+            in: ["ativa", "rascunho", "inativa"]
           }
         },
-        orderBy: [{ status: "asc" }, { versao: "desc" }],
+        orderBy: [{ tp_status: "asc" }, { nr_versao: "desc" }],
         take: 5
       },
       custosSnapshot: {
-        orderBy: { calculadoEm: "desc" },
+        orderBy: { ts_calculo: "desc" },
         take: 1
       },
       execucoesCalculo: {
-        orderBy: { criadoEm: "desc" },
+        orderBy: { ts_criacao: "desc" },
         take: 1,
         select: {
-          criadoEm: true,
-          metadadosJson: true
+          ts_criacao: true,
+          js_metadados: true
         }
       }
     }
@@ -316,22 +316,22 @@ async function listItemsWithPrisma(input: ListItemsInput) {
   const query = input.query.trim();
   const where: Prisma.ItemWhereInput = {
     AND: [
-      input.type && input.type !== "all" ? { tipoPrincipal: input.type } : {},
-      input.status === "ativos" ? { ativo: true } : {},
-      input.status === "inativos" ? { ativo: false } : {},
+      input.type && input.type !== "all" ? { tp_item: input.type } : {},
+      input.status === "ativos" ? { sn_ativo: true } : {},
+      input.status === "inativos" ? { sn_ativo: false } : {},
       input.category && input.category !== "all"
-        ? { categoriaOperacional: { equals: input.category, mode: "insensitive" as const } }
+        ? { nm_categoria_operacional: { equals: input.category, mode: "insensitive" as const } }
         : {},
       query
         ? {
             OR: [
-              { nome: { contains: query, mode: "insensitive" } },
-              { codigoInterno: { contains: query, mode: "insensitive" } },
-              { categoriaOperacional: { contains: query, mode: "insensitive" } },
+              { nm_item: { contains: query, mode: "insensitive" } },
+              { ds_codigo_interno: { contains: query, mode: "insensitive" } },
+              { nm_categoria_operacional: { contains: query, mode: "insensitive" } },
               {
                 aliases: {
                   some: {
-                    alias: {
+                    nm_alias: {
                       contains: query,
                       mode: "insensitive"
                     }
@@ -349,7 +349,7 @@ async function listItemsWithPrisma(input: ListItemsInput) {
       prisma.item.count({ where }),
       prisma.item.findMany({
         where,
-        orderBy: { nome: "asc" },
+        orderBy: { nm_item: "asc" },
         skip: (Math.max(input.page, 1) - 1) * input.pageSize,
         take: input.pageSize,
         include: {
@@ -358,10 +358,10 @@ async function listItemsWithPrisma(input: ListItemsInput) {
           aliases: true,
           conversoes: true,
           compras: {
-            orderBy: [{ principal: "desc" }, { dataAtualizacaoPreco: "desc" }, { criadoEm: "desc" }],
+            orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
             include: {
               fornecedor: {
-                select: { nome: true }
+                select: { nm_fornecedor: true }
               },
               unidadeCompra: true,
               unidadeUso: true
@@ -369,23 +369,23 @@ async function listItemsWithPrisma(input: ListItemsInput) {
           },
           fichasResultantes: {
             where: {
-              status: {
-                in: [FichaStatus.ativa, FichaStatus.rascunho, FichaStatus.inativa]
+              tp_status: {
+                in: ["ativa", "rascunho", "inativa"]
               }
             },
-            orderBy: [{ status: "asc" }, { versao: "desc" }],
+            orderBy: [{ tp_status: "asc" }, { nr_versao: "desc" }],
             take: 5
           },
           custosSnapshot: {
-            orderBy: { calculadoEm: "desc" },
+            orderBy: { ts_calculo: "desc" },
             take: 1
           },
           execucoesCalculo: {
-            orderBy: { criadoEm: "desc" },
+            orderBy: { ts_criacao: "desc" },
             take: 1,
             select: {
-              criadoEm: true,
-              metadadosJson: true
+              ts_criacao: true,
+              js_metadados: true
             }
           }
         }
@@ -429,18 +429,18 @@ async function listItemOptionsWithPrisma() {
 
   try {
     const items = await prisma.item.findMany({
-      where: { ativo: true },
-      orderBy: { nome: "asc" },
+      where: { sn_ativo: true },
+      orderBy: { nm_item: "asc" },
       include: {
         unidadeEstoque: true,
         unidadeUsoPadrao: true,
         aliases: true,
         conversoes: true,
         compras: {
-          orderBy: [{ principal: "desc" }, { dataAtualizacaoPreco: "desc" }, { criadoEm: "desc" }],
+          orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
           include: {
             fornecedor: {
-              select: { nome: true }
+              select: { nm_fornecedor: true }
             },
             unidadeCompra: true,
             unidadeUso: true
@@ -448,23 +448,23 @@ async function listItemOptionsWithPrisma() {
         },
         fichasResultantes: {
           where: {
-            status: {
-              in: [FichaStatus.ativa, FichaStatus.rascunho, FichaStatus.inativa]
+            tp_status: {
+              in: ["ativa", "rascunho", "inativa"]
             }
           },
-          orderBy: [{ status: "asc" }, { versao: "desc" }],
+          orderBy: [{ tp_status: "asc" }, { nr_versao: "desc" }],
           take: 5
         },
         custosSnapshot: {
-          orderBy: { calculadoEm: "desc" },
+          orderBy: { ts_calculo: "desc" },
           take: 1
         },
         execucoesCalculo: {
-          orderBy: { criadoEm: "desc" },
+          orderBy: { ts_criacao: "desc" },
           take: 1,
           select: {
-            criadoEm: true,
-            metadadosJson: true
+            ts_criacao: true,
+            js_metadados: true
           }
         }
       }
@@ -506,10 +506,10 @@ async function saveItemWithPrisma(input: SaveItemInput) {
       const code = normalizedCode || generatedCode;
       const duplicateCode = await tx.item.findFirst({
         where: {
-          codigoInterno: code,
-          ...(input.id ? { NOT: { id: input.id } } : {})
+          ds_codigo_interno: code,
+          ...(input.id ? { NOT: { cd_item: input.id } } : {})
         },
-        select: { id: true }
+        select: { cd_item: true }
       });
 
       if (duplicateCode) {
@@ -520,44 +520,44 @@ async function saveItemWithPrisma(input: SaveItemInput) {
 
       const item = input.id
         ? await tx.item.update({
-            where: { id: input.id },
+            where: { cd_item: input.id },
             data: {
-              codigoInterno: code,
-              nome: input.name,
-              nomeNormalizado: toNormalizedName(input.name),
-              descricao: input.description,
-              tipoPrincipal: input.type,
-              categoriaOperacional: input.operationalCategory,
-              unidadeEstoqueId: stockUnit.id,
-              unidadeUsoPadraoId: usageUnit.id,
-              ativo: input.active
+              ds_codigo_interno: code,
+              nm_item: input.name,
+              nm_normalizado: toNormalizedName(input.name),
+              ds_descricao: input.description,
+              tp_item: input.type,
+              nm_categoria_operacional: input.operationalCategory,
+              cd_unidade_estoque: stockUnit.cd_unidade_medida,
+              cd_unidade_uso_padrao: usageUnit.cd_unidade_medida,
+              sn_ativo: input.active
             }
           })
         : await tx.item.create({
             data: {
-              codigoInterno: code,
-              nome: input.name,
-              nomeNormalizado: toNormalizedName(input.name),
-              descricao: input.description,
-              tipoPrincipal: input.type,
-              categoriaOperacional: input.operationalCategory,
-              unidadeEstoqueId: stockUnit.id,
-              unidadeUsoPadraoId: usageUnit.id,
-              ativo: input.active
+              ds_codigo_interno: code,
+              nm_item: input.name,
+              nm_normalizado: toNormalizedName(input.name),
+              ds_descricao: input.description,
+              tp_item: input.type,
+              nm_categoria_operacional: input.operationalCategory,
+              cd_unidade_estoque: stockUnit.cd_unidade_medida,
+              cd_unidade_uso_padrao: usageUnit.cd_unidade_medida,
+              sn_ativo: input.active
             }
           });
 
       const conversionPairs = new Map<string, { originId: string; targetId: string }>();
-      conversionPairs.set(`${stockUnit.id}:${usageUnit.id}`, {
-        originId: stockUnit.id,
-        targetId: usageUnit.id
+      conversionPairs.set(`${stockUnit.cd_unidade_medida}:${usageUnit.cd_unidade_medida}`, {
+        originId: stockUnit.cd_unidade_medida,
+        targetId: usageUnit.cd_unidade_medida
       });
 
       for (const purchase of input.purchases) {
         const purchaseUnit = await ensureUnit(tx, purchase.purchaseUnit);
-        conversionPairs.set(`${purchaseUnit.id}:${usageUnit.id}`, {
-          originId: purchaseUnit.id,
-          targetId: usageUnit.id
+        conversionPairs.set(`${purchaseUnit.cd_unidade_medida}:${usageUnit.cd_unidade_medida}`, {
+          originId: purchaseUnit.cd_unidade_medida,
+          targetId: usageUnit.cd_unidade_medida
         });
       }
 
@@ -568,38 +568,38 @@ async function saveItemWithPrisma(input: SaveItemInput) {
 
         await tx.conversaoUnidade.upsert({
           where: {
-            itemId_unidadeOrigemId_unidadeDestinoId: {
-              itemId: item.id,
-              unidadeOrigemId: pair.originId,
-              unidadeDestinoId: pair.targetId
+            cd_item_cd_unidade_origem_cd_unidade_destino: {
+              cd_item: item.cd_item,
+              cd_unidade_origem: pair.originId,
+              cd_unidade_destino: pair.targetId
             }
           },
           update: {
-            fator: derivedConversionFactor
+            vl_fator: derivedConversionFactor
           },
           create: {
-            itemId: item.id,
-            unidadeOrigemId: pair.originId,
-            unidadeDestinoId: pair.targetId,
-            fator: derivedConversionFactor,
-            origem: "cadastro_web"
+            cd_item: item.cd_item,
+            cd_unidade_origem: pair.originId,
+            cd_unidade_destino: pair.targetId,
+            vl_fator: derivedConversionFactor,
+            ds_origem: "cadastro_web"
           }
         });
       }
 
       await tx.itemCompra.deleteMany({
-        where: { itemId: item.id }
+        where: { cd_item: item.cd_item }
       });
 
       for (const purchase of input.purchases) {
         const supplier = await tx.fornecedor.upsert({
-          where: { nome: purchase.supplierName.trim() },
+          where: { nm_fornecedor: purchase.supplierName.trim() },
           update: {
-            ativo: true
+            sn_ativo: true
           },
           create: {
-            nome: purchase.supplierName.trim(),
-            ativo: true
+            nm_fornecedor: purchase.supplierName.trim(),
+            sn_ativo: true
           }
         });
 
@@ -612,27 +612,27 @@ async function saveItemWithPrisma(input: SaveItemInput) {
         if (purchase.purchaseIsPrimary) {
           const usageUnitCode = (purchase.usageUnit ?? "").trim() || purchase.purchaseUnit;
           const unidadeUsoRow = await ensureUnit(tx, usageUnitCode);
-          unidadeUsoIdForRow = unidadeUsoRow.id;
+          unidadeUsoIdForRow = unidadeUsoRow.cd_unidade_medida;
           const qu = (purchase.usageQuantity ?? "").trim();
           quantidadeUsoForRow = qu.length > 0 ? qu : "1.0000";
         }
 
         await tx.itemCompra.create({
           data: {
-            itemId: item.id,
-            fornecedorId: supplier.id,
-            unidadeCompraId: purchaseUnit.id,
-            unidadeUsoId: unidadeUsoIdForRow,
-            principal: purchase.purchaseIsPrimary,
-            quantidadePorEmbalagem: purchase.purchaseQuantity,
-            quantidadeUso: quantidadeUsoForRow,
-            custoCompra: purchase.purchaseCost,
-            custoUnitarioBase: calculateCanonicalUnitCost(
+            cd_item: item.cd_item,
+            cd_fornecedor: supplier.cd_fornecedor,
+            cd_unidade_compra: purchaseUnit.cd_unidade_medida,
+            cd_unidade_uso: unidadeUsoIdForRow,
+            sn_principal: purchase.purchaseIsPrimary,
+            vl_qtd_embalagem: purchase.purchaseQuantity,
+            vl_qtd_uso: quantidadeUsoForRow,
+            vl_custo_compra: purchase.purchaseCost,
+            vl_custo_unitario_base: calculateCanonicalUnitCost(
               purchase.purchaseCost,
               purchase.purchaseQuantity,
               purchase.purchaseUnit
             ).toString(),
-            dataAtualizacaoPreco: parsePurchaseUpdatedAt(purchase.priceUpdatedAt)
+            ts_atualizacao_preco: parsePurchaseUpdatedAt(purchase.priceUpdatedAt)
           }
         });
       }
@@ -640,8 +640,8 @@ async function saveItemWithPrisma(input: SaveItemInput) {
       return item;
     });
 
-    await recalculateCascade(prisma, [item.id], "item.save.web");
-    return getItemDetailWithPrisma(item.id);
+    await recalculateCascade(prisma, [item.cd_item], "item.save.web");
+    return getItemDetailWithPrisma(item.cd_item);
   } catch (error) {
     if (error instanceof CatalogRepositoryError) {
       throw error;
@@ -657,12 +657,12 @@ async function countLinkedFichasWithPrisma(
 ) {
   const linkedFichas = await client.fichaTecnica.findMany({
     where: {
-      OR: [{ itemResultanteId: itemId }, { componentes: { some: { itemComponenteId: itemId } } }]
+      OR: [{ cd_item_resultante: itemId }, { componentes: { some: { cd_item_componente: itemId } } }]
     },
-    select: { id: true }
+    select: { cd_ficha_tecnica: true }
   });
 
-  return new Set(linkedFichas.map((ficha) => ficha.id)).size;
+  return new Set(linkedFichas.map((ficha) => ficha.cd_ficha_tecnica)).size;
 }
 
 async function deleteItemWithPrisma(itemId: string): Promise<CatalogDeleteResult | null> {
@@ -684,7 +684,7 @@ async function deleteItemWithPrisma(itemId: string): Promise<CatalogDeleteResult
     }
 
     await prisma.item.delete({
-      where: { id: itemId }
+      where: { cd_item: itemId }
     });
 
     return { success: true };

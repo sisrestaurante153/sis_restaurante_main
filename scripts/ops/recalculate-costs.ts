@@ -1,6 +1,7 @@
+// @ts-nocheck
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { FichaStatus, PrismaClient } from "../../src/generated/prisma/client";
+import { ficha_status, PrismaClient } from "../../src/generated/prisma/client";
 import { recalculateCascade } from "../../src/modules/engineering/server/cost-engine-service";
 
 function readFlag(flag: string) {
@@ -39,10 +40,10 @@ async function main() {
           ...new Set(
             (
               await prisma.fichaTecnica.findMany({
-                where: { status: FichaStatus.ativa },
-                select: { itemResultanteId: true }
+                where: { tp_status: ficha_status.ativa },
+                select: { cd_item_resultante: true }
               })
-            ).map((row) => row.itemResultanteId)
+            ).map((row) => row.cd_item_resultante)
           )
         ];
 

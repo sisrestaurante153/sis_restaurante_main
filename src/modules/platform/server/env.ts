@@ -7,6 +7,10 @@ const serverEnvSchema = z.object({
   APP_NAME: z.string().min(1).default("SIS Restaurante"),
   APP_URL: z.url().default("http://localhost:3000"),
   DATABASE_URL: z.string().min(1).optional(),
+  DIRECT_URL: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_URL: z.url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),

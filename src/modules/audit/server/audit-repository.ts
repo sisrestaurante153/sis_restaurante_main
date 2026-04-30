@@ -14,7 +14,7 @@ export function getAuditRepository() {
           const entries = await prisma.auditoria.findMany({
             take: 50,
             orderBy: {
-              criadoEm: "desc"
+              ts_criacao: "desc"
             },
             include: {
               usuario: true
@@ -22,18 +22,18 @@ export function getAuditRepository() {
           });
 
           return entries.map((entry) => ({
-            id: entry.id,
-            entity: entry.entidade as "item" | "ficha_tecnica" | "importacao",
-            entityId: entry.entidadeId,
-            entityLabel: entry.entidadeId,
-            action: entry.acao,
-            userId: entry.usuarioId,
-            userName: entry.usuario?.nome ?? "Sistema",
-            createdAt: entry.criadoEm.toISOString(),
-            beforeSummary: entry.antesJson ? JSON.stringify(entry.antesJson) : null,
-            afterSummary: entry.depoisJson ? JSON.stringify(entry.depoisJson) : null,
-            beforeJson: entry.antesJson,
-            afterJson: entry.depoisJson
+            id: entry.cd_auditoria,
+            entity: entry.nm_entidade as "item" | "ficha_tecnica" | "importacao",
+            entityId: entry.cd_entidade,
+            entityLabel: entry.cd_entidade,
+            action: entry.ds_acao,
+            userId: entry.cd_usuario,
+            userName: entry.usuario?.nm_usuario ?? "Sistema",
+            createdAt: entry.ts_criacao.toISOString(),
+            beforeSummary: entry.js_antes ? JSON.stringify(entry.js_antes) : null,
+            afterSummary: entry.js_depois ? JSON.stringify(entry.js_depois) : null,
+            beforeJson: entry.js_antes,
+            afterJson: entry.js_depois
           }));
         } catch {
           // Fallback demo em bootstrap local sem banco acessivel.

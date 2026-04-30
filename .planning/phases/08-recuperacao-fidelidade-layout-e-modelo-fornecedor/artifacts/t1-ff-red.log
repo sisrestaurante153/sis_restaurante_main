@@ -1,0 +1,2070 @@
+
+> sis-restaurante@0.1.0 test:unit
+> vitest run src/tests/unit FichaFlatGrid
+
+[1m[43m DEPRECATED [49m[22m [33m"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.[39m
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/felip/OneDrive/Área de Trabalho/projetos cliente/sis-restaurante[39m
+
+ [32m✓[39m src/tests/unit/app-shell-client.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 510[2mms[22m[39m
+   [33m[2m✓[22m[39m AppShellClient[2m > [22mdoes not render the expanded sidebar header copy [33m 509[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-listing.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 692[2mms[22m[39m
+ [32m✓[39m src/tests/unit/dashboard-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 602[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders KPI cards, attention points and quick actions with the new labels [33m 600[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 611[2mms[22m[39m
+   [33m[2m✓[22m[39m CompositionPage[2m > [22mrenders the composition tree view with filtering and nested rows [33m 608[2mms[22m[39m
+ [32m✓[39m src/tests/unit/fichas-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 695[2mms[22m[39m
+   [33m[2m✓[22m[39m FichasPage[2m > [22mrenders the expanded ficha listing contract with shared navigation [33m 694[2mms[22m[39m
+ [32m✓[39m src/tests/unit/costs-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 600[2mms[22m[39m
+   [33m[2m✓[22m[39m CostsPage[2m > [22mrenders searchable financial cards with cost breakdown and ficha links [33m 598[2mms[22m[39m
+ [32m✓[39m src/tests/unit/sidebar-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 902[2mms[22m[39m
+   [33m[2m✓[22m[39m SidebarNav[2m > [22mrenders grouped navigation sections with current route highlighted [33m 638[2mms[22m[39m
+ [32m✓[39m src/tests/unit/items-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1485[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemsPage[2m > [22mrenders the expanded operational listing contract and wires navigation [33m 1484[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering/TotaisIndicadores.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 1039[2mms[22m[39m
+   [33m[2m✓[22m[39m TotaisIndicadores — NaN guards (PDFV2-CRIT-03/05/06/07)[2m > [22mCRIT-03: referencePrice null renderiza "--", nunca "R$ NaN" [33m 384[2mms[22m[39m
+ [31m❯[39m src/tests/unit/engineering/FichaFlatGrid.test.tsx [2m([22m[2m4 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1165[2mms[22m[39m
+[31m   [31m×[31m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mGRID_TEMPLATE bate HTML: 22px 1fr 80px 60px 240px 90px 96px 28px[39m[32m 6[2mms[22m[39m
+[31m     → expected undefined to be '22px 1fr 80px 60px 240px 90px 96px 28…' // Object.is equality[39m
+   [33m[2m✓[22m[39m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mcom Coccao Final: row label visivel, botao Adicionar Coccao Final NAO aparece [33m 904[2mms[22m[39m
+   [32m✓[39m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22msem Coccao Final: botao Adicionar visivel, row label ausente[32m 253[2mms[22m[39m
+[31m   [31m×[31m FichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mcf-row grid bate HTML: 22px auto 120px 110px 90px 1fr 28px[39m[32m 1[2mms[22m[39m
+[31m     → expected undefined to be '22px auto 120px 110px 90px 1fr 28px' // Object.is equality[39m
+[90mstderr[2m | src/tests/unit/login-form.test.tsx[2m > [22m[2mLoginForm[2m > [22m[2muses the configured base path for the auth request
+[22m[39mNot implemented: navigation to another Document
+
+ [32m✓[39m src/tests/unit/login-form.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1346[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mfills seed credentials from chips and toggles password visibility [33m 770[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginForm[2m > [22mshows the login error inside an alert when authentication fails [33m 358[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-api-paths.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 793[2mms[22m[39m
+   [33m[2m✓[22m[39m Import API paths[2m > [22mprefixes artifact downloads and dashboard polling with the configured base path [33m 786[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cadastros-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1264[2mms[22m[39m
+   [33m[2m✓[22m[39m CadastrosPage[2m > [22mrenders the master data workspace with all requested sections [33m 1263[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-workspace.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 935[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportWorkspace[2m > [22mshows the selected workbook name before submitting the import [33m 934[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1375[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemForm[2m > [22mrenders the operational item contract with code and usage metrics visible [33m 1374[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-pending-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1429[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPendingPage[2m > [22mrenders reconciliation grid, confidence indicator and resolution dialog [33m 1427[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1542[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditPage[2m > [22mrenders filters and timeline entries for operational history [33m 1536[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 207[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1522[2mms[22m[39m
+   [33m[2m✓[22m[39m ImportPage[2m > [22mrenders the protected import workspace with blocked upload, active execution and history [33m 1521[2mms[22m[39m
+ [32m✓[39m src/tests/unit/session.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m src/tests/unit/workspace-layout.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 171[2mms[22m[39m
+ [32m✓[39m src/tests/unit/app-data-grid-pattern.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 195[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-repository.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m src/tests/unit/page-header.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 276[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1938[2mms[22m[39m
+   [33m[2m✓[22m[39m ItemDetailPage[2m > [22mrenders the item form without the legacy side cards and keeps safe-delete feedback [33m 1935[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2665[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders the ficha workflow in four semantic sections with totals and finalization fields [33m 2221[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaForm[2m > [22mrenders commercial fallbacks instead of blank or NaN values when sale price or final weight are invalid [33m 443[2mms[22m[39m
+ [32m✓[39m src/tests/unit/auth-routes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 144[2mms[22m[39m
+ [32m✓[39m src/tests/unit/engineering-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m src/tests/unit/cost-engine.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/tests/unit/catalog-repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/tests/unit/forbidden-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 357[2mms[22m[39m
+   [33m[2m✓[22m[39m ForbiddenPage[2m > [22mrenders the centered 403 state with dashboard and login actions [33m 355[2mms[22m[39m
+ [32m✓[39m src/tests/unit/master-data-repository.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/tests/unit/composition-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/tests/unit/audit-service.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-detail-page.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 2690[2mms[22m[39m
+   [33m[2m✓[22m[39m FichaDetailPage[2m > [22mrenders the editing layout without the legacy summary sidebar [33m 2689[2mms[22m[39m
+ [32m✓[39m src/tests/unit/env.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/components-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3332[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders a single flat grid with per-row stage controls and footer buttons [33m 1517[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22mrenders per-row peso labels driven by the row's stage type and reveals montagem on demand [33m 1035[2mms[22m[39m
+   [33m[2m✓[22m[39m ComponentsEditor (flat grid model)[2m > [22madds library items into the flat grid and groups them back into stages on serialize [33m 779[2mms[22m[39m
+ [32m✓[39m src/tests/unit/item-form-schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-form-schema.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tests/unit/reconciliation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/tests/unit/access-control.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/import-execution-domain.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/platform/env.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/unit/health-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/unit/next-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/operational-item-import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/password-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/backup-policy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/user-management.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/tests/unit/ficha-tecnica-domain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/tests/unit/authorization-guards.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/tests/unit/unit-conversion.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [31m❯[39m src/tests/unit/catalog/purchases-editor.test.tsx [2m([22m[2m9 tests[22m[2m | [22m[31m7 failed[39m[2m)[22m[33m 4005[2mms[22m[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal sozinho: sem badge fixado, campos Unidade de uso + Qtde de uso editaveis[39m[33m 569[2mms[22m[39m
+[31m     → Unable to find a label with the text of: /unidade de uso/i
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+      [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCompras / fornecedores[0m
+              [36m</span>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[31m
+              [33mtabindex[31m=[32m"0"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[31m
+                  [33mdata-testid[31m=[32m"AddIcon"[31m
+                  [33mfocusable[31m=[32m"false"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</span>[31m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<input[31m
+            [33mname[31m=[32m"purchasesJson"[31m
+            [33mtype[31m=[32m"hidden"[31m
+            [33mvalue[31m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false}]"[31m
+          [36m/>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiBox-root css-fvl2mk"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Remover fornecedor 1"[31m
+                  [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+                  [33mtabindex[31m=[32m"0"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33maria-hidden[31m=[32m"true"[31m
+                    [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[31m
+                    [33mdata-testid[31m=[32m"DeleteOutlineIcon"[31m
+                    [33mfocusable[31m=[32m"false"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiBox-root css-1ywj1r7"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                  [36m>[31m
+                    [36m<label[31m
+                      [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[31m
+                      [33mdata-shrink[31m=[32m"true"[31m
+                      [33mfor[31m=[32m"_r_2_"[31m
+                      [33mid[31m=[32m"_r_2_-label"[31m
+                    [36m>[31m
+                      [0mFornecedor[0m
+                    [36m</label>[31m
+                    [36m<div[31m
+                      [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                    [36m>[31m
+                      [36m<input[31m
+                        [33maria-autocomplete[31m=[32m"list"[31m
+                        [33maria-expanded[31m=[32m"false"[31m
+                        [33maria-invalid[31m=[32m"false"[31m
+                    ...[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal + secundario: badge 'fixado do 1o fornecedor' aparece 2x (Unidade uso + Qtde uso)[39m[33m 323[2mms[22m[39m
+[31m     → Unable to find an element with the text: /fixado do 1.*fornecedor/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+      [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCompras / fornecedores[0m
+              [36m</span>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[31m
+              [33mtabindex[31m=[32m"0"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[31m
+                  [33mdata-testid[31m=[32m"AddIcon"[31m
+                  [33mfocusable[31m=[32m"false"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</span>[31m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<input[31m
+            [33mname[31m=[32m"purchasesJson"[31m
+            [33mtype[31m=[32m"hidden"[31m
+            [33mvalue[31m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false},{\"supplierName\":\"Atacadao\",\"purchaseUnit\":\"fardo\",\"purchaseIsPrimary\":false,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"\",\"usageUnit\":\"\",\"usageQuantity\":\"\",\"usageIsFixedFromPrimary\":true}]"[31m
+          [36m/>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiBox-root css-fvl2mk"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Remover fornecedor 1"[31m
+                  [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+                  [33mtabindex[31m=[32m"0"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33maria-hidden[31m=[32m"true"[31m
+                    [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[31m
+                    [33mdata-testid[31m=[32m"DeleteOutlineIcon"[31m
+                    [33mfocusable[31m=[32m"false"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiBox-root css-1ywj1r7"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                  [36m>[31m
+                    [36m<label[31m
+                      [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[31m
+                      [33mdata-shrink[31m=[32m"true"[31m
+                      [33mfor[31m=[32m"_r_h_"[31m
+                      [33mid[31m=[32m"_r_h_-label"[31m
+                    [36m>[31m
+                      [0mFornecedor[0m
+                    [36m</label>[31m
+                    [36m<div[31m
+                      [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                    [36m>[31m
+           ...[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario deriva usageUnit client-side do principal (D-05)[39m[32m 297[2mms[22m[39m
+[31m     → Unable to find a label with the text of: /unidade de uso/i
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+      [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCompras / fornecedores[0m
+              [36m</span>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[31m
+              [33mtabindex[31m=[32m"0"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[31m
+                  [33mdata-testid[31m=[32m"AddIcon"[31m
+                  [33mfocusable[31m=[32m"false"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</span>[31m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<input[31m
+            [33mname[31m=[32m"purchasesJson"[31m
+            [33mtype[31m=[32m"hidden"[31m
+            [33mvalue[31m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false},{\"supplierName\":\"Atacadao\",\"purchaseUnit\":\"fardo\",\"purchaseIsPrimary\":false,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"\",\"usageUnit\":\"\",\"usageQuantity\":\"\",\"usageIsFixedFromPrimary\":true}]"[31m
+          [36m/>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiBox-root css-fvl2mk"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Remover fornecedor 1"[31m
+                  [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+                  [33mtabindex[31m=[32m"0"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33maria-hidden[31m=[32m"true"[31m
+                    [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[31m
+                    [33mdata-testid[31m=[32m"DeleteOutlineIcon"[31m
+                    [33mfocusable[31m=[32m"false"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiBox-root css-1ywj1r7"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                  [36m>[31m
+                    [36m<label[31m
+                      [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[31m
+                      [33mdata-shrink[31m=[32m"true"[31m
+                      [33mfor[31m=[32m"_r_1e_"[31m
+                      [33mid[31m=[32m"_r_1e_-label"[31m
+                    [36m>[31m
+                      [0mFornecedor[0m
+                    [36m</label>[31m
+                    [36m<div[31m
+                      [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                    [36m>[31m
+         ...[39m
+   [33m[2m✓[22m[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario tem Unidade de uso e Qtde de uso com aria-readonly=true (D-05 readonly) [33m 651[2mms[22m[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mFator derivado no principal = qtdeCompra/qtdeUso (10/1 = 10.0000)[39m[32m 169[2mms[22m[39m
+[31m     → Unable to find a label with the text of: /fator de conversao/i
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+      [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCompras / fornecedores[0m
+              [36m</span>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[31m
+              [33mtabindex[31m=[32m"0"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[31m
+                  [33mdata-testid[31m=[32m"AddIcon"[31m
+                  [33mfocusable[31m=[32m"false"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</span>[31m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<input[31m
+            [33mname[31m=[32m"purchasesJson"[31m
+            [33mtype[31m=[32m"hidden"[31m
+            [33mvalue[31m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false}]"[31m
+          [36m/>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiBox-root css-fvl2mk"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Remover fornecedor 1"[31m
+                  [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+                  [33mtabindex[31m=[32m"0"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33maria-hidden[31m=[32m"true"[31m
+                    [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[31m
+                    [33mdata-testid[31m=[32m"DeleteOutlineIcon"[31m
+                    [33mfocusable[31m=[32m"false"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiBox-root css-1ywj1r7"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                  [36m>[31m
+                    [36m<label[31m
+                      [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[31m
+                      [33mdata-shrink[31m=[32m"true"[31m
+                      [33mfor[31m=[32m"_r_38_"[31m
+                      [33mid[31m=[32m"_r_38_-label"[31m
+                    [36m>[31m
+                      [0mFornecedor[0m
+                    [36m</label>[31m
+                    [36m<div[31m
+                      [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                    [36m>[31m
+                      [36m<input[31m
+                        [33maria-autocomplete[31m=[32m"list"[31m
+                        [33maria-expanded[31m=[32m"false"[31m
+                        [33maria-invalid[31m=[32m"false"[31m
+                  ...[39m
+   [32m✓[39m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mPreco de uso no secundario usa seu proprio fator (D-07): 80/10=8.0000, NAO o fator do principal[32m 235[2mms[22m[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mRemover aparece so em secundarios (principal sem botao Remover)[39m[33m 370[2mms[22m[39m
+[31m     → expected 2 to be 1 // Object.is equality[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mAdicionar fornecedor adiciona row com purchaseIsPrimary=false, usageUnit='' e usageQuantity=''[39m[32m 193[2mms[22m[39m
+[31m     → expected true to be false // Object.is equality[39m
+[31m   [31m×[31m PurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mtoggle principal em secundario: reseta demais para false + exibe 'Campos fixados atualizados a partir de {nome}' (D-06)[39m[33m 1197[2mms[22m[39m
+[31m     → Unable to find an accessible element with the role "button" and name `/tornar principal/i`
+
+Here are the accessible roles:
+
+  paragraph:
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained MuiFormHelperText-filled css-2s8ubb-MuiFormHelperText-root"[31m
+    [33mid[31m=[32m"_r_6c_-helper-text"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained MuiFormHelperText-filled css-2s8ubb-MuiFormHelperText-root"[31m
+    [33mid[31m=[32m"_r_6q_-helper-text"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  button:
+
+  Name "Adicionar fornecedor":
+  [36m<button[31m
+    [33mclass[31m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[31m
+    [33mtabindex[31m=[32m"0"[31m
+    [33mtype[31m=[32m"button"[31m
+  [36m/>[31m
+
+  Name "Remover fornecedor 1":
+  [36m<button[31m
+    [33maria-label[31m=[32m"Remover fornecedor 1"[31m
+    [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+    [33mtabindex[31m=[32m"0"[31m
+    [33mtype[31m=[32m"button"[31m
+  [36m/>[31m
+
+  Name "Choose date, selected date is 1 de abr de 2026":
+  [36m<button[31m
+    [33maria-label[31m=[32m"Choose date, selected date is 1 de abr de 2026"[31m
+    [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-edgeEnd MuiIconButton-sizeMedium css-1ysp02-MuiButtonBase-root-MuiIconButton-root"[31m
+    [33mtabindex[31m=[32m"0"[31m
+    [33mtype[31m=[32m"button"[31m
+  [36m/>[31m
+
+  Name "Remover fornecedor 2":
+  [36m<button[31m
+    [33maria-label[31m=[32m"Remover fornecedor 2"[31m
+    [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+    [33mtabindex[31m=[32m"0"[31m
+    [33mtype[31m=[32m"button"[31m
+  [36m/>[31m
+
+  Name "Choose date":
+  [36m<button[31m
+    [33maria-label[31m=[32m"Choose date"[31m
+    [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-edgeEnd MuiIconButton-sizeMedium css-1ysp02-MuiButtonBase-root-MuiIconButton-root"[31m
+    [33mtabindex[31m=[32m"0"[31m
+    [33mtype[31m=[32m"button"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Fornecedor":
+  [36m<input[31m
+    [33maria-autocomplete[31m=[32m"list"[31m
+    [33maria-expanded[31m=[32m"false"[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocomplete[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused css-13meb6w-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_60_"[31m
+    [33mname[31m=[32m"purchaseSupplierName"[31m
+    [33mrole[31m=[32m"combobox"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtype[31m=[32m"text"[31m
+    [33mvalue[31m=[32m"VMARKET"[31m
+  [36m/>[31m
+
+  Name "Unidade de compra":
+  [36m<div[31m
+    [33maria-disabled[31m=[32m"true"[31m
+    [33maria-expanded[31m=[32m"false"[31m
+    [33maria-haspopup[31m=[32m"listbox"[31m
+    [33maria-labelledby[31m=[32m"_r_66_-label _r_66_"[31m
+    [33mclass[31m=[32m"MuiSelect-select MuiSelect-outlined Mui-disabled MuiInputBase-input MuiOutlinedInput-input Mui-disabled MuiInputBase-inputSizeSmall css-trm6af-MuiNativeSelect-root-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_66_"[31m
+    [33mrole[31m=[32m"combobox"[31m
+  [36m/>[31m
+
+  Name "Fornecedor":
+  [36m<input[31m
+    [33maria-autocomplete[31m=[32m"list"[31m
+    [33maria-expanded[31m=[32m"false"[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocomplete[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused css-13meb6w-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6e_"[31m
+    [33mname[31m=[32m"purchaseSupplierName"[31m
+    [33mrole[31m=[32m"combobox"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtype[31m=[32m"text"[31m
+    [33mvalue[31m=[32m"Atacadao"[31m
+  [36m/>[31m
+
+  Name "Unidade de compra":
+  [36m<div[31m
+    [33maria-disabled[31m=[32m"true"[31m
+    [33maria-expanded[31m=[32m"false"[31m
+    [33maria-haspopup[31m=[32m"listbox"[31m
+    [33maria-labelledby[31m=[32m"_r_6k_-label _r_6k_"[31m
+    [33mclass[31m=[32m"MuiSelect-select MuiSelect-outlined Mui-disabled MuiInputBase-input MuiOutlinedInput-input Mui-disabled MuiInputBase-inputSizeSmall css-trm6af-MuiNativeSelect-root-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6k_"[31m
+    [33mrole[31m=[32m"combobox"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  group:
+
+  Name "Atualizado em":
+  [36m<div[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33maria-labelledby[31m=[32m"_r_63_-label"[31m
+    [33mclass[31m=[32m"MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-fullWidth MuiPickersInputBase-colorPrimary MuiPickersInputBase-inputSizeSmall MuiPickersInputBase-adornedEnd css-1hgcujo-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"[31m
+    [33mrole[31m=[32m"group"[31m
+  [36m/>[31m
+
+  Name "Atualizado em":
+  [36m<div[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33maria-labelledby[31m=[32m"_r_6h_-label"[31m
+    [33mclass[31m=[32m"MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-fullWidth MuiPickersInputBase-colorPrimary MuiPickersInputBase-inputSizeSmall MuiPickersInputBase-adornedEnd css-1hgcujo-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"[31m
+    [33mrole[31m=[32m"group"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  spinbutton:
+
+  Name "Day":
+  [36m<span[31m
+    [33maria-disabled[31m=[32m"false"[31m
+    [33maria-label[31m=[32m"Day"[31m
+    [33maria-readonly[31m=[32m"false"[31m
+    [33maria-valuemax[31m=[32m"30"[31m
+    [33maria-valuemin[31m=[32m"1"[31m
+    [33maria-valuenow[31m=[32m"1"[31m
+    [33maria-valuetext[31m=[32m"1º"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocorrect[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[31m
+    [33mcontenteditable[31m=[32m"true"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mrole[31m=[32m"spinbutton"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtabindex[31m=[32m"0"[31m
+  [36m/>[31m
+
+  Name "Month":
+  [36m<span[31m
+    [33maria-disabled[31m=[32m"false"[31m
+    [33maria-label[31m=[32m"Month"[31m
+    [33maria-readonly[31m=[32m"false"[31m
+    [33maria-valuemax[31m=[32m"12"[31m
+    [33maria-valuemin[31m=[32m"1"[31m
+    [33maria-valuenow[31m=[32m"4"[31m
+    [33maria-valuetext[31m=[32m"abril"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocorrect[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[31m
+    [33mcontenteditable[31m=[32m"true"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mrole[31m=[32m"spinbutton"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtabindex[31m=[32m"-1"[31m
+  [36m/>[31m
+
+  Name "Year":
+  [36m<span[31m
+    [33maria-disabled[31m=[32m"false"[31m
+    [33maria-label[31m=[32m"Year"[31m
+    [33maria-readonly[31m=[32m"false"[31m
+    [33maria-valuemax[31m=[32m"9999"[31m
+    [33maria-valuemin[31m=[32m"0"[31m
+    [33maria-valuenow[31m=[32m"2026"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocorrect[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[31m
+    [33mcontenteditable[31m=[32m"true"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mrole[31m=[32m"spinbutton"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtabindex[31m=[32m"-1"[31m
+  [36m/>[31m
+
+  Name "Qtde compra":
+  [36m<input[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_68_"[31m
+    [33mname[31m=[32m"purchaseQuantity"[31m
+    [33mstep[31m=[32m"0.0001"[31m
+    [33mtype[31m=[32m"number"[31m
+    [33mvalue[31m=[32m"10.0000"[31m
+  [36m/>[31m
+
+  Name "Preco de compra":
+  [36m<input[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6b_"[31m
+    [33mname[31m=[32m"purchaseCost"[31m
+    [33mstep[31m=[32m"0.0001"[31m
+    [33mtype[31m=[32m"number"[31m
+    [33mvalue[31m=[32m"80.0000"[31m
+  [36m/>[31m
+
+  Name "Day":
+  [36m<span[31m
+    [33maria-disabled[31m=[32m"false"[31m
+    [33maria-label[31m=[32m"Day"[31m
+    [33maria-readonly[31m=[32m"false"[31m
+    [33maria-valuemax[31m=[32m"31"[31m
+    [33maria-valuemin[31m=[32m"1"[31m
+    [33maria-valuetext[31m=[32m"Empty"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocorrect[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[31m
+    [33mcontenteditable[31m=[32m"true"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mrole[31m=[32m"spinbutton"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtabindex[31m=[32m"0"[31m
+  [36m/>[31m
+
+  Name "Month":
+  [36m<span[31m
+    [33maria-disabled[31m=[32m"false"[31m
+    [33maria-label[31m=[32m"Month"[31m
+    [33maria-readonly[31m=[32m"false"[31m
+    [33maria-valuemax[31m=[32m"12"[31m
+    [33maria-valuemin[31m=[32m"1"[31m
+    [33maria-valuetext[31m=[32m"Empty"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocorrect[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[31m
+    [33mcontenteditable[31m=[32m"true"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mrole[31m=[32m"spinbutton"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtabindex[31m=[32m"-1"[31m
+  [36m/>[31m
+
+  Name "Year":
+  [36m<span[31m
+    [33maria-disabled[31m=[32m"false"[31m
+    [33maria-label[31m=[32m"Year"[31m
+    [33maria-readonly[31m=[32m"false"[31m
+    [33maria-valuemax[31m=[32m"9999"[31m
+    [33maria-valuemin[31m=[32m"0"[31m
+    [33maria-valuetext[31m=[32m"Empty"[31m
+    [33mautocapitalize[31m=[32m"none"[31m
+    [33mautocorrect[31m=[32m"off"[31m
+    [33mclass[31m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[31m
+    [33mcontenteditable[31m=[32m"true"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mrole[31m=[32m"spinbutton"[31m
+    [33mspellcheck[31m=[32m"false"[31m
+    [33mtabindex[31m=[32m"-1"[31m
+  [36m/>[31m
+
+  Name "Qtde compra":
+  [36m<input[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6m_"[31m
+    [33mname[31m=[32m"purchaseQuantity"[31m
+    [33mstep[31m=[32m"0.0001"[31m
+    [33mtype[31m=[32m"number"[31m
+    [33mvalue[31m=[32m"10.0000"[31m
+  [36m/>[31m
+
+  Name "Preco de compra":
+  [36m<input[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6p_"[31m
+    [33mname[31m=[32m"purchaseCost"[31m
+    [33mstep[31m=[32m"0.0001"[31m
+    [33mtype[31m=[32m"number"[31m
+    [33mvalue[31m=[32m"80.0000"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Preco de uso":
+  [36m<input[31m
+    [33maria-describedby[31m=[32m"_r_6c_-helper-text"[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33maria-readonly[31m=[32m"true"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall Mui-readOnly MuiInputBase-readOnly css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6c_"[31m
+    [33mreadonly[31m=[32m""[31m
+    [33mtype[31m=[32m"text"[31m
+    [33mvalue[31m=[32m"8.0000"[31m
+  [36m/>[31m
+
+  Name "Preco de uso":
+  [36m<input[31m
+    [33maria-describedby[31m=[32m"_r_6q_-helper-text"[31m
+    [33maria-invalid[31m=[32m"false"[31m
+    [33maria-readonly[31m=[32m"true"[31m
+    [33mclass[31m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall Mui-readOnly MuiInputBase-readOnly css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[31m
+    [33mid[31m=[32m"_r_6q_"[31m
+    [33mreadonly[31m=[32m""[31m
+    [33mtype[31m=[32m"text"[31m
+    [33mvalue[31m=[32m"8.0000"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[31m
+      [33mstyle[31m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCompras / fornecedores[0m
+              [36m</span>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[31m
+              [36m>[31m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[31m
+              [33mtabindex[31m=[32m"0"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[31m
+                  [33mdata-testid[31m=[32m"AddIcon"[31m
+                  [33mfocusable[31m=[32m"false"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</span>[31m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<input[31m
+            [33mname[31m=[32m"purchasesJson"[31m
+            [33mtype[31m=[32m"hidden"[31m
+            [33mvalue[31m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false},{\"supplierName\":\"Atacadao\",\"purchaseUnit\":\"fardo\",\"purchaseIsPrimary\":false,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"\",\"usageUnit\":\"\",\"usageQuantity\":\"\",\"usageIsFixedFromPrimary\":true}]"[31m
+          [36m/>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"MuiBox-root css-fvl2mk"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[31m
+                [36m>[31m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Remover fornecedor 1"[31m
+                  [33mclass[31m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[31m
+                  [33mtabindex[31m=[32m"0"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33maria-hidden[31m=[32m"true"[31m
+                    [33mclass[31m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[31m
+                    [33mdata-testid[31m=[32m"DeleteOutlineIcon"[31m
+                    [33mfocusable[31m=[32m"false"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"MuiBox-root css-1ywj1r7"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[31m
+                  [36m>[31m
+                    [36m<label[31m
+                      [33mclass[31m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[31m
+                      [33mdata-shrink[31m=[32m"true"[31m
+                      [33mfor[31m=[32m"_r_60_"[31m
+                      [33mid[31m=[32m"_r_60_-label"[31m
+                    [36m>[31m
+                      [0mFornecedor[0m
+                    [36m</label>[31m
+                    [36m<div[31m
+                      [33mclass[31m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[31m
+                    [36m>[31m
+         ...[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 9 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal sozinho: sem badge fixado, campos Unidade de uso + Qtde de uso editaveis
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find a label with the text of: /unidade de uso/i
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+      [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCompras / fornecedores[0m
+              [36m</span>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[39m
+              [33mtabindex[39m=[32m"0"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[39m
+                  [33mdata-testid[39m=[32m"AddIcon"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"purchasesJson"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false}]"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiBox-root css-fvl2mk"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Remover fornecedor 1"[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[39m
+                    [33mdata-testid[39m=[32m"DeleteOutlineIcon"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiBox-root css-1ywj1r7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                  [36m>[39m
+                    [36m<label[39m
+                      [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[39m
+                      [33mdata-shrink[39m=[32m"true"[39m
+                      [33mfor[39m=[32m"_r_2_"[39m
+                      [33mid[39m=[32m"_r_2_-label"[39m
+                    [36m>[39m
+                      [0mFornecedor[0m
+                    [36m</label>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                    [36m>[39m
+                      [36m<input[39m
+                        [33maria-autocomplete[39m=[32m"list"[39m
+                        [33maria-expanded[39m=[32m"false"[39m
+                        [33maria-invalid[39m=[32m"false"[39m
+                    ...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getAllByLabelText node_modules/@testing-library/dom/dist/queries/label-text.js:[2m111:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m76:31[22m[39m
+    [90m 74| [39m
+    [90m 75| [39m    // Editable inputs for Unidade de uso + Qtde de uso exist on the p…
+    [90m 76| [39m    [35mconst[39m unidadeUso [33m=[39m screen[33m.[39m[34mgetByLabelText[39m([36m/unidade de uso/i[39m)[33m;[39m
+    [90m   | [39m                              [31m^[39m
+    [90m 77| [39m    const qtdeUso = screen.getByLabelText(/quantidade de uso|qtde de u…
+    [90m 78| [39m    [34mexpect[39m(unidadeUso)[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mprincipal + secundario: badge 'fixado do 1o fornecedor' aparece 2x (Unidade uso + Qtde uso)
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: /fixado do 1.*fornecedor/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+      [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCompras / fornecedores[0m
+              [36m</span>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[39m
+              [33mtabindex[39m=[32m"0"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[39m
+                  [33mdata-testid[39m=[32m"AddIcon"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"purchasesJson"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false},{\"supplierName\":\"Atacadao\",\"purchaseUnit\":\"fardo\",\"purchaseIsPrimary\":false,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"\",\"usageUnit\":\"\",\"usageQuantity\":\"\",\"usageIsFixedFromPrimary\":true}]"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiBox-root css-fvl2mk"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Remover fornecedor 1"[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[39m
+                    [33mdata-testid[39m=[32m"DeleteOutlineIcon"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiBox-root css-1ywj1r7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                  [36m>[39m
+                    [36m<label[39m
+                      [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[39m
+                      [33mdata-shrink[39m=[32m"true"[39m
+                      [33mfor[39m=[32m"_r_h_"[39m
+                      [33mid[39m=[32m"_r_h_-label"[39m
+                    [36m>[39m
+                      [0mFornecedor[0m
+                    [36m</label>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                    [36m>[39m
+           ...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m109:15[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m88:27[22m[39m
+    [90m 86| [39m    [34mrenderEditor[39m([[34mmakePrimary[39m()[33m,[39m [34mmakeSecondary[39m()])[33m;[39m
+    [90m 87| [39m
+    [90m 88| [39m    [35mconst[39m badges [33m=[39m screen[33m.[39m[34mgetAllByText[39m([36m/fixado do 1.*fornecedor/i[39m)[33m;[39m
+    [90m   | [39m                          [31m^[39m
+    [90m 89| [39m    [34mexpect[39m(badges[33m.[39mlength)[33m.[39m[34mtoBeGreaterThanOrEqual[39m([34m2[39m)[33m;[39m
+    [90m 90| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22msecundario deriva usageUnit client-side do principal (D-05)
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find a label with the text of: /unidade de uso/i
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+      [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCompras / fornecedores[0m
+              [36m</span>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[39m
+              [33mtabindex[39m=[32m"0"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[39m
+                  [33mdata-testid[39m=[32m"AddIcon"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"purchasesJson"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false},{\"supplierName\":\"Atacadao\",\"purchaseUnit\":\"fardo\",\"purchaseIsPrimary\":false,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"\",\"usageUnit\":\"\",\"usageQuantity\":\"\",\"usageIsFixedFromPrimary\":true}]"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiBox-root css-fvl2mk"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Remover fornecedor 1"[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[39m
+                    [33mdata-testid[39m=[32m"DeleteOutlineIcon"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiBox-root css-1ywj1r7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                  [36m>[39m
+                    [36m<label[39m
+                      [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[39m
+                      [33mdata-shrink[39m=[32m"true"[39m
+                      [33mfor[39m=[32m"_r_1e_"[39m
+                      [33mid[39m=[32m"_r_1e_-label"[39m
+                    [36m>[39m
+                      [0mFornecedor[0m
+                    [36m</label>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                    [36m>[39m
+         ...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getAllByLabelText node_modules/@testing-library/dom/dist/queries/label-text.js:[2m111:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m109:15[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m99:34[22m[39m
+    [90m 97| [39m
+    [90m 98| [39m    // There should be 2 inputs labeled "Unidade de uso" (one per card…
+    [90m 99| [39m    const unidadeInputs = screen.getAllByLabelText(/unidade de uso/i) …
+    [90m   | [39m                                 [31m^[39m
+    [90m100| [39m    [34mexpect[39m(unidadeInputs[33m.[39mlength)[33m.[39m[34mtoBeGreaterThanOrEqual[39m([34m2[39m)[33m;[39m
+    [90m101| [39m    [90m// Secondary one derives from primary's "kg"[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mFator derivado no principal = qtdeCompra/qtdeUso (10/1 = 10.0000)
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find a label with the text of: /fator de conversao/i
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+      [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCompras / fornecedores[0m
+              [36m</span>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[39m
+              [33mtabindex[39m=[32m"0"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[39m
+                  [33mdata-testid[39m=[32m"AddIcon"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"purchasesJson"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false}]"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiBox-root css-fvl2mk"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Remover fornecedor 1"[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[39m
+                    [33mdata-testid[39m=[32m"DeleteOutlineIcon"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiBox-root css-1ywj1r7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                  [36m>[39m
+                    [36m<label[39m
+                      [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[39m
+                      [33mdata-shrink[39m=[32m"true"[39m
+                      [33mfor[39m=[32m"_r_38_"[39m
+                      [33mid[39m=[32m"_r_38_-label"[39m
+                    [36m>[39m
+                      [0mFornecedor[0m
+                    [36m</label>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                    [36m>[39m
+                      [36m<input[39m
+                        [33maria-autocomplete[39m=[32m"list"[39m
+                        [33maria-expanded[39m=[32m"false"[39m
+                        [33maria-invalid[39m=[32m"false"[39m
+                  ...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getAllByLabelText node_modules/@testing-library/dom/dist/queries/label-text.js:[2m111:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m125:26[22m[39m
+    [90m123| [39m    ])[33m;[39m
+    [90m124| [39m
+    [90m125| [39m    const fator = screen.getByLabelText(/fator de conversao/i) as HTML…
+    [90m   | [39m                         [31m^[39m
+    [90m126| [39m    [34mexpect[39m(fator[33m.[39mvalue)[33m.[39m[34mtoBe[39m([32m"10.0000"[39m)[33m;[39m
+    [90m127| [39m    [90m// Fator is readonly green[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mRemover aparece so em secundarios (principal sem botao Remover)
+[31m[1mAssertionError[22m: expected 2 to be 1 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 2[39m
+
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m152:34[22m[39m
+    [90m150| [39m    const removeButtons = screen.getAllByRole("button", { name: /remov…
+    [90m151| [39m    [90m// Only the secondary row has a remove button[39m
+    [90m152| [39m    [34mexpect[39m(removeButtons[33m.[39mlength)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+    [90m   | [39m                                 [31m^[39m
+    [90m153| [39m  })[33m;[39m
+    [90m154| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mAdicionar fornecedor adiciona row com purchaseIsPrimary=false, usageUnit='' e usageQuantity=''
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m165:37[22m[39m
+    [90m163| [39m    [34mexpect[39m(updated[33m.[39mlength)[33m.[39m[34mtoBe[39m([34m2[39m)[33m;[39m
+    [90m164| [39m    [35mconst[39m added [33m=[39m updated[[34m1[39m][33m;[39m
+    [90m165| [39m    [34mexpect[39m(added[33m.[39mpurchaseIsPrimary)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   | [39m                                    [31m^[39m
+    [90m166| [39m    [34mexpect[39m(added[33m.[39musageUnit)[33m.[39m[34mtoBe[39m([32m""[39m)[33m;[39m
+    [90m167| [39m    [34mexpect[39m(added[33m.[39musageQuantity)[33m.[39m[34mtoBe[39m([32m""[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/catalog/purchases-editor.test.tsx[2m > [22mPurchasesEditor — SPEC-ITEM-FORNECEDOR (D-05, D-06, D-07, D-08, D-11)[2m > [22mtoggle principal em secundario: reseta demais para false + exibe 'Campos fixados atualizados a partir de {nome}' (D-06)
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an accessible element with the role "button" and name `/tornar principal/i`
+
+Here are the accessible roles:
+
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained MuiFormHelperText-filled css-2s8ubb-MuiFormHelperText-root"[39m
+    [33mid[39m=[32m"_r_6c_-helper-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained MuiFormHelperText-filled css-2s8ubb-MuiFormHelperText-root"[39m
+    [33mid[39m=[32m"_r_6q_-helper-text"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Adicionar fornecedor":
+  [36m<button[39m
+    [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[39m
+    [33mtabindex[39m=[32m"0"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Remover fornecedor 1":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Remover fornecedor 1"[39m
+    [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+    [33mtabindex[39m=[32m"0"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Choose date, selected date is 1 de abr de 2026":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Choose date, selected date is 1 de abr de 2026"[39m
+    [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-edgeEnd MuiIconButton-sizeMedium css-1ysp02-MuiButtonBase-root-MuiIconButton-root"[39m
+    [33mtabindex[39m=[32m"0"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Remover fornecedor 2":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Remover fornecedor 2"[39m
+    [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+    [33mtabindex[39m=[32m"0"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Choose date":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Choose date"[39m
+    [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-edgeEnd MuiIconButton-sizeMedium css-1ysp02-MuiButtonBase-root-MuiIconButton-root"[39m
+    [33mtabindex[39m=[32m"0"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Fornecedor":
+  [36m<input[39m
+    [33maria-autocomplete[39m=[32m"list"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocomplete[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused css-13meb6w-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_60_"[39m
+    [33mname[39m=[32m"purchaseSupplierName"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m"VMARKET"[39m
+  [36m/>[39m
+
+  Name "Unidade de compra":
+  [36m<div[39m
+    [33maria-disabled[39m=[32m"true"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"listbox"[39m
+    [33maria-labelledby[39m=[32m"_r_66_-label _r_66_"[39m
+    [33mclass[39m=[32m"MuiSelect-select MuiSelect-outlined Mui-disabled MuiInputBase-input MuiOutlinedInput-input Mui-disabled MuiInputBase-inputSizeSmall css-trm6af-MuiNativeSelect-root-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_66_"[39m
+    [33mrole[39m=[32m"combobox"[39m
+  [36m/>[39m
+
+  Name "Fornecedor":
+  [36m<input[39m
+    [33maria-autocomplete[39m=[32m"list"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocomplete[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused css-13meb6w-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6e_"[39m
+    [33mname[39m=[32m"purchaseSupplierName"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m"Atacadao"[39m
+  [36m/>[39m
+
+  Name "Unidade de compra":
+  [36m<div[39m
+    [33maria-disabled[39m=[32m"true"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"listbox"[39m
+    [33maria-labelledby[39m=[32m"_r_6k_-label _r_6k_"[39m
+    [33mclass[39m=[32m"MuiSelect-select MuiSelect-outlined Mui-disabled MuiInputBase-input MuiOutlinedInput-input Mui-disabled MuiInputBase-inputSizeSmall css-trm6af-MuiNativeSelect-root-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6k_"[39m
+    [33mrole[39m=[32m"combobox"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Atualizado em":
+  [36m<div[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33maria-labelledby[39m=[32m"_r_63_-label"[39m
+    [33mclass[39m=[32m"MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-fullWidth MuiPickersInputBase-colorPrimary MuiPickersInputBase-inputSizeSmall MuiPickersInputBase-adornedEnd css-1hgcujo-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"[39m
+    [33mrole[39m=[32m"group"[39m
+  [36m/>[39m
+
+  Name "Atualizado em":
+  [36m<div[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33maria-labelledby[39m=[32m"_r_6h_-label"[39m
+    [33mclass[39m=[32m"MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-fullWidth MuiPickersInputBase-colorPrimary MuiPickersInputBase-inputSizeSmall MuiPickersInputBase-adornedEnd css-1hgcujo-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"[39m
+    [33mrole[39m=[32m"group"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  spinbutton:
+
+  Name "Day":
+  [36m<span[39m
+    [33maria-disabled[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Day"[39m
+    [33maria-readonly[39m=[32m"false"[39m
+    [33maria-valuemax[39m=[32m"30"[39m
+    [33maria-valuemin[39m=[32m"1"[39m
+    [33maria-valuenow[39m=[32m"1"[39m
+    [33maria-valuetext[39m=[32m"1º"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocorrect[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[39m
+    [33mcontenteditable[39m=[32m"true"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mrole[39m=[32m"spinbutton"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  Name "Month":
+  [36m<span[39m
+    [33maria-disabled[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Month"[39m
+    [33maria-readonly[39m=[32m"false"[39m
+    [33maria-valuemax[39m=[32m"12"[39m
+    [33maria-valuemin[39m=[32m"1"[39m
+    [33maria-valuenow[39m=[32m"4"[39m
+    [33maria-valuetext[39m=[32m"abril"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocorrect[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[39m
+    [33mcontenteditable[39m=[32m"true"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mrole[39m=[32m"spinbutton"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtabindex[39m=[32m"-1"[39m
+  [36m/>[39m
+
+  Name "Year":
+  [36m<span[39m
+    [33maria-disabled[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Year"[39m
+    [33maria-readonly[39m=[32m"false"[39m
+    [33maria-valuemax[39m=[32m"9999"[39m
+    [33maria-valuemin[39m=[32m"0"[39m
+    [33maria-valuenow[39m=[32m"2026"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocorrect[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[39m
+    [33mcontenteditable[39m=[32m"true"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mrole[39m=[32m"spinbutton"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtabindex[39m=[32m"-1"[39m
+  [36m/>[39m
+
+  Name "Qtde compra":
+  [36m<input[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_68_"[39m
+    [33mname[39m=[32m"purchaseQuantity"[39m
+    [33mstep[39m=[32m"0.0001"[39m
+    [33mtype[39m=[32m"number"[39m
+    [33mvalue[39m=[32m"10.0000"[39m
+  [36m/>[39m
+
+  Name "Preco de compra":
+  [36m<input[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6b_"[39m
+    [33mname[39m=[32m"purchaseCost"[39m
+    [33mstep[39m=[32m"0.0001"[39m
+    [33mtype[39m=[32m"number"[39m
+    [33mvalue[39m=[32m"80.0000"[39m
+  [36m/>[39m
+
+  Name "Day":
+  [36m<span[39m
+    [33maria-disabled[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Day"[39m
+    [33maria-readonly[39m=[32m"false"[39m
+    [33maria-valuemax[39m=[32m"31"[39m
+    [33maria-valuemin[39m=[32m"1"[39m
+    [33maria-valuetext[39m=[32m"Empty"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocorrect[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[39m
+    [33mcontenteditable[39m=[32m"true"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mrole[39m=[32m"spinbutton"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  Name "Month":
+  [36m<span[39m
+    [33maria-disabled[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Month"[39m
+    [33maria-readonly[39m=[32m"false"[39m
+    [33maria-valuemax[39m=[32m"12"[39m
+    [33maria-valuemin[39m=[32m"1"[39m
+    [33maria-valuetext[39m=[32m"Empty"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocorrect[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[39m
+    [33mcontenteditable[39m=[32m"true"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mrole[39m=[32m"spinbutton"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtabindex[39m=[32m"-1"[39m
+  [36m/>[39m
+
+  Name "Year":
+  [36m<span[39m
+    [33maria-disabled[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Year"[39m
+    [33maria-readonly[39m=[32m"false"[39m
+    [33maria-valuemax[39m=[32m"9999"[39m
+    [33maria-valuemin[39m=[32m"0"[39m
+    [33maria-valuetext[39m=[32m"Empty"[39m
+    [33mautocapitalize[39m=[32m"none"[39m
+    [33mautocorrect[39m=[32m"off"[39m
+    [33mclass[39m=[32m"MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1jpopwz-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"[39m
+    [33mcontenteditable[39m=[32m"true"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mrole[39m=[32m"spinbutton"[39m
+    [33mspellcheck[39m=[32m"false"[39m
+    [33mtabindex[39m=[32m"-1"[39m
+  [36m/>[39m
+
+  Name "Qtde compra":
+  [36m<input[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6m_"[39m
+    [33mname[39m=[32m"purchaseQuantity"[39m
+    [33mstep[39m=[32m"0.0001"[39m
+    [33mtype[39m=[32m"number"[39m
+    [33mvalue[39m=[32m"10.0000"[39m
+  [36m/>[39m
+
+  Name "Preco de compra":
+  [36m<input[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6p_"[39m
+    [33mname[39m=[32m"purchaseCost"[39m
+    [33mstep[39m=[32m"0.0001"[39m
+    [33mtype[39m=[32m"number"[39m
+    [33mvalue[39m=[32m"80.0000"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Preco de uso":
+  [36m<input[39m
+    [33maria-describedby[39m=[32m"_r_6c_-helper-text"[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33maria-readonly[39m=[32m"true"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall Mui-readOnly MuiInputBase-readOnly css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6c_"[39m
+    [33mreadonly[39m=[32m""[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m"8.0000"[39m
+  [36m/>[39m
+
+  Name "Preco de uso":
+  [36m<input[39m
+    [33maria-describedby[39m=[32m"_r_6q_-helper-text"[39m
+    [33maria-invalid[39m=[32m"false"[39m
+    [33maria-readonly[39m=[32m"true"[39m
+    [33mclass[39m=[32m"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall Mui-readOnly MuiInputBase-readOnly css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input"[39m
+    [33mid[39m=[32m"_r_6q_"[39m
+    [33mreadonly[39m=[32m""[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m"8.0000"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1j74uew-MuiPaper-root-MuiCard-root"[39m
+      [33mstyle[39m=[32m"--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"MuiCardContent-root css-j4isg9-MuiCardContent-root"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"MuiStack-root css-v2woy3-MuiStack-root"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-1l4iccl-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiStack-root css-j3ygch-MuiStack-root"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-6mw38q-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCompras / fornecedores[0m
+              [36m</span>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 css-1wle3ir-MuiTypography-root"[39m
+              [36m>[39m
+                [0mCadastre a referencia operacional de compra com custo, unidade e data de atualizacao.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1uent87-MuiButtonBase-root-MuiButton-root"[39m
+              [33mtabindex[39m=[32m"0"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"MuiButton-icon MuiButton-startIcon MuiButton-iconSizeMedium css-1sh91j5-MuiButton-startIcon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"[39m
+                  [33mdata-testid[39m=[32m"AddIcon"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mAdicionar fornecedor[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"purchasesJson"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"[{\"supplierName\":\"VMARKET\",\"purchaseUnit\":\"kg\",\"purchaseIsPrimary\":true,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"2026-04-01\",\"usageUnit\":\"kg\",\"usageQuantity\":\"1.0000\",\"usageIsFixedFromPrimary\":false},{\"supplierName\":\"Atacadao\",\"purchaseUnit\":\"fardo\",\"purchaseIsPrimary\":false,\"purchaseQuantity\":\"10.0000\",\"purchaseCost\":\"80.0000\",\"priceUpdatedAt\":\"\",\"usageUnit\":\"\",\"usageQuantity\":\"\",\"usageIsFixedFromPrimary\":true}]"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"MuiStack-root css-10kbc59-MuiStack-root"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"MuiBox-root css-fvl2mk"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiStack-root css-1adtwwx-MuiStack-root"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"MuiTypography-root MuiTypography-overline css-1s8eikx-MuiTypography-root"[39m
+                [36m>[39m
+                  [0mFornecedor 1 — Principal[0m
+                [36m</span>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Remover fornecedor 1"[39m
+                  [33mclass[39m=[32m"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-155wbr6-MuiButtonBase-root-MuiIconButton-root"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-120dh41-MuiSvgIcon-root"[39m
+                    [33mdata-testid[39m=[32m"DeleteOutlineIcon"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"MuiBox-root css-1ywj1r7"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"MuiAutocomplete-root MuiAutocomplete-hasClearIcon css-1tlcqt-MuiAutocomplete-root"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"[39m
+                  [36m>[39m
+                    [36m<label[39m
+                      [33mclass[39m=[32m"MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root"[39m
+                      [33mdata-shrink[39m=[32m"true"[39m
+                      [33mfor[39m=[32m"_r_60_"[39m
+                      [33mid[39m=[32m"_r_60_-label"[39m
+                    [36m>[39m
+                      [0mFornecedor[0m
+                    [36m</label>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd MuiAutocomplete-inputRoot css-1n04w30-MuiInputBase-root-MuiOutlinedInput-root"[39m
+                    [36m>[39m
+         ...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/tests/unit/catalog/purchases-editor.test.tsx:[2m176:30[22m[39m
+    [90m174| [39m    const { onRowsChange } = renderEditor([makePrimary(), makeSecondar…
+    [90m175| [39m
+    [90m176| [39m    const toggleBtn = screen.getByRole("button", { name: /tornar princ…
+    [90m   | [39m                             [31m^[39m
+    [90m177| [39m    fireEvent[33m.[39m[34mclick[39m(toggleBtn)[33m;[39m
+    [90m178| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/FichaFlatGrid.test.tsx[2m > [22mFichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mGRID_TEMPLATE bate HTML: 22px 1fr 80px 60px 240px 90px 96px 28px
+[31m[1mAssertionError[22m: expected undefined to be '22px 1fr 80px 60px 240px 90px 96px 28…' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"22px 1fr 80px 60px 240px 90px 96px 28px"
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/tests/unit/engineering/FichaFlatGrid.test.tsx:[2m82:27[22m[39m
+    [90m 80| [39m  it("GRID_TEMPLATE bate HTML: 22px 1fr 80px 60px 240px 90px 96px 28px…
+    [90m 81| [39m    // Garante que a constante exportada bate 1:1 com o HTML tela-fich…
+    [90m 82| [39m    expect(GRID_TEMPLATE).toBe("22px 1fr 80px 60px 240px 90px 96px 28p…
+    [90m   | [39m                          [31m^[39m
+    [90m 83| [39m    [90m// Sanity check: render nao quebra com o GRID_TEMPLATE atual[39m
+    [90m 84| [39m    [35mconst[39m { container } [33m=[39m [34mrenderGrid[39m([baseRow][33m,[39m [35mfalse[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/unit/engineering/FichaFlatGrid.test.tsx[2m > [22mFichaFlatGrid — SPEC-FICHA-FIDELIDADE (HTML tela-ficha-tecnica-v2.html)[2m > [22mcf-row grid bate HTML: 22px auto 120px 110px 90px 1fr 28px
+[31m[1mAssertionError[22m: expected undefined to be '22px auto 120px 110px 90px 1fr 28px' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"22px auto 120px 110px 90px 1fr 28px"
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/tests/unit/engineering/FichaFlatGrid.test.tsx:[2m106:30[22m[39m
+    [90m104| [39m  it("cf-row grid bate HTML: 22px auto 120px 110px 90px 1fr 28px", () …
+    [90m105| [39m    // Garante que a constante exportada bate 1:1 com o HTML tela-fich…
+    [90m106| [39m    expect(CF_GRID_TEMPLATE).toBe("22px auto 120px 110px 90px 1fr 28px…
+    [90m   | [39m                             [31m^[39m
+    [90m107| [39m    [90m// Sanity check: render com CF nao quebra e label aparece[39m
+    [90m108| [39m    [34mrenderGrid[39m([baseRow[33m,[39m coccaoFinalRow][33m,[39m [35mtrue[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m51 passed[39m[22m[90m (53)[39m
+[2m      Tests [22m [1m[31m9 failed[39m[22m[2m | [22m[1m[32m141 passed[39m[22m[90m (150)[39m
+[2m   Start at [22m 19:52:54
+[2m   Duration [22m 6.89s[2m (transform 3.90s, setup 5.73s, collect 32.98s, tests 34.77s, environment 47.08s, prepare 6.15s)[22m
+

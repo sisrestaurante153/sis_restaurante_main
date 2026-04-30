@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@/generated/prisma/client";
-import { FichaStatus, Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import {
   buildDependencyClosure,
   type DirectCompositionEdge
@@ -54,24 +54,24 @@ function serializeCalculatedItem(result: CalculatedItemCost) {
 
 async function loadItemNode(tx: TransactionClient, itemId: string) {
   return tx.item.findUnique({
-    where: { id: itemId },
+    where: { cd_item: itemId },
     include: {
       unidadeUsoPadrao: true,
       custosSnapshot: {
-        orderBy: { calculadoEm: "desc" },
+        orderBy: { ts_calculo: "desc" },
         take: 1
       },
       compras: {
-        orderBy: [{ dataAtualizacaoPreco: "desc" }, { criadoEm: "desc" }],
+        orderBy: [{ ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
         take: 1
       },
       fichasResultantes: {
-        where: { status: FichaStatus.ativa },
-        orderBy: { versao: "desc" },
+        where: { tp_status: "ativa" },
+        orderBy: { nr_versao: "desc" },
         take: 1,
         include: {
           componentes: {
-            orderBy: { ordem: "asc" },
+            orderBy: { nr_ordem: "asc" },
             include: {
               unidadeUso: true
             }
@@ -101,56 +101,56 @@ async function loadCalculationGraph(tx: TransactionClient, rootItemIds: readonly
     }
 
     const activeFicha = item.fichasResultantes[0];
-    graph[item.id] = {
-      id: item.id,
-      name: item.nome,
+    graph[item.cd_item] = {
+      id: item.cd_item,
+      name: item.nm_item,
       unitType: activeFicha
         ? "massa"
-        : item.unidadeUsoPadrao?.tipo === "contagem"
+        : item.unidadeUsoPadrao?.tp_unidade === "contagem"
           ? "contagem"
           : "massa",
       baseUnitCost: activeFicha
-        ? item.custosSnapshot[0]?.custoPorKgOuUnidadeUso?.toString() ??
-          item.compras[0]?.custoUnitarioBase.toString() ??
+        ? item.custosSnapshot[0]?.vl_custo_kg_uso?.toString() ??
+          item.compras[0]?.vl_custo_unitario_base.toString() ??
           "0"
-        : item.compras[0]?.custoUnitarioBase.toString() ??
-          item.custosSnapshot[0]?.custoPorKgOuUnidadeUso?.toString() ??
+        : item.compras[0]?.vl_custo_unitario_base.toString() ??
+          item.custosSnapshot[0]?.vl_custo_kg_uso?.toString() ??
           "0",
       ficha: activeFicha
         ? {
-            mode: activeFicha.modoRendimento,
-            percentualPerda: activeFicha.percentualPerda?.toString(),
-            pesoFinalInformado: activeFicha.pesoFinalInformado?.toString(),
-            rendimentoPorcoes: activeFicha.rendimentoPorcoes?.toString(),
+            mode: activeFicha.tp_modo_rendimento,
+            percentualPerda: activeFicha.vl_pct_perda?.toString(),
+            pesoFinalInformado: activeFicha.vl_peso_final?.toString(),
+            rendimentoPorcoes: activeFicha.vl_rendimento_porcoes?.toString(),
             components: activeFicha.componentes.map((component) => ({
-              id: component.id,
-              itemId: component.itemComponenteId,
-              componentType: component.tipoComponente,
+              id: component.cd_ficha_componente,
+              itemId: component.cd_item_componente,
+              componentType: component.tp_componente,
               quantityGross: normalizeQuantityToCanonical(
-                component.quantidadeBruta.toString(),
-                component.unidadeUso.codigo
+                component.vl_qtd_bruta.toString(),
+                component.unidadeUso.ds_codigo
               ).toString(),
-              quantityNet: component.quantidadeLimpa
+              quantityNet: component.vl_qtd_limpa
                 ? normalizeQuantityToCanonical(
-                    component.quantidadeLimpa.toString(),
-                    component.unidadeUso.codigo
+                    component.vl_qtd_limpa.toString(),
+                    component.unidadeUso.ds_codigo
                   ).toString()
                 : null,
               unitType:
-                component.unidadeUso.tipo === "contagem"
+                component.unidadeUso.tp_unidade === "contagem"
                   ? "contagem"
-                  : component.unidadeUso.tipo === "volume"
+                  : component.unidadeUso.tp_unidade === "volume"
                     ? "volume"
                     : "massa",
-              correctionFactor: component.fatorCorrecao?.toString() ?? null,
-              cookingIndex: component.indiceCoccao?.toString() ?? null
+              correctionFactor: component.vl_fator_correcao?.toString() ?? null,
+              cookingIndex: component.vl_indice_coccao?.toString() ?? null
             }))
           }
         : undefined
     };
 
     for (const component of activeFicha?.componentes ?? []) {
-      queue.push(component.itemComponenteId);
+      queue.push(component.cd_item_componente);
     }
   }
 
@@ -159,12 +159,12 @@ async function loadCalculationGraph(tx: TransactionClient, rootItemIds: readonly
 
 async function loadAllActiveEdges(tx: TransactionClient): Promise<DirectCompositionEdge[]> {
   const fichas = await tx.fichaTecnica.findMany({
-    where: { status: FichaStatus.ativa },
+    where: { tp_status: "ativa" },
     select: {
-      itemResultanteId: true,
+      cd_item_resultante: true,
       componentes: {
         select: {
-          itemComponenteId: true
+          cd_item_componente: true
         }
       }
     }
@@ -172,8 +172,8 @@ async function loadAllActiveEdges(tx: TransactionClient): Promise<DirectComposit
 
   return fichas.flatMap((ficha) =>
     ficha.componentes.map((component) => ({
-      parentItemId: ficha.itemResultanteId,
-      childItemId: component.itemComponenteId
+      parentItemId: ficha.cd_item_resultante,
+      childItemId: component.cd_item_componente
     }))
   );
 }
@@ -204,10 +204,10 @@ export async function rebuildDependencyClosure(tx: TransactionClient) {
   if (closure.length > 0) {
     await tx.dependenciaItem.createMany({
       data: closure.map((row) => ({
-        itemAscendenteId: row.itemAscendenteId,
-        itemDescendenteId: row.itemDescendenteId,
-        profundidade: row.profundidade,
-        relacaoDireta: row.relacaoDireta
+        cd_item_ascendente: row.itemAscendenteId,
+        cd_item_descendente: row.itemDescendenteId,
+        nr_profundidade: row.profundidade,
+        sn_relacao_direta: row.relacaoDireta
       }))
     });
   }
@@ -223,47 +223,47 @@ async function persistCalculationTrail(
 ) {
   const activeFicha = await tx.fichaTecnica.findFirst({
     where: {
-      itemResultanteId: result.itemId,
-      status: FichaStatus.ativa
+      cd_item_resultante: result.itemId,
+      tp_status: "ativa"
     },
-    orderBy: { versao: "desc" }
+    orderBy: { nr_versao: "desc" }
   });
 
   const latestSnapshot = await tx.custoSnapshotItem.findFirst({
-    where: { itemId: result.itemId },
-    orderBy: { calculadoEm: "desc" }
+    where: { cd_item: result.itemId },
+    orderBy: { ts_calculo: "desc" }
   });
 
   const execution = await tx.calculoExecucao.create({
     data: {
-      itemId: result.itemId,
-      fichaTecnicaId: activeFicha?.id ?? null,
-      itemGatilhoId: triggerItemId ?? null,
-      motivo: reason,
-      custoAnterior: latestSnapshot?.custoTotalAtual ?? null,
-      custoNovo: result.totalCost.toString(),
-      quantidadeSaida: result.finalUsefulOutputQuantity.toString(),
-      metadadosJson: normalizeJson(serializeCalculatedItem(result))
+      cd_item: result.itemId,
+      cd_ficha_tecnica: activeFicha?.cd_ficha_tecnica ?? null,
+      cd_item_gatilho: triggerItemId ?? null,
+      ds_motivo: reason,
+      vl_custo_anterior: latestSnapshot?.vl_custo_total ?? null,
+      vl_custo_novo: result.totalCost.toString(),
+      vl_qtd_saida: result.finalUsefulOutputQuantity.toString(),
+      js_metadados: normalizeJson(serializeCalculatedItem(result))
     }
   });
 
   for (const component of result.components) {
     await tx.calculoComponenteSnapshot.create({
       data: {
-        calculoExecucaoId: execution.id,
-        fichaComponenteId: component.componentId,
-        itemComponenteId: component.componentItemId,
-        caminho: component.componentName,
-        profundidade: 1,
-        tipoComponente: component.componentType,
-        quantidadeBruta: component.quantityGross.toString(),
-        quantidadeLiquida: component.quantityNet.toString(),
-        fatorCorrecaoEquivalente: component.factorCorrecaoEquivalente.toString(),
-        indiceCoccaoEquivalente: component.indiceCoccaoEquivalente?.toString() ?? null,
-        custoDireto: component.directCost.toString(),
-        custoHerdado: component.inheritedCost.toString(),
-        custoTotal: component.totalCost.toString(),
-        percentualImpacto: result.totalCost.equals(0)
+        cd_calculo_execucao: execution.cd_calculo,
+        cd_ficha_componente: component.componentId,
+        cd_item_componente: component.componentItemId,
+        ds_caminho: component.componentName,
+        nr_profundidade: 1,
+        tp_componente: component.componentType,
+        vl_qtd_bruta: component.quantityGross.toString(),
+        vl_qtd_liquida: component.quantityNet.toString(),
+        vl_fator_correcao_equiv: component.factorCorrecaoEquivalente.toString(),
+        vl_indice_coccao_equiv: component.indiceCoccaoEquivalente?.toString() ?? null,
+        vl_custo_direto: component.directCost.toString(),
+        vl_custo_herdado: component.inheritedCost.toString(),
+        vl_custo_total: component.totalCost.toString(),
+        vl_pct_impacto: result.totalCost.equals(0)
           ? null
           : component.totalCost.div(result.totalCost).toString()
       }
@@ -276,19 +276,19 @@ async function persistCalculationTrail(
 
   await tx.custoSnapshotItem.create({
     data: {
-      itemId: result.itemId,
-      calculoExecucaoId: execution.id,
-      custoUnitarioAtual:
+      cd_item: result.itemId,
+      cd_calculo_execucao: execution.cd_calculo,
+      vl_custo_unitario:
         result.unitType === "contagem"
           ? result.costPerFinalItem.toString()
           : result.costPerKg.toString(),
-      custoPorKgOuUnidadeUso:
+      vl_custo_kg_uso:
         result.unitType === "contagem"
           ? result.costPerFinalItem.toString()
           : result.costPerKg.toString(),
-      custoEmbalagemAtual: packagingCost.toString(),
-      custoTotalAtual: result.totalCost.toString(),
-      origemRecalculo: reason
+      vl_custo_embalagem: packagingCost.toString(),
+      vl_custo_total: result.totalCost.toString(),
+      ds_origem_recalculo: reason
     }
   });
 
@@ -316,7 +316,7 @@ export async function recalculateCascade(
   return prisma.$transaction(async (tx) => {
     const closureRows = await tx.dependenciaItem.findMany({
       where: {
-        itemDescendenteId: { in: [...changedItemIds] }
+        cd_item_descendente: { in: [...changedItemIds] }
       },
       include: {
         itemAscendente: true
@@ -330,13 +330,13 @@ export async function recalculateCascade(
     }
 
     for (const row of closureRows) {
-      if (row.profundidade === 0) {
+      if (row.nr_profundidade === 0) {
         continue;
       }
 
-      const current = impacted.get(row.itemAscendenteId);
-      if (current === undefined || row.profundidade < current) {
-        impacted.set(row.itemAscendenteId, row.profundidade);
+      const current = impacted.get(row.cd_item_ascendente);
+      if (current === undefined || row.nr_profundidade < current) {
+        impacted.set(row.cd_item_ascendente, row.nr_profundidade);
       }
     }
 
@@ -354,8 +354,8 @@ export async function recalculateCascade(
 
     for (const itemId of order) {
       const before = await tx.custoSnapshotItem.findFirst({
-        where: { itemId },
-        orderBy: { calculadoEm: "desc" }
+        where: { cd_item: itemId },
+        orderBy: { ts_calculo: "desc" }
       });
 
       const { result } = await recalculateItemInTransaction(tx, itemId, reason, changedItemIds[0] ?? null);
@@ -363,9 +363,9 @@ export async function recalculateCascade(
         itemId,
         itemName: result.itemName,
         depth: impacted.get(itemId) ?? 0,
-        beforeCost: before?.custoTotalAtual ?? new Prisma.Decimal(0),
+        beforeCost: before?.vl_custo_total ?? new Prisma.Decimal(0),
         afterCost: result.totalCost,
-        deltaCost: result.totalCost.sub(before?.custoTotalAtual ?? new Prisma.Decimal(0))
+        deltaCost: result.totalCost.sub(before?.vl_custo_total ?? new Prisma.Decimal(0))
       });
     }
 
@@ -382,27 +382,27 @@ export async function previewCascadeImpact(
 ) {
   const closureRows = await tx.dependenciaItem.findMany({
     where: {
-      itemDescendenteId: changedItemId,
-      profundidade: { gt: 0 }
+      cd_item_descendente: changedItemId,
+      nr_profundidade: { gt: 0 }
     },
     include: {
       itemAscendente: true
     },
-    orderBy: [{ profundidade: "asc" }, { itemAscendenteId: "asc" }]
+    orderBy: [{ nr_profundidade: "asc" }, { cd_item_ascendente: "asc" }]
   });
 
   return Promise.all(
     closureRows.map(async (row) => {
       const snapshot = await tx.custoSnapshotItem.findFirst({
-        where: { itemId: row.itemAscendenteId },
-        orderBy: { calculadoEm: "desc" }
+        where: { cd_item: row.cd_item_ascendente },
+        orderBy: { ts_calculo: "desc" }
       });
 
       return {
-        itemId: row.itemAscendenteId,
-        itemName: row.itemAscendente.nome,
-        depth: row.profundidade,
-        currentCost: snapshot?.custoTotalAtual ?? new Prisma.Decimal(0)
+        itemId: row.cd_item_ascendente,
+        itemName: row.itemAscendente.nm_item,
+        depth: row.nr_profundidade,
+        currentCost: snapshot?.vl_custo_total ?? new Prisma.Decimal(0)
       };
     })
   );

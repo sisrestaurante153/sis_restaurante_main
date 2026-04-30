@@ -1,9 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { canAccessRoute, isProtectedPath } from "@/modules/access/domain/access-control";
-import { readSignedSessionToken } from "@/modules/access/server/session";
-import { SESSION_COOKIE_NAME } from "@/modules/access/server/session-cookie";
-import { getRequiredSessionSecret } from "@/modules/platform/server/env";
+import { getSupabaseClient } from "@/lib/supabase";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
@@ -19,14 +17,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = await readSignedSessionToken(token, getRequiredSessionSecret());
+  const supabase = getSupabaseClient();
+  const token = request.cookies.get("sb-access-token")?.value || 
+                request.headers.get("Authorization")?.split(" ")[1];
+
+  const { data: { user } } = token 
+    ? await supabase.auth.getUser(token)
+    : { data: { user: null } };
 
   if (pathname === "/login") {
-    if (session) {
+    if (user) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-
     return NextResponse.next();
   }
 
@@ -34,11 +36,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!session) {
+  if (!user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (!canAccessRoute(pathname, session.roleCodes)) {
+  const roleCodes = (user.app_metadata?.roles as string[]) || [];
+
+  if (!canAccessRoute(pathname, roleCodes)) {
     return NextResponse.redirect(new URL("/forbidden", request.url));
   }
 

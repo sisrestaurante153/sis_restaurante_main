@@ -1,0 +1,231 @@
+{
+  "timestamp": "2026-04-18T01:50:39.937Z",
+  "fichas": {
+    "app": [
+      {
+        "field": "code",
+        "width": 60
+      },
+      {
+        "field": "itemName",
+        "width": 170
+      },
+      {
+        "field": "modalityLabel",
+        "width": 100
+      },
+      {
+        "field": "groupOperational",
+        "width": 100
+      },
+      {
+        "field": "status",
+        "width": 64
+      },
+      {
+        "field": "componentCount",
+        "width": 82
+      },
+      {
+        "field": "correctionFactor",
+        "width": 60
+      },
+      {
+        "field": "cookingIndex",
+        "width": 60
+      },
+      {
+        "field": "totalCost",
+        "width": 82
+      },
+      {
+        "field": "sellingPrice",
+        "width": 80
+      },
+      {
+        "field": "updatedAt",
+        "width": 110
+      },
+      {
+        "field": "notes",
+        "width": 38
+      }
+    ],
+    "html": [
+      {
+        "cls": "c-cod",
+        "width": 71
+      },
+      {
+        "cls": "c-prod",
+        "width": 202
+      },
+      {
+        "cls": "c-mod",
+        "width": 119
+      },
+      {
+        "cls": "c-grp",
+        "width": 119
+      },
+      {
+        "cls": "c-comp",
+        "width": 98
+      },
+      {
+        "cls": "c-fc",
+        "width": 71
+      },
+      {
+        "cls": "c-ic",
+        "width": 71
+      },
+      {
+        "cls": "c-custo",
+        "width": 98
+      },
+      {
+        "cls": "c-pv",
+        "width": 95
+      },
+      {
+        "cls": "c-data",
+        "width": 131
+      },
+      {
+        "cls": "c-sta",
+        "width": 76
+      },
+      {
+        "cls": "c-obs",
+        "width": 45
+      }
+    ]
+  },
+  "itens": {
+    "app": [
+      {
+        "field": "code",
+        "width": 72
+      },
+      {
+        "field": "name",
+        "width": 162
+      },
+      {
+        "field": "type",
+        "width": 90
+      },
+      {
+        "field": "category",
+        "width": 100
+      },
+      {
+        "field": "purchaseQuantity",
+        "width": 72
+      },
+      {
+        "field": "stockUnit",
+        "width": 56
+      },
+      {
+        "field": "baseUnitCost",
+        "width": 72
+      },
+      {
+        "field": "conversionFactor",
+        "width": 60
+      },
+      {
+        "field": "usageQuantity",
+        "width": 64
+      },
+      {
+        "field": "usageUnit",
+        "width": 50
+      },
+      {
+        "field": "usagePrice",
+        "width": 72
+      },
+      {
+        "field": "supplierName",
+        "width": 110
+      },
+      {
+        "field": "active",
+        "width": 62
+      },
+      {
+        "field": "updatedAt",
+        "width": 90
+      },
+      {
+        "field": "description",
+        "width": 40
+      }
+    ],
+    "html": [
+      {
+        "cls": "c-cod",
+        "width": 73
+      },
+      {
+        "cls": "c-nome",
+        "width": 163
+      },
+      {
+        "cls": "c-tipo",
+        "width": 93
+      },
+      {
+        "cls": "c-cat",
+        "width": 103
+      },
+      {
+        "cls": "c-qtdc",
+        "width": 73
+      },
+      {
+        "cls": "c-unc",
+        "width": 54
+      },
+      {
+        "cls": "c-precc",
+        "width": 75
+      },
+      {
+        "cls": "c-fator",
+        "width": 63
+      },
+      {
+        "cls": "c-qtdu",
+        "width": 65
+      },
+      {
+        "cls": "c-unu",
+        "width": 50
+      },
+      {
+        "cls": "c-precu",
+        "width": 75
+      },
+      {
+        "cls": "c-forn",
+        "width": 115
+      },
+      {
+        "cls": "c-sta",
+        "width": 65
+      },
+      {
+        "cls": "c-data",
+        "width": 93
+      },
+      {
+        "cls": "c-obs",
+        "width": 40
+      }
+    ]
+  }
+}
