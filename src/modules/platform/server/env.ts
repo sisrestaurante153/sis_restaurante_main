@@ -16,7 +16,10 @@ const serverEnvSchema = z.object({
     .default("info"),
   IMPORT_STORAGE_DIR: z.string().min(1).default("artifacts/runtime/imports"),
   IMPORT_WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
-  SESSION_SECRET: sessionSecretSchema.optional(),
+  SESSION_SECRET: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    sessionSecretSchema.optional()
+  ),
   POSTGRES_DB: z.string().min(1).default("sis_restaurante"),
   POSTGRES_USER: z.string().min(1).default("sis"),
   POSTGRES_PASSWORD: z.string().min(1).default("sis")
