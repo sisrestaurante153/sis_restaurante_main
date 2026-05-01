@@ -1,13 +1,12 @@
-// @ts-nocheck
 // @vitest-environment node
 
 import { afterAll, describe, expect, it } from "vitest";
 import {
-  FichaStatus,
-  ItemType,
-  ModoRendimento,
-  TipoComponente,
-  UnidadeTipo
+  ficha_status,
+  item_type,
+  modo_rendimento,
+  tipo_componente,
+  unidade_tipo
 } from "@/generated/prisma/client";
 import {
   recalculateCascade,
@@ -34,7 +33,7 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
     await prisma.custoSnapshotItem.deleteMany({
       where: {
         item: {
-          nomeNormalizado: {
+          nm_normalizado: {
             startsWith: "integracao-engenharia-"
           }
         }
@@ -43,7 +42,7 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
     await prisma.calculoExecucao.deleteMany({
       where: {
         item: {
-          nomeNormalizado: {
+          nm_normalizado: {
             startsWith: "integracao-engenharia-"
           }
         }
@@ -54,14 +53,14 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
         OR: [
           {
             itemAscendente: {
-              nomeNormalizado: {
+              nm_normalizado: {
                 startsWith: "integracao-engenharia-"
               }
             }
           },
           {
             itemDescendente: {
-              nomeNormalizado: {
+              nm_normalizado: {
                 startsWith: "integracao-engenharia-"
               }
             }
@@ -73,7 +72,7 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
       where: {
         fichaTecnica: {
           itemResultante: {
-            nomeNormalizado: {
+            nm_normalizado: {
               startsWith: "integracao-engenharia-"
             }
           }
@@ -83,7 +82,7 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
     await prisma.fichaTecnica.deleteMany({
       where: {
         itemResultante: {
-          nomeNormalizado: {
+          nm_normalizado: {
             startsWith: "integracao-engenharia-"
           }
         }
@@ -92,7 +91,7 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
     await prisma.itemCompra.deleteMany({
       where: {
         item: {
-          nomeNormalizado: {
+          nm_normalizado: {
             startsWith: "integracao-engenharia-"
           }
         }
@@ -100,172 +99,172 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
     });
     await prisma.item.deleteMany({
       where: {
-        nomeNormalizado: {
+        nm_normalizado: {
           startsWith: "integracao-engenharia-"
         }
       }
     });
 
     const unidadeKg = await prisma.unidadeMedida.upsert({
-      where: { codigo: "kg-eng-int" },
-      update: { nome: "Quilograma Engenharia Integracao", tipo: UnidadeTipo.massa },
+      where: { ds_codigo: "kg-eng-int" },
+      update: { nm_unidade: "Quilograma Engenharia Integracao", tp_unidade: unidade_tipo.massa },
       create: {
-        codigo: "kg-eng-int",
-        nome: "Quilograma Engenharia Integracao",
-        tipo: UnidadeTipo.massa
+        ds_codigo: "kg-eng-int",
+        nm_unidade: "Quilograma Engenharia Integracao",
+        tp_unidade: unidade_tipo.massa
       }
     });
 
     const unidadeUn = await prisma.unidadeMedida.upsert({
-      where: { codigo: "un-eng-int" },
-      update: { nome: "Unidade Engenharia Integracao", tipo: UnidadeTipo.contagem },
+      where: { ds_codigo: "un-eng-int" },
+      update: { nm_unidade: "Unidade Engenharia Integracao", tp_unidade: unidade_tipo.contagem },
       create: {
-        codigo: "un-eng-int",
-        nome: "Unidade Engenharia Integracao",
-        tipo: UnidadeTipo.contagem
+        ds_codigo: "un-eng-int",
+        nm_unidade: "Unidade Engenharia Integracao",
+        tp_unidade: unidade_tipo.contagem
       }
     });
 
     const unidadeG = await prisma.unidadeMedida.upsert({
-      where: { codigo: "g" },
-      update: { nome: "Grama", tipo: UnidadeTipo.massa },
+      where: { ds_codigo: "g" },
+      update: { nm_unidade: "Grama", tp_unidade: unidade_tipo.massa },
       create: {
-        codigo: "g",
-        nome: "Grama",
-        tipo: UnidadeTipo.massa
+        ds_codigo: "g",
+        nm_unidade: "Grama",
+        tp_unidade: unidade_tipo.massa
       }
     });
 
     const fornecedor = await prisma.fornecedor.upsert({
-      where: { nome: "Fornecedor Integracao Engenharia" },
+      where: { nm_fornecedor: "Fornecedor Integracao Engenharia" },
       update: {},
-      create: { nome: "Fornecedor Integracao Engenharia" }
+      create: { nm_fornecedor: "Fornecedor Integracao Engenharia" }
     });
 
     const insumo = await prisma.item.create({
       data: {
-        nome: "Integracao Engenharia Tomate",
-        nomeNormalizado: "integracao-engenharia-tomate",
-        tipoPrincipal: ItemType.insumo,
-        unidadeEstoqueId: unidadeKg.id,
-        unidadeUsoPadraoId: unidadeKg.id
+        nm_item: "Integracao Engenharia Tomate",
+        nm_normalizado: "integracao-engenharia-tomate",
+        tp_item: item_type.insumo,
+        cd_unidade_estoque: unidadeKg.cd_unidade_medida,
+        cd_unidade_uso_padrao: unidadeKg.cd_unidade_medida
       }
     });
 
     await prisma.itemCompra.create({
       data: {
-        itemId: insumo.id,
-        fornecedorId: fornecedor.id,
-        unidadeCompraId: unidadeKg.id,
-        quantidadePorEmbalagem: "1.0000",
-        custoCompra: "12.0000",
-        custoUnitarioBase: "12.000000"
+        cd_item: insumo.cd_item,
+        cd_fornecedor: fornecedor.cd_fornecedor,
+        cd_unidade_compra: unidadeKg.cd_unidade_medida,
+        vl_qtd_embalagem: "1.0000",
+        vl_custo_compra: "12.0000",
+        vl_custo_unitario_base: "12.000000"
       }
     });
 
     const embalagem = await prisma.item.create({
       data: {
-        nome: "Integracao Engenharia Pote",
-        nomeNormalizado: "integracao-engenharia-pote",
-        tipoPrincipal: ItemType.embalagem,
-        unidadeEstoqueId: unidadeUn.id,
-        unidadeUsoPadraoId: unidadeUn.id
+        nm_item: "Integracao Engenharia Pote",
+        nm_normalizado: "integracao-engenharia-pote",
+        tp_item: item_type.embalagem,
+        cd_unidade_estoque: unidadeUn.cd_unidade_medida,
+        cd_unidade_uso_padrao: unidadeUn.cd_unidade_medida
       }
     });
 
     await prisma.itemCompra.create({
       data: {
-        itemId: embalagem.id,
-        fornecedorId: fornecedor.id,
-        unidadeCompraId: unidadeUn.id,
-        quantidadePorEmbalagem: "1.0000",
-        custoCompra: "0.9000",
-        custoUnitarioBase: "0.900000"
+        cd_item: embalagem.cd_item,
+        cd_fornecedor: fornecedor.cd_fornecedor,
+        cd_unidade_compra: unidadeUn.cd_unidade_medida,
+        vl_qtd_embalagem: "1.0000",
+        vl_custo_compra: "0.9000",
+        vl_custo_unitario_base: "0.900000"
       }
     });
 
     const produto = await prisma.item.create({
       data: {
-        nome: "Integracao Engenharia Produto",
-        nomeNormalizado: "integracao-engenharia-produto",
-        tipoPrincipal: ItemType.produto_pronto,
-        unidadeEstoqueId: unidadeKg.id,
-        unidadeUsoPadraoId: unidadeKg.id
+        nm_item: "Integracao Engenharia Produto",
+        nm_normalizado: "integracao-engenharia-produto",
+        tp_item: item_type.produto_pronto,
+        cd_unidade_estoque: unidadeKg.cd_unidade_medida,
+        cd_unidade_uso_padrao: unidadeKg.cd_unidade_medida
       }
     });
 
     const ficha = await prisma.fichaTecnica.create({
       data: {
-        itemResultanteId: produto.id,
-        versao: 1,
-        status: FichaStatus.ativa,
-        modoRendimento: ModoRendimento.peso_final,
-        pesoFinalInformado: "1.0000"
+        cd_item_resultante: produto.cd_item,
+        nr_versao: 1,
+        tp_status: ficha_status.ativa,
+        tp_modo_rendimento: modo_rendimento.peso_final,
+        vl_peso_final: "1.0000"
       }
     });
 
     await prisma.fichaComponente.createMany({
       data: [
         {
-          fichaTecnicaId: ficha.id,
-          itemComponenteId: insumo.id,
-          tipoComponente: TipoComponente.ingrediente,
-          ordem: 1,
-          quantidadeBruta: "1000.0000",
-          quantidadeLimpa: "1000.0000",
-          unidadeUsoId: unidadeG.id,
-          fatorCorrecao: "1.000000"
+          cd_ficha_tecnica: ficha.cd_ficha_tecnica,
+          cd_item_componente: insumo.cd_item,
+          tp_componente: tipo_componente.ingrediente,
+          nr_ordem: 1,
+          vl_qtd_bruta: "1000.0000",
+          vl_qtd_limpa: "1000.0000",
+          cd_unidade_uso: unidadeG.cd_unidade_medida,
+          vl_fator_correcao: "1.000000"
         },
         {
-          fichaTecnicaId: ficha.id,
-          itemComponenteId: embalagem.id,
-          tipoComponente: TipoComponente.embalagem,
-          ordem: 2,
-          quantidadeBruta: "1.0000",
-          quantidadeLimpa: "1.0000",
-          unidadeUsoId: unidadeUn.id
+          cd_ficha_tecnica: ficha.cd_ficha_tecnica,
+          cd_item_componente: embalagem.cd_item,
+          tp_componente: tipo_componente.embalagem,
+          nr_ordem: 2,
+          vl_qtd_bruta: "1.0000",
+          vl_qtd_limpa: "1.0000",
+          cd_unidade_uso: unidadeUn.cd_unidade_medida
         }
       ]
     });
 
     await prisma.$transaction(async (tx) => {
       await rebuildDependencyClosure(tx);
-      const { result } = await recalculateItemInTransaction(tx, produto.id, "teste_integracao");
+      const { result } = await recalculateItemInTransaction(tx, produto.cd_item, "teste_integracao");
       expect(result.totalCost.toString()).toBe("12.9");
     });
 
     await prisma.itemCompra.deleteMany({
-      where: { itemId: insumo.id }
+      where: { cd_item: insumo.cd_item }
     });
 
     await prisma.itemCompra.create({
       data: {
-        itemId: insumo.id,
-        fornecedorId: fornecedor.id,
-        unidadeCompraId: unidadeKg.id,
-        quantidadePorEmbalagem: "1.0000",
-        custoCompra: "14.0000",
-        custoUnitarioBase: "14.000000"
+        cd_item: insumo.cd_item,
+        cd_fornecedor: fornecedor.cd_fornecedor,
+        cd_unidade_compra: unidadeKg.cd_unidade_medida,
+        vl_qtd_embalagem: "1.0000",
+        vl_custo_compra: "14.0000",
+        vl_custo_unitario_base: "14.000000"
       }
     });
 
-    await recalculateCascade(prisma, [insumo.id], "teste_integracao_preco");
+    await recalculateCascade(prisma, [insumo.cd_item], "teste_integracao_preco");
 
     const latestProductSnapshot = await prisma.custoSnapshotItem.findFirst({
-      where: { itemId: produto.id },
-      orderBy: { calculadoEm: "desc" }
+      where: { cd_item: produto.cd_item },
+      orderBy: { ts_calculo: "desc" }
     });
 
-    expect(latestProductSnapshot?.custoTotalAtual.toString()).toBe("14.9");
+    expect(latestProductSnapshot?.vl_custo_total.toString()).toBe("14.9");
 
     const closure = await prisma.dependenciaItem.findMany({
       where: {
-        itemAscendenteId: produto.id
+        cd_item_ascendente: produto.cd_item
       }
     });
 
-    expect(closure.some((row) => row.itemDescendenteId === insumo.id && row.profundidade === 1)).toBe(
-      true
-    );
+    expect(
+      closure.some((row) => row.cd_item_descendente === insumo.cd_item && row.nr_profundidade === 1)
+    ).toBe(true);
   });
 });

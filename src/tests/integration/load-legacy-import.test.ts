@@ -1,4 +1,3 @@
-// @ts-nocheck
 // @vitest-environment node
 
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -163,8 +162,7 @@ describe.skipIf(!runIntegration)("load legacy import integration", () => {
     expect(persisted.unidadeUsoPadrao?.ds_codigo).toBe("kg");
     expect(persisted.compras[0]?.unidadeCompra.ds_codigo).toBe("un");
     expect(persisted.compras[0]?.vl_custo_unitario_base.toString()).toBe("10");
-    // @ts-ignore
-    expect(persisted.custosSnapshot[0]?.custoPorKgOuUnidadeUso?.toString()).toBe("10");
+    expect(persisted.custosSnapshot[0]?.vl_custo_kg_uso?.toString()).toBe("10");
     expect(persisted.conversoes).toHaveLength(1);
     expect(persisted.conversoes[0]?.unidadeOrigem.ds_codigo).toBe("un");
     expect(persisted.conversoes[0]?.unidadeDestino.ds_codigo).toBe("kg");
@@ -420,11 +418,8 @@ describe.skipIf(!runIntegration)("load legacy import integration", () => {
       }
     });
 
-    // @ts-ignore
-    expect(persisted.custosSnapshot[0]?.custoTotalAtual.toString()).toBe("5.5");
-    // @ts-ignore
-    expect(persisted.custosSnapshot[0]?.custoEmbalagemAtual?.toString()).toBe("0.5");
-    // @ts-ignore
+    expect(persisted.custosSnapshot[0]?.vl_custo_total.toString()).toBe("5.5");
+    expect(persisted.custosSnapshot[0]?.vl_custo_embalagem?.toString()).toBe("0.5");
     expect(persisted.fichasResultantes[0]?.execucoesCalculo[0]).toBeTruthy();
   });
 });

@@ -1,7 +1,6 @@
-// @ts-nocheck
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { item_type, unidade_tipo } from "@/generated/prisma/client";
+import { item_type } from "@/generated/prisma/client";
 import {
   closeIntegrationPrisma,
   getIntegrationPrisma,
@@ -40,7 +39,7 @@ describe.skipIf(!runIntegration)("import operacional D-17 defaults", () => {
     const detail = await repo.saveItem({
       code: `IMP-D17-${Date.now()}`,
       name: "Import D17 Farinha",
-      type: "insumo" as any,
+      type: item_type.insumo,
       operationalCategory: "Operacional",
       description: "Payload espelhado do import-actions",
       active: true,
@@ -60,7 +59,7 @@ describe.skipIf(!runIntegration)("import operacional D-17 defaults", () => {
 
     expect(detail).toBeTruthy();
     const rows = await prisma.itemCompra.findMany({
-      where: { cd_item: (detail as any).cd_item },
+      where: { cd_item: (detail as { id: string }).id },
       include: { unidadeCompra: true, unidadeUso: true }
     });
     expect(rows.length).toBe(1);

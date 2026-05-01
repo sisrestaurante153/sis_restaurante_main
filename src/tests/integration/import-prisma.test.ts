@@ -1,10 +1,9 @@
-// @ts-nocheck
 // @vitest-environment node
 
 import { afterAll, describe, expect, it } from "vitest";
 import {
-  ImportacaoLinhaStatus,
-  ImportacaoStatus
+  importacao_linha_status,
+  importacao_status
 } from "@/generated/prisma/client";
 import { getImportRepository } from "@/modules/import/server/import-repository";
 import { ActiveImportExecutionError } from "@/modules/import/domain/import-execution";
@@ -27,7 +26,7 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     await prisma.itemAlias.deleteMany({
       where: {
         item: {
-          nomeNormalizado: {
+          nm_normalizado: {
             startsWith: "integracao-importacao-"
           }
         }
@@ -37,13 +36,13 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       where: {
         OR: [
           {
-            normalizedName: {
+            nm_normalizado: {
               startsWith: "tomate teste"
             }
           },
           {
             execucao: {
-              origemArquivo: "integracao-importacao.xlsx"
+              ds_origem_arquivo: "integracao-importacao.xlsx"
             }
           }
         ]
@@ -52,18 +51,18 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     await prisma.importacaoStaging.deleteMany({
       where: {
         execucao: {
-          origemArquivo: "integracao-importacao.xlsx"
+          ds_origem_arquivo: "integracao-importacao.xlsx"
         }
       }
     });
     await prisma.importacaoExecucao.deleteMany({
       where: {
-        origemArquivo: "integracao-importacao.xlsx"
+        ds_origem_arquivo: "integracao-importacao.xlsx"
       }
     });
     await prisma.item.deleteMany({
       where: {
-        nomeNormalizado: {
+        nm_normalizado: {
           startsWith: "integracao-importacao-"
         }
       }
@@ -71,44 +70,44 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
 
     const item = await prisma.item.create({
       data: {
-        nome: "Integracao Importacao Tomate",
-        nomeNormalizado: "integracao-importacao-tomate",
-        tipoPrincipal: "insumo"
+        nm_item: "Integracao Importacao Tomate",
+        nm_normalizado: "integracao-importacao-tomate",
+        tp_item: "insumo"
       }
     });
 
     const execucao = await prisma.importacaoExecucao.create({
       data: {
-        origemArquivo: "integracao-importacao.xlsx",
-        status: ImportacaoStatus.concluida_com_conflitos
+        ds_origem_arquivo: "integracao-importacao.xlsx",
+        tp_status: importacao_status.concluida_com_conflitos
       }
     });
 
     const staging = await prisma.importacaoStaging.create({
       data: {
-        execucaoId: execucao.cd_importacao,
-        entidade: "item",
-        chaveExterna: "item:integracao:1",
-        sheetName: "ABA TESTE",
-        rowNumber: 1,
-        payloadJson: {
+        cd_importacao_execucao: execucao.cd_importacao,
+        nm_entidade: "item",
+        ds_chave_externa: "item:integracao:1",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 1,
+        js_payload: {
           display_name: "Tomate Teste"
         },
-        status: ImportacaoLinhaStatus.conflict
+        tp_status: importacao_linha_status.conflict
       }
     });
 
     const conflict = await prisma.importacaoConflito.create({
       data: {
-        execucaoId: execucao.cd_importacao,
-        stagingId: staging.cd_importacao,
-        tipo: "name_conflict",
-        rawName: "Tomate Teste",
-        normalizedName: "tomate teste",
-        sheetName: "ABA TESTE",
-        rowNumber: 1,
-        confidence: "0.9100",
-        detalhesJson: {
+        cd_importacao_execucao: execucao.cd_importacao,
+        cd_staging: staging.cd_staging,
+        tp_conflito: "name_conflict",
+        ds_nome_bruto: "Tomate Teste",
+        nm_normalizado: "tomate teste",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 1,
+        vl_confianca: "0.9100",
+        js_detalhes: {
           best_candidate: "Integracao Importacao Tomate"
         }
       }
@@ -117,38 +116,38 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     const repository = getImportRepository();
     const pending = await repository.listPendingConflicts();
 
-    expect(pending.some((entry) => entry.cd_importacao === conflict.cd_importacao)).toBe(true);
+    expect(pending.some((entry) => entry.id === conflict.cd_conflito)).toBe(true);
 
     const resolved = await repository.resolveConflict({
-      conflictId: conflict.cd_importacao,
-      targetItemId: item.cd_importacao,
+      conflictId: conflict.cd_conflito,
+      targetItemId: item.cd_item,
       alias: "Tomate Teste",
       actorId: null,
       actorName: "Teste Integracao"
     });
 
-    expect(resolved?.itemId).toBe(item.cd_importacao);
+    expect(resolved?.itemId).toBe(item.cd_item);
 
     const persistedConflict = await prisma.importacaoConflito.findUniqueOrThrow({
-      where: { id: conflict.cd_importacao }
+      where: { cd_conflito: conflict.cd_conflito }
     });
     const persistedAlias = await prisma.itemAlias.findFirst({
-      where: { itemId: item.cd_importacao }
+      where: { cd_item: item.cd_item }
     });
     const persistedStaging = await prisma.importacaoStaging.findUniqueOrThrow({
-      where: { id: staging.cd_importacao }
+      where: { cd_staging: staging.cd_staging }
     });
 
-    expect(persistedConflict.resolvido).toBe(true);
-    expect(persistedAlias?.alias).toBe("Tomate Teste");
-    expect(persistedStaging.status).toBe(ImportacaoLinhaStatus.imported);
+    expect(persistedConflict.sn_resolvido).toBe(true);
+    expect(persistedAlias?.nm_alias).toBe("Tomate Teste");
+    expect(persistedStaging.tp_status).toBe(importacao_linha_status.imported);
   });
 
   it("resolves all unresolved conflicts with the same normalized name in one execution", async () => {
     await prisma.itemAlias.deleteMany({
       where: {
         item: {
-          nomeNormalizado: {
+          nm_normalizado: {
             startsWith: "integracao-importacao-lote-"
           }
         }
@@ -158,11 +157,11 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       where: {
         OR: [
           {
-            normalizedName: "integracao-importacao-lote-tomate"
+            nm_normalizado: "integracao-importacao-lote-tomate"
           },
           {
             execucao: {
-              origemArquivo: {
+              ds_origem_arquivo: {
                 startsWith: "integracao-importacao-lote-"
               }
             }
@@ -173,7 +172,7 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     await prisma.importacaoStaging.deleteMany({
       where: {
         execucao: {
-          origemArquivo: {
+          ds_origem_arquivo: {
             startsWith: "integracao-importacao-lote-"
           }
         }
@@ -181,14 +180,14 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     });
     await prisma.importacaoExecucao.deleteMany({
       where: {
-        origemArquivo: {
+        ds_origem_arquivo: {
           startsWith: "integracao-importacao-lote-"
         }
       }
     });
     await prisma.item.deleteMany({
       where: {
-        nomeNormalizado: {
+        nm_normalizado: {
           startsWith: "integracao-importacao-lote-"
         }
       }
@@ -196,162 +195,146 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
 
     const item = await prisma.item.create({
       data: {
-        nome: "Integracao Importacao Lote Tomate",
-        nomeNormalizado: "integracao-importacao-lote-tomate-item",
-        tipoPrincipal: "insumo"
+        nm_item: "Integracao Importacao Lote Tomate",
+        nm_normalizado: "integracao-importacao-lote-tomate-item",
+        tp_item: "insumo"
       }
     });
 
     const execution = await prisma.importacaoExecucao.create({
       data: {
-        origemArquivo: "integracao-importacao-lote-principal.xlsx",
-        status: ImportacaoStatus.concluida_com_conflitos
+        ds_origem_arquivo: "integracao-importacao-lote-principal.xlsx",
+        tp_status: importacao_status.concluida_com_conflitos
       }
     });
     const otherExecution = await prisma.importacaoExecucao.create({
       data: {
-        origemArquivo: "integracao-importacao-lote-outra.xlsx",
-        status: ImportacaoStatus.concluida_com_conflitos
+        ds_origem_arquivo: "integracao-importacao-lote-outra.xlsx",
+        tp_status: importacao_status.concluida_com_conflitos
       }
     });
 
     const firstStaging = await prisma.importacaoStaging.create({
       data: {
-        execucaoId: execution.cd_importacao,
-        entidade: "item",
-        chaveExterna: "item:lote:1",
-        sheetName: "ABA TESTE",
-        rowNumber: 1,
-        payloadJson: {
-          display_name: "Tomate Lote"
-        },
-        status: ImportacaoLinhaStatus.conflict
+        cd_importacao_execucao: execution.cd_importacao,
+        nm_entidade: "item",
+        ds_chave_externa: "item:lote:1",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 1,
+        js_payload: { display_name: "Tomate Lote" },
+        tp_status: importacao_linha_status.conflict
       }
     });
     const secondStaging = await prisma.importacaoStaging.create({
       data: {
-        execucaoId: execution.cd_importacao,
-        entidade: "item",
-        chaveExterna: "item:lote:2",
-        sheetName: "ABA TESTE",
-        rowNumber: 2,
-        payloadJson: {
-          display_name: "Tomate Lote"
-        },
-        status: ImportacaoLinhaStatus.conflict
+        cd_importacao_execucao: execution.cd_importacao,
+        nm_entidade: "item",
+        ds_chave_externa: "item:lote:2",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 2,
+        js_payload: { display_name: "Tomate Lote" },
+        tp_status: importacao_linha_status.conflict
       }
     });
     const externalStaging = await prisma.importacaoStaging.create({
       data: {
-        execucaoId: otherExecution.cd_importacao,
-        entidade: "item",
-        chaveExterna: "item:lote:3",
-        sheetName: "ABA TESTE",
-        rowNumber: 3,
-        payloadJson: {
-          display_name: "Tomate Lote"
-        },
-        status: ImportacaoLinhaStatus.conflict
+        cd_importacao_execucao: otherExecution.cd_importacao,
+        nm_entidade: "item",
+        ds_chave_externa: "item:lote:3",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 3,
+        js_payload: { display_name: "Tomate Lote" },
+        tp_status: importacao_linha_status.conflict
       }
     });
 
     const firstConflict = await prisma.importacaoConflito.create({
       data: {
-        execucaoId: execution.cd_importacao,
-        stagingId: firstStaging.cd_importacao,
-        tipo: "unit_mismatch",
-        rawName: "Tomate Lote",
-        normalizedName: "integracao-importacao-lote-tomate",
-        sheetName: "ABA TESTE",
-        rowNumber: 1,
-        confidence: "0.9900",
-        detalhesJson: {
-          best_candidate: "Integracao Importacao Lote Tomate"
-        }
+        cd_importacao_execucao: execution.cd_importacao,
+        cd_staging: firstStaging.cd_staging,
+        tp_conflito: "unit_mismatch",
+        ds_nome_bruto: "Tomate Lote",
+        nm_normalizado: "integracao-importacao-lote-tomate",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 1,
+        vl_confianca: "0.9900",
+        js_detalhes: { best_candidate: "Integracao Importacao Lote Tomate" }
       }
     });
     const secondConflict = await prisma.importacaoConflito.create({
       data: {
-        execucaoId: execution.cd_importacao,
-        stagingId: secondStaging.cd_importacao,
-        tipo: "unit_mismatch",
-        rawName: "Tomate Lote",
-        normalizedName: "integracao-importacao-lote-tomate",
-        sheetName: "ABA TESTE",
-        rowNumber: 2,
-        confidence: "0.9900",
-        detalhesJson: {
-          best_candidate: "Integracao Importacao Lote Tomate"
-        }
+        cd_importacao_execucao: execution.cd_importacao,
+        cd_staging: secondStaging.cd_staging,
+        tp_conflito: "unit_mismatch",
+        ds_nome_bruto: "Tomate Lote",
+        nm_normalizado: "integracao-importacao-lote-tomate",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 2,
+        vl_confianca: "0.9900",
+        js_detalhes: { best_candidate: "Integracao Importacao Lote Tomate" }
       }
     });
     const externalConflict = await prisma.importacaoConflito.create({
       data: {
-        execucaoId: otherExecution.cd_importacao,
-        stagingId: externalStaging.cd_importacao,
-        tipo: "unit_mismatch",
-        rawName: "Tomate Lote",
-        normalizedName: "integracao-importacao-lote-tomate",
-        sheetName: "ABA TESTE",
-        rowNumber: 3,
-        confidence: "0.9900",
-        detalhesJson: {
-          best_candidate: "Integracao Importacao Lote Tomate"
-        }
+        cd_importacao_execucao: otherExecution.cd_importacao,
+        cd_staging: externalStaging.cd_staging,
+        tp_conflito: "unit_mismatch",
+        ds_nome_bruto: "Tomate Lote",
+        nm_normalizado: "integracao-importacao-lote-tomate",
+        nm_planilha: "ABA TESTE",
+        nr_linha: 3,
+        vl_confianca: "0.9900",
+        js_detalhes: { best_candidate: "Integracao Importacao Lote Tomate" }
       }
     });
 
     const resolved = await getImportRepository().resolveConflict({
-      conflictId: firstConflict.cd_importacao,
-      targetItemId: item.cd_importacao,
+      conflictId: firstConflict.cd_conflito,
+      targetItemId: item.cd_item,
       alias: "Tomate Lote",
       applyToExecutionName: true,
       actorId: null,
       actorName: "Teste Integracao"
     });
 
-    expect(resolved?.itemId).toBe(item.cd_importacao);
+    expect(resolved?.itemId).toBe(item.cd_item);
     expect(resolved?.resolvedConflictCount).toBe(2);
 
     const persistedConflicts = await prisma.importacaoConflito.findMany({
       where: {
-        id: {
-          in: [firstConflict.cd_importacao, secondConflict.cd_importacao, externalConflict.cd_importacao]
+        cd_conflito: {
+          in: [firstConflict.cd_conflito, secondConflict.cd_conflito, externalConflict.cd_conflito]
         }
       },
-      orderBy: {
-        rowNumber: "asc"
-      }
+      orderBy: { nr_linha: "asc" }
     });
     const persistedAlias = await prisma.itemAlias.findMany({
-      where: { itemId: item.cd_importacao }
+      where: { cd_item: item.cd_item }
     });
     const persistedStages = await prisma.importacaoStaging.findMany({
       where: {
-        id: {
-          in: [firstStaging.cd_importacao, secondStaging.cd_importacao, externalStaging.cd_importacao]
+        cd_staging: {
+          in: [firstStaging.cd_staging, secondStaging.cd_staging, externalStaging.cd_staging]
         }
       },
-      orderBy: {
-        rowNumber: "asc"
-      }
+      orderBy: { nr_linha: "asc" }
     });
 
-    expect(persistedConflicts[0]?.resolvido).toBe(true);
-    expect(persistedConflicts[1]?.resolvido).toBe(true);
-    expect(persistedConflicts[2]?.resolvido).toBe(false);
+    expect(persistedConflicts[0]?.sn_resolvido).toBe(true);
+    expect(persistedConflicts[1]?.sn_resolvido).toBe(true);
+    expect(persistedConflicts[2]?.sn_resolvido).toBe(false);
     expect(persistedAlias).toHaveLength(1);
-    expect(persistedAlias[0]?.alias).toBe("Tomate Lote");
-    expect(persistedStages[0]?.status).toBe(ImportacaoLinhaStatus.imported);
-    expect(persistedStages[1]?.status).toBe(ImportacaoLinhaStatus.imported);
-    expect(persistedStages[2]?.status).toBe(ImportacaoLinhaStatus.conflict);
+    expect(persistedAlias[0]?.nm_alias).toBe("Tomate Lote");
+    expect(persistedStages[0]?.tp_status).toBe(importacao_linha_status.imported);
+    expect(persistedStages[1]?.tp_status).toBe(importacao_linha_status.imported);
+    expect(persistedStages[2]?.tp_status).toBe(importacao_linha_status.conflict);
   });
 
   it("creates, serializes and completes import executions", async () => {
     await prisma.importacaoConflito.deleteMany({
       where: {
         execucao: {
-          origemArquivo: {
+          ds_origem_arquivo: {
             startsWith: "integracao-load-legado"
           }
         }
@@ -360,7 +343,7 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     await prisma.importacaoStaging.deleteMany({
       where: {
         execucao: {
-          origemArquivo: {
+          ds_origem_arquivo: {
             startsWith: "integracao-load-legado"
           }
         }
@@ -368,14 +351,14 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     });
     await prisma.importacaoExecucao.deleteMany({
       where: {
-        origemArquivo: {
+        ds_origem_arquivo: {
           startsWith: "integracao-load-legado"
         }
       }
     });
     await prisma.importacaoExecucao.deleteMany({
       where: {
-        origemArquivo: {
+        ds_origem_arquivo: {
           startsWith: "integracao-execucao-"
         }
       }
@@ -391,7 +374,7 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       requestedByUserId: null
     });
 
-    expect(created.status).toBe(ImportacaoStatus.pendente);
+    expect(created.status).toBe(importacao_status.pendente);
     expect(created.currentStage).toBe("aguardando_worker");
 
     await expect(
@@ -405,7 +388,7 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       })
     ).rejects.toBeInstanceOf(ActiveImportExecutionError);
 
-    const processing = await repository.markImportExecutionProcessing(created.cd_importacao, {
+    const processing = await repository.markImportExecutionProcessing(created.id, {
       stage: "parser_python"
     });
     expect(processing).not.toBeNull();
@@ -413,11 +396,11 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       throw new Error("Expected processing execution to be returned.");
     }
 
-    expect(processing.status).toBe(ImportacaoStatus.processando);
+    expect(processing.status).toBe(importacao_status.processando);
     expect(processing.currentStage).toBe("parser_python");
     expect(processing.startedAt).toBeTruthy();
 
-    const processingStageUpdate = await repository.markImportExecutionProcessing(created.cd_importacao, {
+    const processingStageUpdate = await repository.markImportExecutionProcessing(created.id, {
       stage: "carregando_banco",
       technicalDetails: {
         parserStdout: "ok"
@@ -428,12 +411,12 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       throw new Error("Expected processing stage update to be returned.");
     }
 
-    expect(processingStageUpdate.status).toBe(ImportacaoStatus.processando);
+    expect(processingStageUpdate.status).toBe(importacao_status.processando);
     expect(processingStageUpdate.currentStage).toBe("carregando_banco");
     expect(processingStageUpdate.startedAt).toBeTruthy();
     expect(processingStageUpdate.technicalDetails?.parserStdout).toBe("ok");
 
-    const completed = await repository.markImportExecutionCompleted(created.cd_importacao, {
+    const completed = await repository.markImportExecutionCompleted(created.id, {
       stage: "consolidando_resultado",
       friendlySummary: {
         headline: "Importacao concluida",
@@ -455,7 +438,7 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
       throw new Error("Expected completed execution to be returned.");
     }
 
-    expect(completed.status).toBe(ImportacaoStatus.concluida);
+    expect(completed.status).toBe(importacao_status.concluida);
     expect(completed.finishedAt).toBeTruthy();
     expect(completed.friendlySummary?.headline).toBe("Importacao concluida");
 
@@ -463,9 +446,9 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     expect(active).toBeNull();
 
     const history = await repository.listImportExecutions();
-    expect(history.some((execution) => execution.cd_importacao === created.cd_importacao)).toBe(true);
+    expect(history.some((execution) => execution.id === created.id)).toBe(true);
 
-    const persisted = await repository.getImportExecution(created.cd_importacao);
+    const persisted = await repository.getImportExecution(created.id);
     expect(persisted?.artifacts?.reportPath).toBe("/tmp/imports/report.json");
   });
 
@@ -473,36 +456,34 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     await prisma.importacaoConflito.deleteMany({
       where: {
         execucao: {
-          origemArquivo: "integracao-execucao-removida.xlsx"
+          ds_origem_arquivo: "integracao-execucao-removida.xlsx"
         }
       }
     });
     await prisma.importacaoStaging.deleteMany({
       where: {
         execucao: {
-          origemArquivo: "integracao-execucao-removida.xlsx"
+          ds_origem_arquivo: "integracao-execucao-removida.xlsx"
         }
       }
     });
     await prisma.importacaoExecucao.deleteMany({
       where: {
-        origemArquivo: "integracao-execucao-removida.xlsx"
+        ds_origem_arquivo: "integracao-execucao-removida.xlsx"
       }
     });
 
     const execution = await prisma.importacaoExecucao.create({
       data: {
-        origemArquivo: "integracao-execucao-removida.xlsx",
-        status: ImportacaoStatus.processando,
-        estagioAtual: "carregando_banco",
-        iniciadoEm: new Date()
+        ds_origem_arquivo: "integracao-execucao-removida.xlsx",
+        tp_status: importacao_status.processando,
+        ds_estagio_atual: "carregando_banco",
+        ts_inicio: new Date()
       }
     });
 
     await prisma.importacaoExecucao.delete({
-      where: {
-        id: execution.cd_importacao
-      }
+      where: { cd_importacao: execution.cd_importacao }
     });
 
     const result = await getImportRepository().markImportExecutionFailed(execution.cd_importacao, {
