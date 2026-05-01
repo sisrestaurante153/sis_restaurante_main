@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/ensure-runtime-artifacts.mjs && prisma generate && next build",
-    "start": "next start --hostname 0.0.0.0",
+    "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier . --write",
