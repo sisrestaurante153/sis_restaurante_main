@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { signInWithPassword } from "@/modules/access/server/auth-service";
+import { createUserSession } from "@/modules/access/server/session-cookie";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -18,6 +19,14 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ message: result.message }, { status: 401 });
   }
+
+  // Set the custom application session cookie
+  await createUserSession({
+    userId: result.user.id,
+    email: result.user.email,
+    name: result.user.nome,
+    roleCodes: result.user.roleCodes
+  });
 
   const response = NextResponse.json({ ok: true });
   

@@ -7,7 +7,7 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "dev": "next dev --hostname 127.0.0.1",
+    "dev": "next dev",
     "build": "node scripts/ensure-runtime-artifacts.mjs && prisma generate && next build",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",

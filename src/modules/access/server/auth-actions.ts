@@ -64,7 +64,10 @@ export async function redirectIfAuthenticated() {
   
   if (token) {
     const supabase = getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!supabase) return; // Skip check if keys are missing
+    
+    const { data } = await supabase.auth.getUser(token);
+    const user = data?.user;
     if (user) {
       redirect("/dashboard");
     }

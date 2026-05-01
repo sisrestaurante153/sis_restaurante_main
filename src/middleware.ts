@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.next();
   const token = request.cookies.get("sb-access-token")?.value || 
                 request.headers.get("Authorization")?.split(" ")[1];
 

@@ -9,6 +9,11 @@ export interface AuthUserRecord {
 
 export async function signInWithPassword(email: string, password: string) {
   const supabase = createServerSupabaseClient();
+  
+  if (!supabase) {
+    throw new Error("Erro de configuração: Chaves do Supabase não encontradas no ambiente.");
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
