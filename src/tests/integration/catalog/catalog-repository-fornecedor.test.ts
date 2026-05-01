@@ -1,7 +1,6 @@
-// @ts-nocheck
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ItemType, UnidadeTipo } from "@/generated/prisma/client";
+import { item_type, unidade_tipo } from "@/generated/prisma/client";
 import {
   closeIntegrationPrisma,
   getIntegrationPrisma,
@@ -23,19 +22,19 @@ describe.skipIf(!runIntegration)(
 
     async function seedUnits() {
       await prisma.unidadeMedida.upsert({
-        where: { codigo: KG_CODE },
+        where: { ds_codigo: KG_CODE },
         update: {},
-        create: { codigo: KG_CODE, nome: "Quilograma Fornecedor Int", tipo: UnidadeTipo.massa }
+        create: { ds_codigo: KG_CODE, nm_unidade: "Quilograma Fornecedor Int", tp_unidade: unidade_tipo.massa }
       });
       await prisma.unidadeMedida.upsert({
-        where: { codigo: G_CODE },
+        where: { ds_codigo: G_CODE },
         update: {},
-        create: { codigo: G_CODE, nome: "Grama Fornecedor Int", tipo: UnidadeTipo.massa }
+        create: { ds_codigo: G_CODE, nm_unidade: "Grama Fornecedor Int", tp_unidade: unidade_tipo.massa }
       });
       await prisma.unidadeMedida.upsert({
-        where: { codigo: UN_CODE },
+        where: { ds_codigo: UN_CODE },
         update: {},
-        create: { codigo: UN_CODE, nome: "Unidade Fornecedor Int", tipo: UnidadeTipo.contagem }
+        create: { ds_codigo: UN_CODE, nm_unidade: "Unidade Fornecedor Int", tp_unidade: unidade_tipo.contagem }
       });
     }
 
@@ -45,7 +44,7 @@ describe.skipIf(!runIntegration)(
       await prisma.conversaoUnidade.deleteMany();
       await prisma.itemAlias.deleteMany();
       await prisma.item.deleteMany({
-        where: { nomeNormalizado: { startsWith: "integracao-fornecedor" } }
+        where: { nm_normalizado: { startsWith: "integracao-fornecedor" } }
       });
     }
 
@@ -62,7 +61,7 @@ describe.skipIf(!runIntegration)(
       const detail = await repo.saveItem({
         code: `FORN-INT-${Date.now()}`,
         name: "Integracao Fornecedor Farinha 1",
-        type: ItemType.insumo,
+        type: item_type.insumo,
         operationalCategory: "Secos",
         description: "",
         active: true,
@@ -90,25 +89,25 @@ describe.skipIf(!runIntegration)(
 
       expect(detail).toBeTruthy();
       const rows = await prisma.itemCompra.findMany({
-        where: { itemId: detail!.id },
-        orderBy: { principal: "desc" }
+        where: { cd_item: detail!.id },
+        orderBy: { sn_principal: "desc" }
       });
       expect(rows.length).toBe(2);
 
-      const primary = rows.find((r) => r.principal)!;
-      const secondary = rows.find((r) => !r.principal)!;
-      expect(primary.unidadeUsoId).not.toBeNull();
-      expect(primary.quantidadeUso).not.toBeNull();
-      expect(Number(primary.quantidadeUso)).toBe(1000);
-      expect(secondary.unidadeUsoId).toBeNull();
-      expect(secondary.quantidadeUso).toBeNull();
+      const primary = rows.find((r) => r.sn_principal)!;
+      const secondary = rows.find((r) => !r.sn_principal)!;
+      expect(primary.cd_unidade_uso).not.toBeNull();
+      expect(primary.vl_qtd_uso).not.toBeNull();
+      expect(Number(primary.vl_qtd_uso)).toBe(1000);
+      expect(secondary.cd_unidade_uso).toBeNull();
+      expect(secondary.vl_qtd_uso).toBeNull();
     });
 
     it("secundario com usageUnit enviado no payload: escrita ignora (D-05)", async () => {
       const detail = await repo.saveItem({
         code: `FORN-INT2-${Date.now()}`,
         name: "Integracao Fornecedor Farinha 2",
-        type: ItemType.insumo,
+        type: item_type.insumo,
         operationalCategory: "Secos",
         description: "",
         active: true,
@@ -137,18 +136,18 @@ describe.skipIf(!runIntegration)(
       });
 
       const rows = await prisma.itemCompra.findMany({
-        where: { itemId: detail!.id }
+        where: { cd_item: detail!.id }
       });
-      const secondary = rows.find((r) => !r.principal)!;
-      expect(secondary.unidadeUsoId).toBeNull();
-      expect(secondary.quantidadeUso).toBeNull();
+      const secondary = rows.find((r) => !r.sn_principal)!;
+      expect(secondary.cd_unidade_uso).toBeNull();
+      expect(secondary.vl_qtd_uso).toBeNull();
     });
 
     it("read retorna secundario com usageUnit derivado do principal (D-05)", async () => {
       const saved = await repo.saveItem({
         code: `FORN-INT3-${Date.now()}`,
         name: "Integracao Fornecedor Farinha 3",
-        type: ItemType.insumo,
+        type: item_type.insumo,
         operationalCategory: "Secos",
         description: "",
         active: true,
@@ -188,7 +187,7 @@ describe.skipIf(!runIntegration)(
       const saved = await repo.saveItem({
         code: `FORN-INT4-${Date.now()}`,
         name: "Integracao Fornecedor Farinha 4",
-        type: ItemType.insumo,
+        type: item_type.insumo,
         operationalCategory: "Secos",
         description: "",
         active: true,
@@ -214,12 +213,11 @@ describe.skipIf(!runIntegration)(
         ]
       });
 
-      // Toggle: H passa a ser principal com g
       const updated = await repo.saveItem({
         id: saved!.id,
         code: saved!.code,
         name: saved!.name,
-        type: ItemType.insumo,
+        type: item_type.insumo,
         operationalCategory: "Secos",
         description: "",
         active: true,
@@ -257,7 +255,7 @@ describe.skipIf(!runIntegration)(
       const saved = await repo.saveItem({
         code: `FORN-INT5-${Date.now()}`,
         name: "Integracao Fornecedor Farinha 5",
-        type: ItemType.insumo,
+        type: item_type.insumo,
         operationalCategory: "Secos",
         description: "",
         active: true,
@@ -287,15 +285,11 @@ describe.skipIf(!runIntegration)(
       const secondary = saved!.purchases.find((p) => !p.purchaseIsPrimary)!;
       expect(Number(primary.conversionFactor)).toBe(1);
       expect(Number(primary.usagePrice)).toBe(10);
-      // secundario: qc=10, qu_derivado=1 -> fator=10, precoUso=80/10=8
       expect(Number(secondary.conversionFactor)).toBe(10);
       expect(Number(secondary.usagePrice)).toBe(8);
     });
 
     it("save rejeita 2 principais via Zod superRefine (D-08)", async () => {
-      // Este teste depende do parser Zod no nivel da action/form. Como repo.saveItem aceita
-      // o SaveItemInput diretamente, validamos o comportamento: o repository nao deve aceitar 2 principais.
-      // O contrato Phase 8 D-08 e que a Zod schema rejeita na action layer; aqui testamos no parser.
       const { parseItemFormData } = await import("@/modules/catalog/server/item-form-schema");
       const fd = new FormData();
       fd.set("id", "");
@@ -360,7 +354,6 @@ describe.skipIf(!runIntegration)(
             purchaseQuantity: "1",
             purchaseCost: "1",
             priceUpdatedAt: "2026-04-17"
-            // no usageUnit, no usageQuantity — should fail
           }
         ])
       );

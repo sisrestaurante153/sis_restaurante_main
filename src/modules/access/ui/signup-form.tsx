@@ -43,8 +43,8 @@ export function SignupForm() {
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setMessage(err.message);
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
       setPending(false);
     }

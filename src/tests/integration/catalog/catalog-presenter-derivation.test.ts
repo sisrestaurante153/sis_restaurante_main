@@ -1,7 +1,6 @@
-// @ts-nocheck
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ItemType, UnidadeTipo } from "@/generated/prisma/client";
+import { item_type, unidade_tipo } from "@/generated/prisma/client";
 import {
   closeIntegrationPrisma,
   getIntegrationPrisma,
@@ -29,34 +28,34 @@ describe.skipIf(!runIntegration)(
       await prisma.itemCompra.deleteMany();
       await prisma.conversaoUnidade.deleteMany();
       await prisma.item.deleteMany({
-        where: { nomeNormalizado: { startsWith: "integracao-presenter" } }
+        where: { nm_normalizado: { startsWith: "integracao-presenter" } }
       });
 
       const kg = await prisma.unidadeMedida.upsert({
-        where: { codigo: KG },
+        where: { ds_codigo: KG },
         update: {},
-        create: { codigo: KG, nome: "Kg presenter", tipo: UnidadeTipo.massa }
+        create: { ds_codigo: KG, nm_unidade: "Kg presenter", tp_unidade: unidade_tipo.massa }
       });
       const g = await prisma.unidadeMedida.upsert({
-        where: { codigo: G },
+        where: { ds_codigo: G },
         update: {},
-        create: { codigo: G, nome: "G presenter", tipo: UnidadeTipo.massa }
+        create: { ds_codigo: G, nm_unidade: "G presenter", tp_unidade: unidade_tipo.massa }
       });
-      unidadeKgId = kg.id;
-      unidadeGId = g.id;
+      unidadeKgId = kg.cd_unidade_medida;
+      unidadeGId = g.cd_unidade_medida;
 
       const supA = await prisma.fornecedor.upsert({
-        where: { nome: "Presenter Fornecedor Primary" },
+        where: { nm_fornecedor: "Presenter Fornecedor Primary" },
         update: {},
-        create: { nome: "Presenter Fornecedor Primary" }
+        create: { nm_fornecedor: "Presenter Fornecedor Primary" }
       });
       const supB = await prisma.fornecedor.upsert({
-        where: { nome: "Presenter Fornecedor Secondary" },
+        where: { nm_fornecedor: "Presenter Fornecedor Secondary" },
         update: {},
-        create: { nome: "Presenter Fornecedor Secondary" }
+        create: { nm_fornecedor: "Presenter Fornecedor Secondary" }
       });
-      supplierPrimaryId = supA.id;
-      supplierSecondaryId = supB.id;
+      supplierPrimaryId = supA.cd_fornecedor;
+      supplierSecondaryId = supB.cd_fornecedor;
     });
 
     afterAll(async () => {
@@ -66,40 +65,40 @@ describe.skipIf(!runIntegration)(
     it("seed direto com 1 principal (kg, 1) + 1 secundario (null, null): read retorna secundario com fixado do principal", async () => {
       const item = await prisma.item.create({
         data: {
-          nome: "Presenter Item A",
-          nomeNormalizado: "integracao-presenter-a",
-          tipoPrincipal: ItemType.insumo,
-          unidadeEstoqueId: unidadeKgId,
-          unidadeUsoPadraoId: unidadeGId
+          nm_item: "Presenter Item A",
+          nm_normalizado: "integracao-presenter-a",
+          tp_item: item_type.insumo,
+          cd_unidade_estoque: unidadeKgId,
+          cd_unidade_uso_padrao: unidadeGId
         }
       });
 
       await prisma.itemCompra.create({
         data: {
-          itemId: item.id,
-          fornecedorId: supplierPrimaryId,
-          unidadeCompraId: unidadeKgId,
-          unidadeUsoId: unidadeKgId,
-          principal: true,
-          quantidadePorEmbalagem: "1.0000",
-          quantidadeUso: "1.0000",
-          custoCompra: "10.0000",
-          custoUnitarioBase: "10.000000"
+          cd_item: item.cd_item,
+          cd_fornecedor: supplierPrimaryId,
+          cd_unidade_compra: unidadeKgId,
+          cd_unidade_uso: unidadeKgId,
+          sn_principal: true,
+          vl_qtd_embalagem: "1.0000",
+          vl_qtd_uso: "1.0000",
+          vl_custo_compra: "10.0000",
+          vl_custo_unitario_base: "10.000000"
         }
       });
       await prisma.itemCompra.create({
         data: {
-          itemId: item.id,
-          fornecedorId: supplierSecondaryId,
-          unidadeCompraId: unidadeKgId,
-          principal: false,
-          quantidadePorEmbalagem: "5.0000",
-          custoCompra: "40.0000",
-          custoUnitarioBase: "8.000000"
+          cd_item: item.cd_item,
+          cd_fornecedor: supplierSecondaryId,
+          cd_unidade_compra: unidadeKgId,
+          sn_principal: false,
+          vl_qtd_embalagem: "5.0000",
+          vl_custo_compra: "40.0000",
+          vl_custo_unitario_base: "8.000000"
         }
       });
 
-      const detail = await repo.getItemDetail(item.id);
+      const detail = await repo.getItemDetail(item.cd_item);
       expect(detail).toBeTruthy();
       const primary = detail!.purchases.find((p) => p.purchaseIsPrimary)!;
       const secondary = detail!.purchases.find((p) => !p.purchaseIsPrimary)!;
@@ -113,43 +112,42 @@ describe.skipIf(!runIntegration)(
     it("troca principal (mark secundario=true unidadeUso=g qtdeUso=1000): ex-principal passa a secundario derivado", async () => {
       const item = await prisma.item.create({
         data: {
-          nome: "Presenter Item B",
-          nomeNormalizado: "integracao-presenter-b",
-          tipoPrincipal: ItemType.insumo,
-          unidadeEstoqueId: unidadeKgId,
-          unidadeUsoPadraoId: unidadeGId
+          nm_item: "Presenter Item B",
+          nm_normalizado: "integracao-presenter-b",
+          tp_item: item_type.insumo,
+          cd_unidade_estoque: unidadeKgId,
+          cd_unidade_uso_padrao: unidadeGId
         }
       });
 
-      // Inverter principal: primary=kg, secondary=g 1000 (marcado como novo principal)
       await prisma.itemCompra.create({
         data: {
-          itemId: item.id,
-          fornecedorId: supplierPrimaryId,
-          unidadeCompraId: unidadeKgId,
-          unidadeUsoId: null,
-          principal: false,
-          quantidadePorEmbalagem: "1.0000",
-          quantidadeUso: null,
-          custoCompra: "10.0000",
-          custoUnitarioBase: "10.000000"
+          cd_item: item.cd_item,
+          cd_fornecedor: supplierPrimaryId,
+          cd_unidade_compra: unidadeKgId,
+          cd_unidade_uso: null,
+          sn_principal: false,
+          vl_qtd_embalagem: "1.0000",
+          vl_qtd_uso: null,
+          vl_custo_compra: "10.0000",
+          vl_custo_unitario_base: "10.000000"
         }
       });
       await prisma.itemCompra.create({
         data: {
-          itemId: item.id,
-          fornecedorId: supplierSecondaryId,
-          unidadeCompraId: unidadeKgId,
-          unidadeUsoId: unidadeGId,
-          principal: true,
-          quantidadePorEmbalagem: "1.0000",
-          quantidadeUso: "1000.0000",
-          custoCompra: "10.0000",
-          custoUnitarioBase: "10.000000"
+          cd_item: item.cd_item,
+          cd_fornecedor: supplierSecondaryId,
+          cd_unidade_compra: unidadeKgId,
+          cd_unidade_uso: unidadeGId,
+          sn_principal: true,
+          vl_qtd_embalagem: "1.0000",
+          vl_qtd_uso: "1000.0000",
+          vl_custo_compra: "10.0000",
+          vl_custo_unitario_base: "10.000000"
         }
       });
 
-      const detail = await repo.getItemDetail(item.id);
+      const detail = await repo.getItemDetail(item.cd_item);
       const newPrimary = detail!.purchases.find((p) => p.purchaseIsPrimary)!;
       const exPrimary = detail!.purchases.find((p) => !p.purchaseIsPrimary)!;
       expect(newPrimary.usageUnit).toBe(G);
@@ -162,40 +160,40 @@ describe.skipIf(!runIntegration)(
     it("fator por fornecedor (D-07): secundario qtdeCompra=10 -> fator=10/1=10", async () => {
       const item = await prisma.item.create({
         data: {
-          nome: "Presenter Item C",
-          nomeNormalizado: "integracao-presenter-c",
-          tipoPrincipal: ItemType.insumo,
-          unidadeEstoqueId: unidadeKgId,
-          unidadeUsoPadraoId: unidadeKgId
+          nm_item: "Presenter Item C",
+          nm_normalizado: "integracao-presenter-c",
+          tp_item: item_type.insumo,
+          cd_unidade_estoque: unidadeKgId,
+          cd_unidade_uso_padrao: unidadeKgId
         }
       });
 
       await prisma.itemCompra.create({
         data: {
-          itemId: item.id,
-          fornecedorId: supplierPrimaryId,
-          unidadeCompraId: unidadeKgId,
-          unidadeUsoId: unidadeKgId,
-          principal: true,
-          quantidadePorEmbalagem: "1.0000",
-          quantidadeUso: "1.0000",
-          custoCompra: "10.0000",
-          custoUnitarioBase: "10.000000"
+          cd_item: item.cd_item,
+          cd_fornecedor: supplierPrimaryId,
+          cd_unidade_compra: unidadeKgId,
+          cd_unidade_uso: unidadeKgId,
+          sn_principal: true,
+          vl_qtd_embalagem: "1.0000",
+          vl_qtd_uso: "1.0000",
+          vl_custo_compra: "10.0000",
+          vl_custo_unitario_base: "10.000000"
         }
       });
       await prisma.itemCompra.create({
         data: {
-          itemId: item.id,
-          fornecedorId: supplierSecondaryId,
-          unidadeCompraId: unidadeKgId,
-          principal: false,
-          quantidadePorEmbalagem: "10.0000",
-          custoCompra: "80.0000",
-          custoUnitarioBase: "8.000000"
+          cd_item: item.cd_item,
+          cd_fornecedor: supplierSecondaryId,
+          cd_unidade_compra: unidadeKgId,
+          sn_principal: false,
+          vl_qtd_embalagem: "10.0000",
+          vl_custo_compra: "80.0000",
+          vl_custo_unitario_base: "8.000000"
         }
       });
 
-      const detail = await repo.getItemDetail(item.id);
+      const detail = await repo.getItemDetail(item.cd_item);
       const primary = detail!.purchases.find((p) => p.purchaseIsPrimary)!;
       const secondary = detail!.purchases.find((p) => !p.purchaseIsPrimary)!;
       expect(Number(primary.conversionFactor)).toBe(1);

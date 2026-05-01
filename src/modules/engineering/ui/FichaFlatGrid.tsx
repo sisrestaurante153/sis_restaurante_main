@@ -328,12 +328,6 @@ export function FichaFlatGrid({
                 ? "IC"
                 : "";
           const fmtNum = (n: number) => Number(n.toFixed(4)).toString();
-          const pesoHint =
-            factorPrefix && factor !== null
-              ? `${factorPrefix} = ${fmtNum(out)}/${fmtNum(qty)} = ${factorLabel}`
-              : factorPrefix
-                ? `${factorPrefix} = --`
-                : "";
 
           return (
             <Box key={`${row.itemId}-${index}`}>
