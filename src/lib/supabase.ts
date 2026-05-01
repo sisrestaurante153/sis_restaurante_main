@@ -11,7 +11,7 @@ export function getSupabaseClient() {
   if (!url || !key) {
     if (process.env.NODE_ENV === "development") {
       console.warn("⚠️ NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are missing.");
-      return null as any;
+      return null as unknown as ReturnType<typeof createClient>;
     }
     throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required.");
   }
@@ -27,7 +27,7 @@ export function createServerSupabaseClient() {
   if (!url || !key) {
     if (process.env.NODE_ENV === "development") {
       console.warn("⚠️ NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY are missing.");
-      return null as any;
+      return null as unknown as ReturnType<typeof createClient>;
     }
     throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
   }
