@@ -21,9 +21,11 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get("sb-access-token")?.value || 
                 request.headers.get("Authorization")?.split(" ")[1];
 
-  const { data: { user } } = token 
+  const { data, error } = token 
     ? await supabase.auth.getUser(token)
-    : { data: { user: null } };
+    : { data: { user: null }, error: null };
+
+  const user = data?.user;
 
   if (pathname === "/login") {
     if (user) {

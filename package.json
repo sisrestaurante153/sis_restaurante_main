@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
-    "build": "node scripts/ensure-runtime-artifacts.mjs && next build",
+    "build": "node scripts/ensure-runtime-artifacts.mjs && prisma generate && next build",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
