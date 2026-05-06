@@ -90,52 +90,75 @@ function SidebarSurface({ currentUser, pendingCounts, onNavigate, showLogout }: 
         display: "flex",
         height: "100%",
         flexDirection: "column",
-        bgcolor: "background.paper"
+        bgcolor: "#FAF7F0" // ink-50
       }}
     >
-      {/* Logo — matches HTML .sidebar-logo (azul #185FA5, 13px, weight 600, borda inferior) */}
+      {/* Logo — matches new landing page brand */}
       <Box
         sx={{
           px: 2,
-          pt: "18px",
-          pb: "14px",
-          borderBottom: "0.5px solid",
-          borderColor: "divider"
+          pt: 2.5,
+          pb: 2.5,
+          borderBottom: "1px solid",
+          borderColor: "#EDE8DF", // ink-200
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          mx: 1.5,
+          mb: 1
         }}
       >
+        <Box
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: 1.5,
+            background: "linear-gradient(to bottom right, #004A99, #001F3F)", // blue-700 to blue-900
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: 16
+          }}
+        >
+          🍽
+        </Box>
         <Typography
           component="div"
           sx={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: "#185FA5",
-            lineHeight: 1.2
+            fontFamily: "Manrope, sans-serif",
+            fontSize: 14,
+            fontWeight: 800,
+            lineHeight: 1.1,
+            color: "#001F3F" // blue-900
           }}
         >
-          SIS Restaurante
+          Custo de<br />
+          <Box component="span" sx={{ color: "#FF6B00" }}>RECEITA</Box>
         </Typography>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: "auto", px: 0, pt: 1 }}>
+      <Box sx={{ flex: 1, overflowY: "auto", px: 0, pt: 0 }}>
         <SidebarNav onNavigate={onNavigate} pendingCounts={pendingCounts} />
       </Box>
 
-      {/* Footer — email-only, matches HTML .s-footer (11px, text-3, border-top) */}
+      {/* Footer */}
       <Box
         sx={{
-          px: 2,
-          py: 1.5,
-          borderTop: "0.5px solid",
-          borderColor: "divider"
+          px: 3,
+          py: 2,
+          borderTop: "1px solid",
+          borderColor: "#EDE8DF"
         }}
       >
         <Typography
           component="div"
           sx={{
             fontSize: 11,
-            color: "#888780",
+            color: "#A39F96", // ink-400
             lineHeight: 1.35,
-            wordBreak: "break-all"
+            wordBreak: "break-all",
+            fontFamily: "Manrope, sans-serif"
           }}
         >
           {currentUser.email}

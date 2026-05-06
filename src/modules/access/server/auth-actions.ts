@@ -5,6 +5,7 @@ import { z } from "zod";
 import { signInWithPassword } from "@/modules/access/server/auth-service";
 import { cookies } from "next/headers";
 import { getSupabaseClient } from "@/lib/supabase";
+import { createUserSession, SESSION_COOKIE_NAME } from "@/modules/access/server/session-cookie";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um email valido."),
@@ -49,12 +50,20 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     path: "/",
   });
 
+  await createUserSession({
+    userId: result.user.id,
+    email: result.user.email,
+    name: result.user.nome,
+    roleCodes: result.user.roleCodes,
+  });
+
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete("sb-access-token");
+  cookieStore.delete(SESSION_COOKIE_NAME);
   redirect("/login");
 }
 

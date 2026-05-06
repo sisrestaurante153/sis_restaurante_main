@@ -1,4 +1,6 @@
 @layer theme, base, mui, components, utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -29,10 +31,28 @@
   --sidebar-border: #e2e8f0;
   --sidebar-accent: rgba(25, 118, 210, 0.08);
   --sidebar-accent-foreground: #1976d2;
+
+  /* Brand palette */
+  --color-brand-primary: #185FA5;
+  --color-brand-primary-dark: #004A99;
+  --color-brand-orange: #FF6B00;
+  --color-brand-orange-hover: #E55F00;
+  --color-brand-dark: #0D1B2A;
+  --color-brand-dark-mid: #1A2A3A;
+  --color-brand-gray: #64748B;
+  --color-brand-gray-light: #94A3B8;
+  --color-brand-border: #E2E8F0;
+  --color-brand-bg: #FAFBFC;
+  --color-brand-green-dot: #22C55E;
 }
 
 @theme inline {
-  --font-sans: var(--font-plus-jakarta-sans);
+  /* Fonts */
+  --font-sans: "Manrope", sans-serif;
+  --font-serif: "Fraunces", serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* App tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -61,6 +81,59 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+
+  /* Brand tokens exposed to Tailwind */
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primary-dark: var(--color-brand-primary-dark);
+  --color-brand-orange: var(--color-brand-orange);
+  --color-brand-orange-hover: var(--color-brand-orange-hover);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-brand-dark-mid: var(--color-brand-dark-mid);
+  --color-brand-gray: var(--color-brand-gray);
+  --color-brand-gray-light: var(--color-brand-gray-light);
+  --color-brand-border: var(--color-brand-border);
+  --color-brand-bg: var(--color-brand-bg);
+  --color-brand-green-dot: var(--color-brand-green-dot);
+
+  /* Landing Page tokens */
+  --color-blue-900: #001F3F;
+  --color-blue-800: #003672;
+  --color-blue-700: #004A99;
+  --color-blue-600: #1966B8;
+  --color-blue-500: #3B82D4;
+  --color-blue-300: #8AB3E0;
+  --color-blue-100: #D6E5F5;
+  --color-blue-50:  #EEF4FB;
+
+  --color-orange-800: #B34A00;
+  --color-orange-700: #D95C00;
+  --color-orange-600: #FF6B00;
+  --color-orange-500: #FF8533;
+  --color-orange-300: #FFAB66;
+  --color-orange-100: #FFE0CC;
+  --color-orange-50:  #FFF3E8;
+
+  --color-ink-900: #0A0A0A;
+  --color-ink-800: #1A1A1A;
+  --color-ink-700: #2E2C28;
+  --color-ink-600: #4A4741;
+  --color-ink-500: #6B6560;
+  --color-ink-400: #A39F96;
+  --color-ink-300: #D9D4CB;
+  --color-ink-200: #EDE8DF;
+  --color-ink-100: #F6F1E8;
+  --color-ink-50:  #FAF7F0;
+  --color-paper:   #FDFBF6;
+
+  --color-success: #0E8A4F;
+  --color-success-bg: #E3F5EC;
+  --color-warning: #E8A43B;
+  --color-warning-bg: #FDF3DF;
+  --color-error: #DC3545;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 * {
@@ -76,7 +149,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   min-height: 100vh;
-  font-family: var(--font-plus-jakarta-sans), "Segoe UI", sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -102,35 +175,43 @@ textarea {
 }
 
 @layer components {
+  /* ── App layout components ── */
+  .container-page {
+    @apply w-full max-w-[1200px] mx-auto px-6 relative z-10;
+  }
   .app-panel {
     @apply rounded-[1rem] border border-border bg-card p-5 sm:p-6;
   }
-
   .app-panel-muted {
     @apply rounded-[1rem] border border-border bg-muted/60 p-5 sm:p-6;
   }
-
   .app-subpanel {
     @apply rounded-[0.875rem] border border-border bg-background p-4;
   }
-
   .app-filter-bar {
     @apply rounded-[1rem] border border-border bg-card p-5 sm:p-6 flex flex-col gap-4;
   }
-
   .app-data-shell {
     @apply rounded-[1rem] border border-border bg-card overflow-hidden p-0;
   }
-
   .app-muted-label {
     @apply text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
   }
-
   .app-section-title {
     @apply text-lg font-semibold text-foreground;
   }
-
   .app-metric-value {
     @apply text-[clamp(1.65rem,2.8vw,2.25rem)] font-semibold tracking-tight text-foreground;
+  }
+
+  /* ── Brand buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-[--color-brand-orange] text-white font-sans font-bold text-base px-7 py-3.5 rounded-lg border-none cursor-pointer transition-all hover:bg-[--color-brand-orange-hover] hover:-translate-y-[1px];
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 bg-transparent text-[--color-brand-primary] font-sans font-bold text-base px-7 py-3.5 rounded-lg border-2 border-[--color-brand-primary] cursor-pointer transition-all hover:bg-[--color-brand-primary] hover:text-white;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-1.5 bg-transparent text-white/85 font-sans font-semibold text-[15px] px-6 py-3 rounded-lg border-[1.5px] border-white/30 cursor-pointer transition-all hover:bg-white/10 hover:border-white/50;
   }
 }

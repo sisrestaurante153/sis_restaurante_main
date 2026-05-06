@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import type { item_type as ItemType, unidade_tipo as UnidadeTipo } from "@/generated/prisma/client";
 import { requirePermission } from "@/modules/access/server/authorization";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
@@ -31,6 +32,15 @@ export async function saveMasterDataAction(formData: FormData) {
 
   const repository = getMasterDataRepository();
   const kind = getKind(formData);
+
+  const paths: Record<string, string> = {
+    "supplier": "/cadastros/fornecedores",
+    "unit": "/cadastros/unidades",
+    "operational-category": "/cadastros/categorias",
+    "modality": "/cadastros/modalidades",
+    "item-type": "/cadastros/tipos-item",
+    "stage-type": "/cadastros/tipos-etapa"
+  };
 
   try {
     switch (kind) {
@@ -87,11 +97,17 @@ export async function saveMasterDataAction(formData: FormData) {
         redirect("/cadastros?error=invalid_kind");
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+      throw error;
+    }
     const message = error instanceof Error ? encodeURIComponent(error.message) : "save_failed";
-    redirect(`/cadastros?error=${message}`);
+    const redirectPath = paths[kind] || "/cadastros";
+    redirect(`${redirectPath}?error=${message}`);
   }
 
-  redirect(`/cadastros?saved=${kind}`);
+  const redirectPath = paths[kind] || "/cadastros";
+  revalidatePath(redirectPath);
+  redirect(`${redirectPath}?saved=${kind}`);
 }
 
 export async function deleteMasterDataAction(formData: FormData) {
@@ -100,6 +116,15 @@ export async function deleteMasterDataAction(formData: FormData) {
   const repository = getMasterDataRepository();
   const kind = getKind(formData);
   const id = formData.get("id")?.toString() ?? "";
+
+  const paths: Record<string, string> = {
+    "supplier": "/cadastros/fornecedores",
+    "unit": "/cadastros/unidades",
+    "operational-category": "/cadastros/categorias",
+    "modality": "/cadastros/modalidades",
+    "item-type": "/cadastros/tipos-item",
+    "stage-type": "/cadastros/tipos-etapa"
+  };
 
   const result =
     kind === "supplier"
@@ -116,9 +141,12 @@ export async function deleteMasterDataAction(formData: FormData) {
                 ? await repository.deleteStageType(id)
               : { success: false as const, reason: "Tipo de cadastro invalido." };
 
+  const redirectPath = paths[kind] || "/cadastros";
+
   if (!result.success) {
-    redirect(`/cadastros?error=${encodeURIComponent(result.reason)}`);
+    redirect(`${redirectPath}?error=${encodeURIComponent(result.reason)}`);
   }
 
-  redirect(`/cadastros?deleted=${kind}`);
+  revalidatePath(redirectPath);
+  redirect(`${redirectPath}?deleted=${kind}`);
 }

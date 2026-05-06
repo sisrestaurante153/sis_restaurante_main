@@ -1,7 +1,7 @@
+import { getSupabaseClient } from "@/lib/supabase";
+import { canAccessRoute, isPublicPath } from "@/modules/access/domain/access-control";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { canAccessRoute, isProtectedPath } from "@/modules/access/domain/access-control";
-import { getSupabaseClient } from "@/lib/supabase";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
@@ -35,12 +35,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!isProtectedPath(pathname)) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.delete("sis_session");
+    return response;
   }
 
   const roleCodes = (user.app_metadata?.roles as string[]) || [];

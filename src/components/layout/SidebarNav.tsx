@@ -11,7 +11,6 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { alpha, useTheme } from "@mui/material/styles";
 import { navigationSections } from "@/components/layout/navigation";
 
 interface SidebarNavProps {
@@ -26,24 +25,32 @@ export function SidebarNav({
   pendingCounts = {}
 }: SidebarNavProps = {}) {
   const pathname = usePathname();
-  const theme = useTheme();
 
   return (
     <Box component="nav" aria-label="Navegacao principal">
       {navigationSections.map((section) => (
-        <Box key={section.label} sx={{ mb: 2.5 }}>
+        <Box key={section.label} sx={{ mb: 1 }}>
           {!compact ? (
             <Typography
               component="p"
-              variant="overline"
-              color="text.secondary"
-              sx={{ display: "block", px: 1.5, pb: 1 }}
+              sx={{ 
+                display: "block", 
+                px: 3, 
+                pt: 3, 
+                pb: 1.5, 
+                fontSize: 10,
+                fontWeight: 600,
+                color: "#A39F96", // ink-400
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontFamily: "Manrope, sans-serif"
+              }}
             >
               {section.label}
             </Typography>
           ) : null}
 
-          <List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.5, px: 2 }}>
             {section.items.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               const count = pendingCounts[item.href] ?? 0;
@@ -55,25 +62,23 @@ export function SidebarNav({
                   aria-label={compact ? item.label : undefined}
                   onClick={onNavigate}
                   sx={{
-                    minHeight: 44,
+                    minHeight: 40,
                     px: compact ? 1 : 1.5,
+                    py: 1,
                     justifyContent: compact ? "center" : "flex-start",
                     gap: compact ? 0 : 1.5,
-                    borderLeft: "3px solid",
-                    borderColor: isActive ? "primary.main" : "transparent",
                     borderRadius: 1.5,
-                    color: isActive ? "primary.main" : "text.secondary",
-                    bgcolor: isActive ? alpha(theme.palette.primary.main, 0.08) : "transparent",
+                    color: isActive ? "#FFFFFF" : "#4A4741", // white or ink-600
+                    bgcolor: isActive ? "#004A99" : "transparent", // blue-700 or transparent
                     "&:hover": {
-                      bgcolor: isActive
-                        ? alpha(theme.palette.primary.main, 0.12)
-                        : alpha(theme.palette.primary.main, 0.04)
+                      bgcolor: isActive ? "#004A99" : "#FFFFFF", // blue-700 or white
+                      color: isActive ? "#FFFFFF" : "#0A0A0A" // white or ink-900
                     }
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: compact ? 0 : 36,
+                      minWidth: compact ? 0 : 30,
                       color: "inherit",
                       justifyContent: "center"
                     }}
@@ -84,16 +89,17 @@ export function SidebarNav({
                       overlap="circular"
                       max={99}
                     >
-                      <item.icon fontSize="small" />
+                      <item.icon sx={{ fontSize: 20 }} />
                     </Badge>
                   </ListItemIcon>
                   {!compact ? (
                     <ListItemText
                       primary={item.label}
                       primaryTypographyProps={{
-                        fontSize: "0.92rem",
-                        fontWeight: isActive ? 600 : 500,
-                        color: "inherit"
+                        fontSize: "0.85rem",
+                        fontWeight: 500,
+                        color: "inherit",
+                        fontFamily: "Manrope, sans-serif"
                       }}
                     />
                   ) : null}

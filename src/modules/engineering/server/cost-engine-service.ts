@@ -171,10 +171,12 @@ async function loadAllActiveEdges(tx: TransactionClient): Promise<DirectComposit
   });
 
   return fichas.flatMap((ficha) =>
-    ficha.componentes.map((component) => ({
-      parentItemId: ficha.cd_item_resultante,
-      childItemId: component.cd_item_componente
-    }))
+    ficha.componentes
+      .filter((component) => component.cd_item_componente !== ficha.cd_item_resultante)
+      .map((component) => ({
+        parentItemId: ficha.cd_item_resultante,
+        childItemId: component.cd_item_componente
+      }))
   );
 }
 
@@ -183,6 +185,10 @@ export async function assertNoCyclesBeforeSaving(
   itemResultanteId: string,
   componentItemIds: readonly string[]
 ) {
+  if (componentItemIds.some((id) => id === itemResultanteId)) {
+    throw new DomainInvariantError("Um item nao pode compor a si mesmo.");
+  }
+
   const edges = (await loadAllActiveEdges(tx)).filter((edge) => edge.parentItemId !== itemResultanteId);
 
   edges.push(

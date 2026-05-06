@@ -5,6 +5,7 @@ import { createAuditService } from "@/modules/audit/server/audit-service";
 import { requirePermission } from "@/modules/access/server/authorization";
 import { getEngineeringRepository } from "@/modules/engineering/server/engineering-repository";
 import { parseFichaFormData } from "@/modules/engineering/server/ficha-form-schema";
+import { DomainInvariantError } from "@/modules/engineering/domain/errors";
 
 export interface EngineeringFormState {
   status: "idle" | "error";
@@ -46,7 +47,17 @@ export async function saveFichaAction(
 
   const repository = getEngineeringRepository();
   const before = parsed.data.id ? await repository.getFichaDetail(parsed.data.id) : null;
-  const ficha = await repository.saveFicha(parsed.data);
+
+  let ficha;
+  try {
+    ficha = await repository.saveFicha(parsed.data);
+  } catch (error) {
+    if (error instanceof DomainInvariantError) {
+      return { status: "error", message: error.message };
+    }
+    throw error;
+  }
+
   await createAuditService().record({
     actorId: actor.userId,
     actorName: actor.name,
