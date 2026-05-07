@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import { StickyActionBar } from "@/components/ui/StickyActionBar";
+import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
 import { deleteItemAction } from "@/modules/catalog/server/catalog-actions";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { ItemForm } from "@/modules/catalog/ui/item-form";
@@ -99,6 +100,7 @@ export default async function ItemDetailPage({
       />
 
       <ItemForm
+        key={item.id}
         formId={formId}
         {...formOptions}
         initialValues={{
@@ -121,14 +123,14 @@ export default async function ItemDetailPage({
             usageIsFixedFromPrimary: purchase.usageIsFixedFromPrimary ?? !purchase.purchaseIsPrimary
           }))
         }}
-      />
-
-      <StickyActionBar>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} width="100%">
-          <form action={deleteItemAction}>
-            <input type="hidden" name="itemId" value={item.id} />
+      >
+        <StickyActionBar>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} width="100%">
             <Button
               type="submit"
+              formAction={deleteItemAction}
+              name="itemId"
+              value={item.id}
               fullWidth
               color="error"
               variant="outlined"
@@ -142,25 +144,22 @@ export default async function ItemDetailPage({
             >
               Excluir item
             </Button>
-          </form>
-          <Button
-            type="submit"
-            form={formId}
-            fullWidth
-            variant="contained"
-            startIcon={<SaveOutlinedIcon />}
-            sx={{
-              padding: "8px 18px",
-              backgroundColor: "#185FA5",
-              borderColor: "#185FA5",
-              color: "#fff",
-              "&:hover": { backgroundColor: "#0C447C" }
-            }}
-          >
-            Salvar alteracoes
-          </Button>
-        </Stack>
-      </StickyActionBar>
+            <FormSubmitButton
+              variant="contained"
+              startIcon={<SaveOutlinedIcon />}
+              sx={{
+                padding: "8px 18px",
+                backgroundColor: "#185FA5",
+                borderColor: "#185FA5",
+                color: "#fff",
+                "&:hover": { backgroundColor: "#0C447C" }
+              }}
+            >
+              Salvar alteracoes
+            </FormSubmitButton>
+          </Stack>
+        </StickyActionBar>
+      </ItemForm>
     </Box>
   );
 }

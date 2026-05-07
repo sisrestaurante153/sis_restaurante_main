@@ -692,6 +692,7 @@ export function TotaisIndicadores({
               <Box
                 component="input"
                 id="qf-sale-price"
+                name="salePrice"
                 type="text"
                 inputMode="decimal"
                 step="0.01"
@@ -748,6 +749,7 @@ export function TotaisIndicadores({
               <Box
                 component="input"
                 id="qf-variable-expense"
+                name="variableExpensePercent"
                 type="text"
                 inputMode="decimal"
                 step="0.5"

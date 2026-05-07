@@ -2,6 +2,7 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { StickyActionBar } from "@/components/ui/StickyActionBar";
+import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
 import { ItemForm } from "@/modules/catalog/ui/item-form";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { PageHeader } from "@/modules/platform/ui/page-header";
@@ -41,26 +42,23 @@ export default async function NewItemPage() {
         }
       />
 
-      <ItemForm formId={formId} {...formOptions} />
-
-      <StickyActionBar>
-        <Button
-          type="submit"
-          form={formId}
-          fullWidth
-          variant="contained"
-          startIcon={<SaveOutlinedIcon />}
-          sx={{
-            padding: "8px 18px",
-            backgroundColor: "#185FA5",
-            borderColor: "#185FA5",
-            color: "#fff",
-            "&:hover": { backgroundColor: "#0C447C" }
-          }}
-        >
-          Salvar item
-        </Button>
-      </StickyActionBar>
+      <ItemForm key="new-item" formId={formId} {...formOptions}>
+        <StickyActionBar>
+          <FormSubmitButton
+            variant="contained"
+            startIcon={<SaveOutlinedIcon />}
+            sx={{
+              padding: "8px 18px",
+              backgroundColor: "#185FA5",
+              borderColor: "#185FA5",
+              color: "#fff",
+              "&:hover": { backgroundColor: "#0C447C" }
+            }}
+          >
+            Salvar item
+          </FormSubmitButton>
+        </StickyActionBar>
+      </ItemForm>
     </Box>
   );
 }

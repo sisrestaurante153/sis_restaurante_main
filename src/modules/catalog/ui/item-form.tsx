@@ -1,8 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -29,6 +32,7 @@ interface ItemFormProps {
     active: boolean;
     purchases: PurchaseRow[];
   };
+  children?: React.ReactNode;
 }
 
 const defaultItemTypes = [
@@ -62,7 +66,8 @@ export function ItemForm({
   operationalCategoryOptions,
   unitOptions,
   supplierOptions,
-  initialValues
+  initialValues,
+  children
 }: ItemFormProps) {
   const [state, formAction] = useActionState(saveItemAction, {
     status: "idle"
@@ -96,6 +101,19 @@ export function ItemForm({
         ]
   );
 
+  const [code, setCode] = useState(() => {
+    if (initialValues?.code) return initialValues.code;
+    if (!initialValues?.id) {
+      return `${Math.floor(100000 + Math.random() * 900000)}`;
+    }
+    return "";
+  });
+
+  function generateNewCode() {
+    const randomNum = Math.floor(100000 + Math.random() * 900000); // 6 digits
+    setCode(`${randomNum}`);
+  }
+
   function getFieldError(field: string) {
     return state.errors?.[field]?.[0];
   }
@@ -127,9 +145,27 @@ export function ItemForm({
             size="small"
             label="Codigo"
             name="code"
-            defaultValue={initialValues?.code ?? ""}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
             error={Boolean(getFieldError("code"))}
             helperText={getFieldError("code") ?? " "}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="Gerar novo código"
+                      edge="end"
+                      onClick={generateNewCode}
+                      size="small"
+                      title="Gerar código aleatório"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }
+            }}
           />
           <TextField
             required
@@ -169,10 +205,13 @@ export function ItemForm({
             size="small"
             label="Tipo"
             name="type"
-            defaultValue={initialValues?.type ?? "insumo"}
+            defaultValue={initialValues?.type ?? ""}
             error={Boolean(getFieldError("type"))}
             helperText={getFieldError("type") ?? " "}
           >
+            <MenuItem value="" disabled sx={{ display: 'none' }}>
+              Selecione o tipo
+            </MenuItem>
             {resolvedTypeOptions.map((itemType) => (
               <MenuItem key={itemType.value} value={itemType.value}>
                 {itemType.label}
@@ -186,15 +225,16 @@ export function ItemForm({
             size="small"
             label="Categoria operacional (Secao)"
             name="operationalCategory"
-            defaultValue={
-              initialValues?.operationalCategory ?? resolvedOperationalCategoryOptions[0] ?? ""
-            }
+            defaultValue={initialValues?.operationalCategory ?? ""}
             // Phase 09.1 gap #6: ensure label always floats at top even when DB value
             // doesn't match any static option (prevents label collapsing into placeholder).
             InputLabelProps={{ shrink: true }}
             error={Boolean(getFieldError("operationalCategory"))}
             helperText={getFieldError("operationalCategory") ?? " "}
           >
+            <MenuItem value="" disabled sx={{ display: 'none' }}>
+              Selecione a categoria
+            </MenuItem>
             {resolvedOperationalCategoryOptions.map((category) => (
               <MenuItem key={category} value={category}>
                 {category}
@@ -242,6 +282,8 @@ export function ItemForm({
           helperText={getFieldError("description") ?? " "}
         />
       </FormSection>
+
+      {children}
     </Stack>
   );
 }

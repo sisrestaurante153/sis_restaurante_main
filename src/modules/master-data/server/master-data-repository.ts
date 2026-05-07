@@ -157,28 +157,12 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
     });
   }
 
-  await tx.$executeRawUnsafe(`
-    create table if not exists "tipo_etapa" (
-      "id" text primary key,
-      "codigo" text not null unique,
-      "nome" text not null,
-      "ativo" boolean not null default true,
-      "criado_em" timestamptz not null default now(),
-      "atualizado_em" timestamptz not null default now()
-    )
-  `);
-
   for (const stageType of DEFAULT_STAGE_TYPES) {
-    await tx.$executeRawUnsafe(
-      `
-      insert into "tipo_etapa" ("id", "codigo", "nome", "ativo", "criado_em", "atualizado_em")
-      values ($1, $2, $3, true, now(), now())
-      on conflict ("codigo") do update set "nome" = excluded."nome", "atualizado_em" = now()
-      `,
-      `stage-type-${stageType.code}`,
-      stageType.code,
-      stageType.name
-    );
+    await tx.tipoEtapa.upsert({
+      where: { ds_codigo: stageType.code },
+      update: { nm_tipo_etapa: stageType.name },
+      create: { ds_codigo: stageType.code, nm_tipo_etapa: stageType.name, sn_ativo: true }
+    });
   }
 }
 
@@ -323,15 +307,15 @@ async function listStageTypesWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
-    const rows = await prisma.$queryRaw<Array<{ id: string; codigo: string; nome: string; ativo: boolean }>>`
-      select id, codigo, nome, ativo from "tipo_etapa" order by nome asc
-    `;
+    const rows = await prisma.tipoEtapa.findMany({
+      orderBy: { nm_tipo_etapa: "asc" }
+    });
 
     return rows.map((row) => ({
-      id: row.id,
-      code: row.codigo as DemoStageTypeRegistryEntry["code"],
-      name: row.nome,
-      active: row.ativo
+      id: row.cd_tipo_etapa,
+      code: row.ds_codigo as DemoStageTypeRegistryEntry["code"],
+      name: row.nm_tipo_etapa,
+      active: row.sn_ativo
     }));
   } catch {
     return null;
@@ -668,32 +652,28 @@ export function getMasterDataRepository() {
             await ensureMasterDataRegistry(tx);
           });
 
-          const [record] = await prisma.$queryRaw<
-            Array<{ id: string; codigo: string; nome: string; ativo: boolean }>
-          >`
-            insert into "tipo_etapa" ("id", "codigo", "nome", "ativo", "criado_em", "atualizado_em")
-            values (
-              ${input.id ?? createDemoId("tipo-etapa")},
-              ${input.code},
-              ${input.name.trim()},
-              ${input.active},
-              now(),
-              now()
-            )
-            on conflict ("id")
-            do update set
-              "codigo" = excluded."codigo",
-              "nome" = excluded."nome",
-              "ativo" = excluded."ativo",
-              "atualizado_em" = now()
-            returning id, codigo, nome, ativo
-          `;
+          const record = input.id
+            ? await prisma.tipoEtapa.update({
+                where: { cd_tipo_etapa: input.id },
+                data: {
+                  ds_codigo: input.code,
+                  nm_tipo_etapa: input.name.trim(),
+                  sn_ativo: input.active
+                }
+              })
+            : await prisma.tipoEtapa.create({
+                data: {
+                  ds_codigo: input.code,
+                  nm_tipo_etapa: input.name.trim(),
+                  sn_ativo: input.active
+                }
+              });
 
           return {
-            id: record.id,
-            code: record.codigo as DemoStageTypeRegistryEntry["code"],
-            name: record.nome,
-            active: record.ativo
+            id: record.cd_tipo_etapa,
+            code: record.ds_codigo as DemoStageTypeRegistryEntry["code"],
+            name: record.nm_tipo_etapa,
+            active: record.sn_ativo
           };
         } catch {
           // fall back to demo storage

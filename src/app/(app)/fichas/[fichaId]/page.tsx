@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import { StickyActionBar } from "@/components/ui/StickyActionBar";
+import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { getEngineeringRepository } from "@/modules/engineering/server/engineering-repository";
 import { FichaHeaderActions } from "@/modules/engineering/ui/FichaHeaderActions";
@@ -72,6 +73,7 @@ export default async function FichaDetailPage({ params }: { params: Params }) {
       />
 
       <FichaForm
+        key={ficha.id}
         formId={formId}
         itemOptions={itemOptions}
         modalityOptions={modalityOptions}
@@ -83,6 +85,7 @@ export default async function FichaDetailPage({ params }: { params: Params }) {
         }))}
         initialValues={{
           id: ficha.id,
+          code: ficha.code,
           itemId: ficha.itemId,
           itemName: ficha.itemName,
           canonicalItemName: ficha.canonicalItemName,
@@ -107,27 +110,23 @@ export default async function FichaDetailPage({ params }: { params: Params }) {
           summary: ficha.sheetSummary,
           stages: ficha.stages
         }}
-      />
-
-      <StickyActionBar>
-        {/* Phase 09-04 D-06: mesmos tokens do Salvar ficha no topbar. */}
-        <Button
-          type="submit"
-          form={formId}
-          fullWidth
-          variant="contained"
-          startIcon={<SaveOutlinedIcon />}
-          sx={{
-            padding: '7px 16px',
-            backgroundColor: '#185FA5',
-            borderColor: '#185FA5',
-            color: '#fff',
-            '&:hover': { backgroundColor: '#0C447C' }
-          }}
-        >
-          Salvar ficha
-        </Button>
-      </StickyActionBar>
+      >
+        <StickyActionBar>
+          <FormSubmitButton
+            variant="contained"
+            startIcon={<SaveOutlinedIcon />}
+            sx={{
+              padding: '7px 16px',
+              backgroundColor: '#185FA5',
+              borderColor: '#185FA5',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#0C447C' }
+            }}
+          >
+            Salvar ficha
+          </FormSubmitButton>
+        </StickyActionBar>
+      </FichaForm>
     </Box>
   );
 }

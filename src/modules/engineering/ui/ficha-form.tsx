@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import { RefreshCw } from "lucide-react";
 import { FormSection } from "@/components/ui/FormSection";
 import {
   saveFichaAction,
@@ -57,6 +58,7 @@ interface FichaFormProps {
   }>;
   initialValues?: {
     id?: string;
+    code?: string;
     itemId?: string;
     itemName: string;
     canonicalItemName?: string;
@@ -128,6 +130,7 @@ interface FichaFormProps {
   stageTypeOptions?: StageTypeOption[];
   // Quick 20260424 item 3: opcoes de unidade vindas de master-data listUnits().
   unitOptions?: string[];
+  children?: React.ReactNode;
 }
 
 export function FichaForm({
@@ -137,11 +140,26 @@ export function FichaForm({
   itemOptions,
   componentOptions,
   stageTypeOptions,
-  unitOptions
+  unitOptions,
+  children
 }: FichaFormProps) {
   const [state, formAction] = useActionState(saveFichaAction, {
     status: "idle"
   } satisfies EngineeringFormState);
+  
+  const [code, setCode] = useState(() => {
+    if (initialValues?.code) return initialValues.code;
+    if (!initialValues?.id) {
+      return `${Math.floor(100000 + Math.random() * 900000)}`;
+    }
+    return "";
+  });
+
+  function generateNewCode() {
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    setCode(`${randomNum}`);
+  }
+
   // PDFV2-FICHA-07: estado controlado do Modalidade. O input continua como
   // name="modalityId" no form submit, apenas o valor se torna controlado.
   const [modalityId, setModalityId] = useState<string>(
@@ -276,12 +294,24 @@ export function FichaForm({
             size="small"
             label="Cod."
             name="code"
-            value={initialValues?.id ?? ""}
-            // Phase 09.1 gap #8: readonly Cod field always shows label on top (even
-            // when value empty on /nova) to match HTML .f label static-above pattern.
-            InputLabelProps={{ shrink: true }}
-            slotProps={{ input: { readOnly: true } }}
-            helperText=" "
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            error={Boolean(getFieldError("code"))}
+            helperText={getFieldError("code") ?? " "}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <button
+                    type="button"
+                    onClick={generateNewCode}
+                    className="p-1 hover:bg-slate-100 rounded-md transition-colors"
+                    title="Gerar novo codigo"
+                  >
+                    <RefreshCw className="w-4 h-4 text-slate-500" />
+                  </button>
+                )
+              }
+            }}
           />
           <TextField
             required
@@ -317,6 +347,9 @@ export function FichaForm({
             error={Boolean(getFieldError("modalityId"))}
             helperText={getFieldError("modalityId") ?? " "}
           >
+            <MenuItem value="" disabled sx={{ display: 'none' }}>
+              Selecione
+            </MenuItem>
             {modalityOptions.map((option) => (
               <MenuItem key={option.id} value={option.id}>
                 {option.label}
@@ -360,7 +393,7 @@ export function FichaForm({
             fullWidth
             size="small"
             label="Custo atual da ficha"
-            value={`R$ ${formatCurrency(linkedItem?.currentCost).replace(/R\$\s?/, "")}`}
+            value={`R$ ${formatCurrency(quadroFinalSummary?.costReal ?? formSummary.costReal ?? linkedItem?.currentCost).replace(/R\$\s?/, "")}`}
             InputLabelProps={{ shrink: true }}
             slotProps={{
               input: {
@@ -457,6 +490,8 @@ export function FichaForm({
           onAssemblyEnabledChange={setAssemblyEnabled}
         />
       ) : null}
+
+      {children}
     </Stack>
   );
 }

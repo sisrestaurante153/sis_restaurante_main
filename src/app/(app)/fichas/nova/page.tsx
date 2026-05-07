@@ -2,6 +2,7 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { StickyActionBar } from "@/components/ui/StickyActionBar";
+import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { getEngineeringRepository } from "@/modules/engineering/server/engineering-repository";
 import { FichaForm } from "@/modules/engineering/ui/ficha-form";
@@ -30,7 +31,7 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
     scope === "finais"
       ? itemOptions.filter((item) => ["prato", "porcao", "marmita", "combo"].includes(item.type))
       : itemOptions;
-  const baseItem = filteredItemOptions[0] ?? itemOptions[0];
+
   const formId = "new-ficha-form";
 
   return (
@@ -66,6 +67,7 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
       />
 
       <FichaForm
+        key="new-ficha"
         formId={formId}
         itemOptions={filteredItemOptions}
         componentOptions={itemOptions}
@@ -77,14 +79,15 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
           label: stageType.name
         }))}
         initialValues={{
-          itemId: baseItem?.id ?? "",
-          itemName: baseItem?.name ?? "",
-          itemType: baseItem?.type ?? "pre_preparo",
+          itemId: "",
+          itemName: "",
+          itemType: "pre_preparo",
+          groupOperational: "",
           modality: {
-            id: modalityOptions[0]?.id ?? "",
-            label: modalityOptions[0]?.label ?? ""
+            id: "",
+            label: ""
           },
-          status: "rascunho",
+          status: "ativa",
           yieldMode: "percentual_perda",
           percentLoss: "0.1000",
           finalWeight: "",
@@ -125,27 +128,23 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
             }
           ]
         }}
-      />
-
-      <StickyActionBar>
-        {/* Phase 09-04 D-06: mesmos tokens do Salvar ficha no topbar. */}
-        <Button
-          type="submit"
-          form={formId}
-          fullWidth
-          variant="contained"
-          startIcon={<SaveOutlinedIcon />}
-          sx={{
-            padding: '7px 16px',
-            backgroundColor: '#185FA5',
-            borderColor: '#185FA5',
-            color: '#fff',
-            '&:hover': { backgroundColor: '#0C447C' }
-          }}
-        >
-          Salvar ficha
-        </Button>
-      </StickyActionBar>
+      >
+        <StickyActionBar>
+          <FormSubmitButton
+            variant="contained"
+            startIcon={<SaveOutlinedIcon />}
+            sx={{
+              padding: '7px 16px',
+              backgroundColor: '#185FA5',
+              borderColor: '#185FA5',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#0C447C' }
+            }}
+          >
+            Salvar ficha
+          </FormSubmitButton>
+        </StickyActionBar>
+      </FichaForm>
     </Box>
   );
 }

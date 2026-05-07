@@ -39,6 +39,7 @@ export interface ListFichasInput {
 
 export interface SaveFichaInput {
   id?: string;
+  code?: string;
   itemId?: string;
   displayName: string;
   itemType: DemoFichaRecord["itemType"];
@@ -410,12 +411,22 @@ async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) 
 
 async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: SaveFichaInput) {
   if (input.itemId) {
-    return tx.item.findUniqueOrThrow({
+    const existing = await tx.item.findUniqueOrThrow({
       where: { cd_item: input.itemId },
       include: {
         unidadeUsoPadrao: true
       }
     });
+
+    if (input.code && existing.ds_codigo_interno !== input.code.trim()) {
+      return tx.item.update({
+        where: { cd_item: input.itemId },
+        data: { ds_codigo_interno: input.code.trim() },
+        include: { unidadeUsoPadrao: true }
+      });
+    }
+
+    return existing;
   }
 
   const normalizedName = toNormalizedName(input.displayName);
@@ -435,6 +446,7 @@ async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: Sa
   return tx.item.create({
     data: {
       nm_item: input.displayName.trim(),
+      ds_codigo_interno: input.code?.trim() || null,
       nm_normalizado: normalizedName,
       nm_categoria_operacional: input.groupOperational,
       tp_item: input.itemType,
@@ -490,9 +502,12 @@ async function ensureStageType(
   input: { stageTypeId?: string; stageTypeCode?: string }
 ) {
   if (input.stageTypeId) {
-    return tx.tipoEtapa.findUnique({
+    const existing = await tx.tipoEtapa.findUnique({
       where: { cd_tipo_etapa: input.stageTypeId }
     });
+    if (existing) {
+      return existing;
+    }
   }
 
   if (!input.stageTypeCode) {
@@ -792,6 +807,7 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
 
   return {
     id: record.cd_ficha_tecnica,
+    code: record.itemResultante.ds_codigo_interno ?? "",
     itemId: record.cd_item_resultante,
     itemName: displayName,
     canonicalItemName: record.itemResultante.nm_item,
@@ -913,35 +929,10 @@ async function listFichasWithPrisma(input: ListFichasInput) {
             }
           },
           modalidade: true,
-          etapas: {
-            orderBy: { nr_ordem: "asc" },
-            include: {
-              componentes: {
-                orderBy: { nr_ordem: "asc" },
-                include: {
-                  itemComponente: {
-                    select: {
-                      nm_item: true,
-                      tp_item: true,
-                      unidadeUsoPadrao: true
-                    }
-                  },
-                  unidadeUso: true
-                }
-              }
-            }
-          },
           componentes: {
-            orderBy: { nr_ordem: "asc" },
-            include: {
-              itemComponente: {
-                select: {
-                  nm_item: true,
-                  tp_item: true,
-                  unidadeUsoPadrao: true
-                }
-              },
-              unidadeUso: true
+            select: {
+              vl_qtd_bruta: true,
+              vl_qtd_limpa: true
             }
           },
           execucoesCalculo: {
@@ -957,7 +948,7 @@ async function listFichasWithPrisma(input: ListFichasInput) {
     ]);
 
     return {
-      items: fichas.map((ficha) => mapFichaListRow(ficha as NonNullable<FichaRecord>)),
+      items: fichas.map((ficha) => mapFichaListRow(ficha as unknown as NonNullable<FichaRecord>)),
       totalCount,
       totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
       page: Math.max(input.page, 1)
@@ -1532,6 +1523,7 @@ function toFichaDetail(ficha: DemoFichaRecord) {
 
   return cloneDemoStore({
     id: ficha.id,
+    code: getDemoStore().items.find((item) => item.id === ficha.itemId)?.code ?? "",
     itemId: ficha.itemId,
     itemName: ficha.displayName,
     canonicalItemName: ficha.itemName,

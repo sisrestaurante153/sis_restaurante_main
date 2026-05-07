@@ -1,16 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import Alert from "@mui/material/Alert";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { withBasePath } from "@/modules/platform/lib/base-path";
-import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { useState } from "react";
 
 export function LoginForm() {
   const [message, setMessage] = useState<string | null>(null);
@@ -36,7 +30,7 @@ export function LoginForm() {
 
     if (!response.ok) {
       const payload = await response.json().catch(() => null);
-      setMessage(payload?.message ?? "Nao foi possivel autenticar.");
+      setMessage(payload?.message ?? "Não foi possível autenticar.");
       setPending(false);
       return;
     }
@@ -49,64 +43,73 @@ export function LoginForm() {
       action={async (formData) => {
         await handleSubmit(formData);
       }}
+      className="space-y-5"
     >
-      <Stack spacing={2.5}>
-        {message ? <Alert severity="error">{message}</Alert> : null}
+      {message && (
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
-        <TextField
-          label="Email"
-          name="email"
-          type="email"
-          fullWidth
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="admin@sis-restaurante.local"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailOutlinedIcon color="action" fontSize="small" />
-                </InputAdornment>
-              )
-            }
-          }}
-        />
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground">Email</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+              <Mail className="h-4 w-4" />
+            </div>
+            <Input
+              name="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="admin@sis-restaurante.local"
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
 
-        <TextField
-          label="Senha"
-          name="password"
-          type={showPassword ? "text" : "password"}
-          fullWidth
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="admin123"
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    edge="end"
-                    onClick={() => setShowPassword((value) => !value)}
-                  >
-                    {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }
-          }}
-        />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground">Senha</label>
+          <div className="relative">
+            <Input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="admin123"
+              className="pr-10"
+              required
+            />
+            <div className="absolute inset-y-0 right-0 pr-1 flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none rounded-full"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <FormSubmitButton
-          disabled={pending}
-          variant="contained"
-          fullWidth
-          size="large"
-          sx={{ minHeight: 48 }}
-        >
-          Entrar no painel
-        </FormSubmitButton>
-      </Stack>
+      <button
+        type="submit"
+        disabled={pending}
+        className="bg-brand-primary w-full h-12 mt-2 flex justify-center items-center rounded-full font-semibold text-base shadow-sm disabled:opacity-70 text-white"
+      >
+        {pending ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Entrando...
+          </>
+        ) : (
+          "Entrar no painel"
+        )}
+      </button>
     </form>
   );
 }

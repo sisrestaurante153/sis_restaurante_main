@@ -23,16 +23,20 @@ const optionalPositiveDecimalString = z
   .string()
   .trim()
   .optional()
-  .transform((value) => value || undefined)
+  .transform((value) => value ? value.replace(",", ".") : undefined)
   .refine((value) => value === undefined || Number(value) > 0, "Deve ser maior que zero.");
 const optionalPercentString = z
   .string()
   .trim()
   .optional()
-  .transform((value) => value || undefined)
+  .transform((value) => {
+    if (!value) return undefined;
+    const num = Number(value.replace(",", "."));
+    return Number.isFinite(num) ? (num > 1 ? (num / 100).toString() : num.toString()) : undefined;
+  })
   .refine(
     (value) => value === undefined || (Number(value) >= 0 && Number(value) <= 1),
-    "Deve estar entre 0 e 1."
+    "Deve estar entre 0 e 100%."
   );
 
 const componentSchema = z.object({
@@ -59,6 +63,7 @@ const stageSchema = z.object({
 const fichaFormSchema = z
   .object({
     id: z.string().trim().optional(),
+    code: z.string().trim().optional(),
     itemId: z.string().trim().optional().transform((value) => value || undefined),
     displayName: nonEmptyString,
     itemType: itemTypeSchema,
@@ -201,6 +206,7 @@ export function parseFichaFormData(formData: FormData) {
 
   const parsed = fichaFormSchema.safeParse({
     id: formData.get("id")?.toString(),
+    code: formData.get("code")?.toString(),
     itemId: formData.get("itemId")?.toString(),
     displayName: formData.get("displayName")?.toString(),
     itemType: formData.get("itemType")?.toString(),

@@ -1,53 +1,70 @@
 import { redirectIfAuthenticated } from "@/modules/access/server/auth-actions";
 import { LoginForm } from "@/modules/access/ui/login-form";
-import FiberManualRecordRoundedIcon from "@mui/icons-material/FiberManualRecordRounded";
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Grow from "@mui/material/Grow";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 
 export default async function LoginPage() {
   await redirectIfAuthenticated();
 
   return (
-    <Box
-      component="main"
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-        px: 2
-      }}
-    >
-      <Grow in timeout={180}>
-        <Card sx={{ width: "100%", maxWidth: 420, borderRadius: 2 }}>
-          <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-            <Stack spacing={3}>
-              <Stack spacing={1.5} alignItems="center" textAlign="center">
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FiberManualRecordRoundedIcon sx={{ color: "success.main", fontSize: 14 }} />
-                  <Typography variant="subtitle2" color="text.secondary">
-                    SIS Restaurante
-                  </Typography>
-                </Stack>
-                <Box>
-                  <Typography variant="h2">Acesse o painel</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Sessao segura em cookie HttpOnly para o ambiente operacional.
-                  </Typography>
-                </Box>
-              </Stack>
-              <Box>
-                <LoginForm />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Grow>
-    </Box>
+    <div className="min-h-screen flex w-full bg-brand-bg">
+      {/* Left side: branding/image */}
+      <div className="hidden lg:flex flex-1 flex-col justify-between bg-gradient-to-br from-brand-primary-dark to-brand-primary p-12 text-white relative overflow-hidden">
+        {/* Abstract shapes or patterns could go here */}
+        <div className="absolute inset-0 bg-black/10 z-0"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 -left-20 w-80 h-80 bg-brand-orange/20 rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+            <div className="w-4 h-4 bg-brand-orange rounded-full"></div>
+          </div>
+          <span className="text-2xl font-bold font-serif tracking-tight">SIS Restaurante</span>
+        </div>
+
+        <div className="relative z-10 max-w-xl">
+          <h1 className="text-5xl font-bold font-serif leading-[1.1] mb-6">
+            Gestão inteligente de fichas técnicas
+          </h1>
+          <p className="text-lg text-white/80 leading-relaxed font-sans">
+            Substitua suas planilhas por um sistema centralizado de cálculo de custos, 
+            rendimentos e composição recursiva de ponta a ponta.
+          </p>
+        </div>
+
+        <div className="relative z-10">
+          <p className="text-sm text-white/60 font-sans">
+            &copy; {new Date().getFullYear()} SIS Restaurante. Todos os direitos reservados.
+          </p>
+        </div>
+      </div>
+
+      {/* Right side: login form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-[420px] space-y-8 animate-in fade-in zoom-in-95 duration-500">
+          <div className="flex flex-col space-y-2 text-center lg:text-left">
+            <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center">
+                <div className="w-4 h-4 bg-brand-orange rounded-full"></div>
+              </div>
+              <span className="text-2xl font-bold font-serif tracking-tight text-brand-dark">SIS Restaurante</span>
+            </div>
+            
+            <h2 className="text-3xl font-bold tracking-tight text-brand-dark">
+              Acesse o painel
+            </h2>
+            <p className="text-muted-foreground text-[15px]">
+              Insira suas credenciais para entrar no ambiente operacional.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
+            <LoginForm />
+          </div>
+          
+          <div className="text-center text-sm text-muted-foreground">
+            Sessão segura com cookie HttpOnly.
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

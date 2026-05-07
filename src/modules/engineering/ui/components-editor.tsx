@@ -221,7 +221,7 @@ export function ComponentsEditor({
     flattenStagesToRows(initialRegularStages, stageTypeOptions)
   );
   const [internalAssemblyEnabled, setInternalAssemblyEnabled] = useState(
-    summary?.assemblyEnabled ?? Boolean(initialAssemblyStage)
+    Boolean(initialAssemblyStage) || (summary?.assemblyEnabled ?? false)
   );
   const [assemblyRows, setAssemblyRows] = useState<ComponentEditorRow[]>(initialAssemblyStage?.items ?? []);
   const [internalSalePriceInput, setInternalSalePriceInput] = useState(
