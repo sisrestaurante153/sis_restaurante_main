@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signInWithPassword } from "@/modules/access/server/auth-service";
+import { getAuthRepository } from "@/modules/access/server/auth-repository";
 import { cookies } from "next/headers";
 import { getSupabaseClient } from "@/lib/supabase";
 import { createUserSession, SESSION_COOKIE_NAME } from "@/modules/access/server/session-cookie";
@@ -50,8 +51,12 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     path: "/",
   });
 
+  const localUser = await getAuthRepository().findUserByEmail(result.user.email);
+  const restaurantId = localUser?.restaurantId ?? "rest_padrao";
+
   await createUserSession({
     userId: result.user.id,
+    restaurantId,
     email: result.user.email,
     name: result.user.nome,
     roleCodes: result.user.roleCodes,

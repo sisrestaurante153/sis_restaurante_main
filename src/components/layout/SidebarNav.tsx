@@ -17,18 +17,24 @@ interface SidebarNavProps {
   compact?: boolean;
   onNavigate?: () => void;
   pendingCounts?: Partial<Record<string, number>>;
+  roleCodes?: string[];
 }
 
 export function SidebarNav({
   compact = false,
   onNavigate,
-  pendingCounts = {}
+  pendingCounts = {},
+  roleCodes = []
 }: SidebarNavProps = {}) {
   const pathname = usePathname();
+  const isAdmin = roleCodes.includes("admin");
+  const visibleSections = navigationSections.filter(
+    (section) => !section.adminOnly || isAdmin
+  );
 
   return (
     <Box component="nav" aria-label="Navegacao principal">
-      {navigationSections.map((section) => (
+      {visibleSections.map((section) => (
         <Box key={section.label} sx={{ mb: 1 }}>
           {!compact ? (
             <Typography

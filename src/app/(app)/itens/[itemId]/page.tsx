@@ -13,6 +13,7 @@ import { getCatalogRepository } from "@/modules/catalog/server/catalog-repositor
 import { ItemForm } from "@/modules/catalog/ui/item-form";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { PageHeader } from "@/modules/platform/ui/page-header";
+import { requireSession } from "@/modules/access/server/session-cookie";
 
 type Params = Promise<{ itemId: string }>;
 type SearchParams = Promise<{ error?: string }>;
@@ -24,9 +25,12 @@ export default async function ItemDetailPage({
   params: Params;
   searchParams?: SearchParams;
 }) {
-  const { itemId } = await params;
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const repository = getCatalogRepository();
+  const [{ itemId }, session, resolvedSearchParams] = await Promise.all([
+    params,
+    requireSession(),
+    searchParams ?? Promise.resolve(undefined)
+  ]);
+  const repository = getCatalogRepository(session.restaurantId);
   const [item, formOptions] = await Promise.all([
     repository.getItemDetail(itemId),
     getMasterDataRepository().getItemFormOptions()

@@ -305,7 +305,7 @@ async function queryItem(
   }) as Promise<CatalogItemRecord | null>;
 }
 
-async function listItemsWithPrisma(input: ListItemsInput) {
+async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: string }) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -315,6 +315,7 @@ async function listItemsWithPrisma(input: ListItemsInput) {
 
   const query = input.query.trim();
   const where: Prisma.ItemWhereInput = {
+    cd_restaurante: input.restaurantId,
     AND: [
       input.type && input.type !== "all" ? { tp_item: input.type } : {},
       input.status === "ativos" ? { sn_ativo: true } : {},
@@ -419,7 +420,7 @@ async function getItemDetailWithPrisma(itemId: string) {
   }
 }
 
-async function listItemOptionsWithPrisma() {
+async function listItemOptionsWithPrisma(restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -429,7 +430,7 @@ async function listItemOptionsWithPrisma() {
 
   try {
     const items = await prisma.item.findMany({
-      where: { sn_ativo: true },
+      where: { sn_ativo: true, cd_restaurante: restaurantId },
       orderBy: { nm_item: "asc" },
       include: {
         unidadeEstoque: true,
@@ -476,7 +477,7 @@ async function listItemOptionsWithPrisma() {
   }
 }
 
-async function saveItemWithPrisma(input: SaveItemInput) {
+async function saveItemWithPrisma(input: SaveItemInput & { restaurantId: string }) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -507,6 +508,7 @@ async function saveItemWithPrisma(input: SaveItemInput) {
       const duplicateCode = await tx.item.findFirst({
         where: {
           ds_codigo_interno: code,
+          cd_restaurante: input.restaurantId,
           ...(input.id ? { NOT: { cd_item: input.id } } : {})
         },
         select: { cd_item: true }
@@ -543,7 +545,8 @@ async function saveItemWithPrisma(input: SaveItemInput) {
               nm_categoria_operacional: input.operationalCategory,
               cd_unidade_estoque: stockUnit.cd_unidade_medida,
               cd_unidade_uso_padrao: usageUnit.cd_unidade_medida,
-              sn_ativo: input.active
+              sn_ativo: input.active,
+              cd_restaurante: input.restaurantId
             }
           });
 
@@ -696,10 +699,10 @@ async function deleteItemWithPrisma(itemId: string): Promise<CatalogDeleteResult
   }
 }
 
-export function getCatalogRepository() {
+export function getCatalogRepository(restaurantId = "rest_padrao") {
   return {
     async listItems({ page, pageSize, query, type = "all", status = "all", category = "all" }: ListItemsInput) {
-      const prismaResult = await listItemsWithPrisma({ page, pageSize, query, type, status, category });
+      const prismaResult = await listItemsWithPrisma({ page, pageSize, query, type, status, category, restaurantId });
       if (prismaResult) {
         return prismaResult;
       }
@@ -743,7 +746,7 @@ export function getCatalogRepository() {
     },
 
     async listItemOptions() {
-      const prismaResult = await listItemOptionsWithPrisma();
+      const prismaResult = await listItemOptionsWithPrisma(restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -755,7 +758,7 @@ export function getCatalogRepository() {
     },
 
     async saveItem(input: SaveItemInput) {
-      const prismaResult = await saveItemWithPrisma(input);
+      const prismaResult = await saveItemWithPrisma({ ...input, restaurantId });
       if (prismaResult) {
         return prismaResult;
       }

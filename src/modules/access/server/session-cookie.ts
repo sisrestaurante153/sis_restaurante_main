@@ -25,6 +25,7 @@ export function buildSessionCookieOptions(expiresAt: Date) {
 
 export async function createUserSession(input: {
   userId: string;
+  restaurantId: string;
   email: string;
   name: string;
   roleCodes: string[];
@@ -33,6 +34,7 @@ export async function createUserSession(input: {
   const expiresAt = new Date(issuedAt.getTime() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
   const payload: SessionPayload = {
     userId: input.userId,
+    restaurantId: input.restaurantId,
     email: input.email,
     name: input.name,
     roleCodes: input.roleCodes,

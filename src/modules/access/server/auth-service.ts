@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 
 export interface AuthUserRecord {
   id: string;
+  restaurantId: string;
   email: string;
   nome: string;
   roleCodes: string[];

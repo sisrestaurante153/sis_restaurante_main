@@ -8,10 +8,8 @@ type AppLayoutProps = Readonly<{
 }>;
 
 export default async function AppLayout({ children }: AppLayoutProps) {
-  const [session, pendingConflicts] = await Promise.all([
-    requireSession(),
-    getImportRepository().listPendingConflicts()
-  ]);
+  const session = await requireSession();
+  const pendingConflicts = await getImportRepository(session.restaurantId).listPendingConflicts();
 
   return (
     <AppShell

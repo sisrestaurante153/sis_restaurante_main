@@ -8,11 +8,26 @@ datasource db {
   provider = "postgresql"
 }
 
+model Restaurante {
+  cd_restaurante String   @id @default(cuid())
+  nm_restaurante String
+  sn_ativo       Boolean  @default(true)
+  ts_criacao     DateTime @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime @default(now()) @db.Timestamptz(6)
+
+  usuarios    User[]
+  itens       Item[]
+  fichas      FichaTecnica[]
+  importacoes ImportacaoExecucao[]
+
+  @@map("restaurante")
+}
+
 model Item {
   cd_item                  String @id @default(cuid())
-  ds_codigo_interno        String?                     @unique(map: "item_codigo_interno_key")
+  ds_codigo_interno        String?
   nm_item                  String
-  nm_normalizado           String                      @unique(map: "item_nome_normalizado_key")
+  nm_normalizado           String
   ds_descricao             String?
   nm_categoria_operacional String?
   tp_item                  item_type
@@ -23,6 +38,7 @@ model Item {
   ts_criacao               DateTime                    @default(now()) @db.Timestamptz(6)
   ts_atualizacao           DateTime                    @default(now()) @db.Timestamptz(6)
   cd_restaurante           String?
+  restaurante              Restaurante?                @relation(fields: [cd_restaurante], references: [cd_restaurante], onUpdate: NoAction, map: "item_restaurante_id_fkey")
   componentesCalculados    CalculoComponenteSnapshot[]
   execucoesGatilho         CalculoExecucao[]           @relation("CalculoExecucaoGatilho")
   execucoesCalculo         CalculoExecucao[]           @relation("CalculoExecucaoItem")
@@ -38,6 +54,9 @@ model Item {
   aliases                  ItemAlias[]
   compras                  ItemCompra[]
 
+  @@unique([nm_normalizado, cd_restaurante], map: "item_nome_normalizado_restaurante_key")
+  @@unique([ds_codigo_interno, cd_restaurante], map: "item_codigo_interno_restaurante_key")
+  @@index([cd_restaurante], map: "idx_item_restaurante")
   @@index([tp_item], map: "idx_item_tipo")
   @@index([cd_unidade_estoque], map: "idx_item_unidade_estoque")
   @@index([cd_unidade_uso_padrao], map: "idx_item_unidade_uso")
@@ -203,6 +222,7 @@ model FichaTecnica {
   ts_criacao              DateTime            @default(now()) @db.Timestamptz(6)
   ts_atualizacao          DateTime            @default(now()) @db.Timestamptz(6)
   cd_restaurante          String?
+  restaurante             Restaurante?        @relation(fields: [cd_restaurante], references: [cd_restaurante], onUpdate: NoAction, map: "ficha_tecnica_restaurante_id_fkey")
   execucoesCalculo        CalculoExecucao[]
   componentes             FichaComponente[]
   etapas                  FichaEtapa[]
@@ -314,6 +334,7 @@ model User {
   ts_criacao             DateTime             @default(now()) @db.Timestamptz(6)
   ts_atualizacao         DateTime             @default(now()) @db.Timestamptz(6)
   cd_restaurante         String?
+  restaurante            Restaurante?         @relation(fields: [cd_restaurante], references: [cd_restaurante], onUpdate: NoAction, map: "usuario_restaurante_id_fkey")
   auditorias             Auditoria[]
   fichasCriadas          FichaTecnica[]
   importacoesSolicitadas ImportacaoExecucao[]
@@ -402,6 +423,7 @@ model ImportacaoExecucao {
   ts_inicio            DateTime?            @db.Timestamptz(6)
   ts_fim               DateTime?            @db.Timestamptz(6)
   cd_restaurante       String?
+  restaurante          Restaurante?         @relation(fields: [cd_restaurante], references: [cd_restaurante], onUpdate: NoAction, map: "importacao_execucao_restaurante_id_fkey")
   conflitos            ImportacaoConflito[]
   solicitadoPor        User?                @relation(fields: [cd_solicitante], references: [cd_usuario], onUpdate: NoAction, map: "importacao_execucao_solicitado_por_id_fkey")
   stagingRows          ImportacaoStaging[]

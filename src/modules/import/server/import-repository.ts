@@ -186,9 +186,10 @@ function importExecutionInclude() {
   } satisfies Prisma.ImportacaoExecucaoInclude;
 }
 
-async function findActiveExecutionTx(tx: Prisma.TransactionClient) {
+async function findActiveExecutionTx(tx: Prisma.TransactionClient, restaurantId?: string) {
   return tx.importacaoExecucao.findFirst({
     where: {
+      ...(restaurantId ? { cd_restaurante: restaurantId } : {}),
       tp_status: {
         in: [importacao_status.pendente, importacao_status.processando]
       }
@@ -411,7 +412,9 @@ async function resolveConflictWithPrisma(input: {
   }
 }
 
-async function listImportExecutionsWithPrisma(filters?: ImportExecutionFilters) {
+async function listImportExecutionsWithPrisma(
+  filters?: ImportExecutionFilters & { restaurantId?: string }
+) {
   const prisma = resolvePrismaClient();
 
   if (!prisma) {
@@ -421,6 +424,7 @@ async function listImportExecutionsWithPrisma(filters?: ImportExecutionFilters) 
   try {
     const executions = await prisma.importacaoExecucao.findMany({
       where: {
+        ...(filters?.restaurantId ? { cd_restaurante: filters.restaurantId } : {}),
         ...(filters?.status ? { tp_status: filters.status } : {}),
         ...(filters?.dateFrom || filters?.dateTo
           ? {
@@ -461,7 +465,7 @@ async function getImportExecutionWithPrisma(id: string) {
   }
 }
 
-async function getActiveImportExecutionWithPrisma() {
+async function getActiveImportExecutionWithPrisma(restaurantId?: string) {
   const prisma = resolvePrismaClient();
 
   if (!prisma) {
@@ -471,6 +475,7 @@ async function getActiveImportExecutionWithPrisma() {
   try {
     const execution = await prisma.importacaoExecucao.findFirst({
       where: {
+        ...(restaurantId ? { cd_restaurante: restaurantId } : {}),
         tp_status: {
           in: [importacao_status.pendente, importacao_status.processando]
         }
@@ -492,6 +497,7 @@ async function createImportExecutionWithPrisma(input: {
   fileSizeBytes?: number | null;
   mimeType?: string | null;
   requestedByUserId?: string | null;
+  restaurantId?: string | null;
 }) {
   const prisma = resolvePrismaClient();
 
@@ -500,7 +506,7 @@ async function createImportExecutionWithPrisma(input: {
   }
 
   return withImportQueueLock(prisma, async (tx) => {
-    const activeExecution = await findActiveExecutionTx(tx);
+    const activeExecution = await findActiveExecutionTx(tx, input.restaurantId ?? undefined);
     assertCanCreateImportExecution(
       activeExecution
         ? {
@@ -529,7 +535,8 @@ async function createImportExecutionWithPrisma(input: {
         js_artefatos: toJsonInput({
           originalFilePath: input.originalFilePath
         }),
-        cd_solicitante: requestingUser?.cd_usuario ?? null
+        cd_solicitante: requestingUser?.cd_usuario ?? null,
+        cd_restaurante: input.restaurantId ?? null
       },
       include: importExecutionInclude()
     });
@@ -764,7 +771,7 @@ function updateDemoExecution(
   return mapDemoExecution(updated);
 }
 
-export function getImportRepository() {
+export function getImportRepository(restaurantId = "rest_padrao") {
   return {
     async createImportExecution(input: {
       originalFileName: string;
@@ -774,7 +781,7 @@ export function getImportRepository() {
       mimeType?: string | null;
       requestedByUserId?: string | null;
     }) {
-      const prismaResult = await createImportExecutionWithPrisma(input);
+      const prismaResult = await createImportExecutionWithPrisma({ ...input, restaurantId });
       if (prismaResult) {
         return prismaResult;
       }
@@ -783,7 +790,7 @@ export function getImportRepository() {
     },
 
     async listImportExecutions(filters?: ImportExecutionFilters) {
-      const prismaResult = await listImportExecutionsWithPrisma(filters);
+      const prismaResult = await listImportExecutionsWithPrisma({ ...filters, restaurantId });
       if (prismaResult) {
         return prismaResult;
       }
@@ -801,7 +808,7 @@ export function getImportRepository() {
     },
 
     async getActiveImportExecution() {
-      const prismaResult = await getActiveImportExecutionWithPrisma();
+      const prismaResult = await getActiveImportExecutionWithPrisma(restaurantId);
       if (prismaResult) {
         return prismaResult;
       }

@@ -50,7 +50,7 @@ function resolveContentType(artifact: string, executionMimeType: string | null) 
 }
 
 export async function GET(request: Request) {
-  await requirePermission("import.run");
+  const session = await requirePermission("import.run");
 
   const url = new URL(request.url);
   const executionId = url.searchParams.get("executionId");
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     return new Response("executionId is required", { status: 400 });
   }
 
-  const execution = await getImportRepository().getImportExecution(executionId);
+  const execution = await getImportRepository(session.restaurantId).getImportExecution(executionId);
   if (!execution) {
     return new Response("Importacao nao encontrada", { status: 404 });
   }

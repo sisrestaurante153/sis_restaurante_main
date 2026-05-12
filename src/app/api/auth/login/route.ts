@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { signInWithPassword } from "@/modules/access/server/auth-service";
+import { getAuthRepository } from "@/modules/access/server/auth-repository";
 import { createUserSession } from "@/modules/access/server/session-cookie";
 
 export async function POST(request: Request) {
@@ -20,9 +21,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: result.message }, { status: 401 });
   }
 
+  const localUser = await getAuthRepository().findUserByEmail(result.user.email);
+  const restaurantId = localUser?.restaurantId ?? "rest_padrao";
+
   // Set the custom application session cookie
   await createUserSession({
     userId: result.user.id,
+    restaurantId,
     email: result.user.email,
     name: result.user.nome,
     roleCodes: result.user.roleCodes

@@ -1,6 +1,7 @@
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { getEngineeringRepository } from "@/modules/engineering/server/engineering-repository";
 import { getImportRepository } from "@/modules/import/server/import-repository";
+import { requireSession } from "@/modules/access/server/session-cookie";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
@@ -17,9 +18,10 @@ export default async function DashboardPage() {
   const costsHref = "/custos";
   const pendingImportHref = "/importacao";
   
-  const catalogRepository = getCatalogRepository();
-  const engineeringRepository = getEngineeringRepository();
-  const importRepository = getImportRepository();
+  const session = await requireSession();
+  const catalogRepository = getCatalogRepository(session.restaurantId);
+  const engineeringRepository = getEngineeringRepository(session.restaurantId);
+  const importRepository = getImportRepository(session.restaurantId);
   
   const [items, fichas, conflicts, costs] = await Promise.all([
     catalogRepository.listItems({ page: 1, pageSize: 50, query: "", type: "all", status: "all" }),

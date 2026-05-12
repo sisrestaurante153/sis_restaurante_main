@@ -3,6 +3,8 @@ import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import LibraryBooksRoundedIcon from "@mui/icons-material/LibraryBooksRounded";
 import SpaceDashboardRoundedIcon from "@mui/icons-material/SpaceDashboardRounded";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import CreditCardRoundedIcon from "@mui/icons-material/CreditCardRounded";
 
 export interface NavigationItem {
   href: string;
@@ -13,6 +15,7 @@ export interface NavigationItem {
 export interface NavigationSection {
   label: string;
   items: NavigationItem[];
+  adminOnly?: boolean;
 }
 
 export const navigationSections: NavigationSection[] = [
@@ -27,7 +30,15 @@ export const navigationSections: NavigationSection[] = [
     items: [
       { href: "/itens", label: "Itens", icon: Inventory2RoundedIcon },
       { href: "/fichas", label: "Fichas Tecnicas", icon: LibraryBooksRoundedIcon },
-      { href: "/cadastros", label: "Cadastros", icon: HistoryEduRoundedIcon }
+      { href: "/cadastros", label: "Cadastros", icon: HistoryEduRoundedIcon },
+      { href: "/importacao", label: "Importacao", icon: CloudUploadRoundedIcon }
+    ]
+  },
+  {
+    label: "Administracao",
+    adminOnly: true,
+    items: [
+      { href: "/billing", label: "Assinaturas", icon: CreditCardRoundedIcon }
     ]
   }
 ];

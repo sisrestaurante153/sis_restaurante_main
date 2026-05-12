@@ -7,6 +7,7 @@ describe("authorization guards", () => {
       assertActorPermission(
         {
           userId: "user-engenharia",
+          restaurantId: "rest_padrao",
           roleCodes: ["engenharia"]
         },
         "ficha.write"
@@ -19,6 +20,7 @@ describe("authorization guards", () => {
       assertActorPermission(
         {
           userId: "user-consulta",
+          restaurantId: "rest_padrao",
           roleCodes: ["consulta"]
         },
         "import.run"

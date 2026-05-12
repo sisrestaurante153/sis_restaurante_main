@@ -25,6 +25,7 @@ afterEach(() => {
 function buildPayload(overrides: Partial<SessionPayload> = {}): SessionPayload {
   return {
     userId: "user-1",
+    restaurantId: "rest_padrao",
     email: "admin@sis-restaurante.local",
     name: "Administrador",
     roleCodes: ["admin"],

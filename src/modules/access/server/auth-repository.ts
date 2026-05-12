@@ -28,6 +28,7 @@ export function getAuthRepository() {
           if (user) {
             return {
               id: user.cd_usuario,
+              restaurantId: user.cd_restaurante ?? "rest_padrao",
               email: user.ds_email,
               nome: user.nm_usuario,
               roleCodes: user.roles.map((assignment) => assignment.role.ds_codigo)
@@ -46,6 +47,7 @@ export function getAuthRepository() {
 
       return {
         id: demoUser.id,
+        restaurantId: "rest_padrao",
         email: demoUser.email,
         nome: demoUser.nome,
         roleCodes: demoUser.roleCodes

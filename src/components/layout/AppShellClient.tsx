@@ -84,6 +84,7 @@ function SidebarFooterLogout() {
 }
 
 function SidebarSurface({ currentUser, pendingCounts, onNavigate, showLogout }: SidebarSurfaceProps) {
+  const { roleCodes } = currentUser;
   return (
     <Box
       sx={{
@@ -139,7 +140,7 @@ function SidebarSurface({ currentUser, pendingCounts, onNavigate, showLogout }: 
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto", px: 0, pt: 0 }}>
-        <SidebarNav onNavigate={onNavigate} pendingCounts={pendingCounts} />
+        <SidebarNav onNavigate={onNavigate} pendingCounts={pendingCounts} roleCodes={roleCodes} />
       </Box>
 
       {/* Footer */}

@@ -25,7 +25,7 @@ vi.mock("@/modules/master-data/server/master-data-repository", () => ({
 
 describe("CadastrosPage", () => {
   it("renders the master data workspace with all requested sections", async () => {
-    render(await CadastrosPage({}));
+    render(await CadastrosPage());
 
     expect(screen.getByRole("heading", { name: /cadastros mestres/i })).toBeInTheDocument();
     expect(screen.getByText("Fornecedores")).toBeInTheDocument();

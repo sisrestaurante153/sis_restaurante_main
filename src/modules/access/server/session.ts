@@ -2,6 +2,7 @@ const encoder = new TextEncoder();
 
 export interface SessionPayload {
   userId: string;
+  restaurantId: string;
   email: string;
   name: string;
   roleCodes: string[];

@@ -2,6 +2,7 @@ import { getCatalogRepository } from "@/modules/catalog/server/catalog-repositor
 import { DesktopNewItemAction, ItemsListingView } from "@/modules/catalog/ui/items-listing-view";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { PageHeader } from "@/modules/platform/ui/page-header";
+import { requireSession } from "@/modules/access/server/session-cookie";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -10,14 +11,14 @@ function getSingle(searchParam: string | string[] | undefined, fallback = "") {
 }
 
 export default async function ItemsPage({ searchParams }: { searchParams: SearchParams }) {
-  const resolvedSearchParams = await searchParams;
+  const [session, resolvedSearchParams] = await Promise.all([requireSession(), searchParams]);
   const query = getSingle(resolvedSearchParams.query);
   const type = getSingle(resolvedSearchParams.type, "all");
   const status = getSingle(resolvedSearchParams.status, "all") as "ativos" | "inativos" | "all";
   const category = getSingle(resolvedSearchParams.category, "all");
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "10"));
-  const repository = getCatalogRepository();
+  const repository = getCatalogRepository(session.restaurantId);
   const masterData = getMasterDataRepository();
   const [result, categoryRows] = await Promise.all([
     repository.listItems({

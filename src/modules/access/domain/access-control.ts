@@ -7,7 +7,8 @@ export type PermissionCode =
   | "ficha.write"
   | "impact.read"
   | "import.run"
-  | "cost.recalculate";
+  | "cost.recalculate"
+  | "billing.manage";
 
 export interface RoutePolicy {
   pattern: RegExp;
@@ -22,7 +23,8 @@ const rolePermissions: Record<RoleCode, PermissionCode[]> = {
     "ficha.write",
     "impact.read",
     "import.run",
-    "cost.recalculate"
+    "cost.recalculate",
+    "billing.manage"
   ],
   engenharia: [
     "item.read",
@@ -49,7 +51,9 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/custos$/, permission: "impact.read" },
   { pattern: /^\/importacao$/, permission: "import.run" },
   { pattern: /^\/importacao\/pendencias$/, permission: "import.run" },
-  { pattern: /^\/auditoria$/, permission: "item.read" }
+  { pattern: /^\/auditoria$/, permission: "item.read" },
+  { pattern: /^\/billing$/, permission: "billing.manage" },
+  { pattern: /^\/billing\/.*$/, permission: "billing.manage" }
 ];
 
 const publicPaths = ["/", "/login", "/forbidden", "/api/health"];

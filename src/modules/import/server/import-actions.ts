@@ -8,6 +8,8 @@ import { parseResolveConflictFormData } from "@/modules/import/domain/reconcilia
 import { getImportRepository } from "@/modules/import/server/import-repository";
 import { persistImportWorkbook } from "@/modules/import/server/import-storage";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
+import * as XLSX from "xlsx";
+import { z } from "zod";
 
 async function resolveImportActor() {
   try {
@@ -16,6 +18,7 @@ async function resolveImportActor() {
     if (error instanceof Error && error.message.includes("outside a request scope")) {
       return {
         userId: null,
+        restaurantId: "rest_padrao",
         name: "Sistema",
         email: "system@sis-restaurante.local",
         roleCodes: ["admin"]
@@ -42,7 +45,7 @@ export async function createImportExecutionAction(formData: FormData) {
 
   try {
     const storedFile = await persistImportWorkbook(uploadedFile);
-    const execution = await getImportRepository().createImportExecution({
+    const execution = await getImportRepository(actor.restaurantId).createImportExecution({
       originalFileName: storedFile.originalFileName,
       originalFilePath: storedFile.storedPath,
       fileHash: storedFile.fileHash,
@@ -74,7 +77,7 @@ export async function createOperationalItemImportAction(formData: FormData) {
     redirect("/importacao?error=invalid_file");
   }
 
-  const repository = getImportRepository();
+  const repository = getImportRepository(actor.restaurantId);
   let executionId = "";
 
   try {
@@ -97,7 +100,7 @@ export async function createOperationalItemImportAction(formData: FormData) {
     });
 
     const parsed = parseOperationalItemsCsv(await uploadedFile.text());
-    const catalogRepository = getCatalogRepository();
+    const catalogRepository = getCatalogRepository(actor.restaurantId);
     let itemsProcessed = 0;
 
     for (const row of parsed.rows.filter((entry) => entry.itemName && entry.type)) {
@@ -203,7 +206,7 @@ export async function resolveImportConflictAction(formData: FormData) {
     redirect("/importacao/pendencias?error=resolve");
   }
 
-  const result = await getImportRepository().resolveConflict({
+  const result = await getImportRepository(actor.restaurantId).resolveConflict({
     conflictId: parsed.data.conflictId,
     targetItemId: parsed.data.targetItemId,
     alias: parsed.data.alias,
@@ -221,4 +224,140 @@ export async function resolveImportConflictAction(formData: FormData) {
     : "/importacao/pendencias?resolved=1";
 
   redirect(redirectTarget);
+}
+
+const MappingSchema = z.record(z.string(), z.string());
+
+export async function createMappedItemImportAction(formData: FormData) {
+  const actor = await resolveImportActor();
+  const file = formData.get("file") as File;
+  const mappingJson = formData.get("mappingJson") as string;
+
+  if (!file || file.size === 0 || !mappingJson) {
+    redirect("/importacao/itens?error=invalid_params");
+  }
+
+  const mapping = MappingSchema.parse(JSON.parse(mappingJson));
+  const repository = getImportRepository(actor.restaurantId);
+  const catalogRepository = getCatalogRepository(actor.restaurantId);
+
+  let executionId = "";
+
+  try {
+    const storedFile = await persistImportWorkbook(file);
+    const execution = await repository.createImportExecution({
+      originalFileName: storedFile.originalFileName,
+      originalFilePath: storedFile.storedPath,
+      fileHash: storedFile.fileHash,
+      fileSizeBytes: storedFile.fileSizeBytes,
+      mimeType: storedFile.mimeType,
+      requestedByUserId: actor.userId
+    });
+    executionId = execution.id;
+
+    await repository.markImportExecutionProcessing(execution.id, {
+      stage: "processando_arquivo",
+      technicalDetails: {
+        importMode: "mapped_items",
+        mapping
+      }
+    });
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const workbook = XLSX.read(buffer);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
+
+    let itemsProcessed = 0;
+
+    for (const row of rows) {
+      const getValue = (field: string) => {
+        const columnName = mapping[field];
+        return columnName ? row[columnName] : undefined;
+      };
+
+      const itemName = getValue("itemName");
+      const type = getValue("type");
+
+      if (!itemName || !type) continue;
+
+      // Basic cleanup for type
+      let itemType = String(type).toLowerCase().trim() as Parameters<typeof catalogRepository.saveItem>[0]["type"];
+      const validTypes = [
+        "insumo", "pre_preparo", "intermediario", "produto_pronto", 
+        "prato", "porcao", "marmita", "combo", "embalagem", "apoio"
+      ];
+      if (!validTypes.includes(itemType)) {
+        itemType = "insumo"; // fallback
+      }
+
+      const existingItems = await catalogRepository.listItems({
+        page: 1,
+        pageSize: 10,
+        query: String(itemName),
+        status: "all",
+        type: "all"
+      });
+
+      const existingItem = existingItems.items.find(
+        (item) => item.name.trim().toLowerCase() === String(itemName).trim().toLowerCase()
+      );
+
+      await catalogRepository.saveItem({
+        id: existingItem?.id,
+        code: String(getValue("internalCode") || existingItem?.code || ""),
+        name: String(itemName),
+        type: itemType,
+        operationalCategory: String(getValue("operationalCategory") || existingItem?.category || "Importado"),
+        description: `Importado via mapeamento customizado em ${new Date().toLocaleString("pt-BR")}`,
+        active: true,
+        purchases: [
+          {
+            supplierName: String(getValue("supplierName") || "Importacao"),
+            purchaseUnit: String(getValue("purchaseUnit") || "un"),
+            purchaseIsPrimary: true,
+            purchaseQuantity: String(getValue("purchaseQuantity") || "1"),
+            purchaseCost: String(getValue("purchaseCost") || "0"),
+            priceUpdatedAt: String(getValue("updatedAt") || new Date().toISOString()),
+            usageUnit: String(getValue("usageUnit") || getValue("purchaseUnit") || "un"),
+            usageQuantity: String(getValue("usageQuantity") || "1")
+          }
+        ]
+      });
+
+      itemsProcessed++;
+    }
+
+    await repository.markImportExecutionCompleted(execution.id, {
+      stage: "concluida",
+      friendlySummary: {
+        headline: "Importação concluída com sucesso",
+        whatHappened: `Foram processadas ${rows.length} linhas do arquivo ${file.name}.`,
+        impact: `${itemsProcessed} itens foram criados ou atualizados.`,
+        whatToDoNow: "Você pode revisar os itens importados no cadastro de materiais.",
+        nextAction: {
+          label: "Ver Itens",
+          href: "/itens"
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("Import error:", error);
+    if (executionId) {
+      await repository.markImportExecutionFailed(executionId, {
+        stage: "falha",
+        friendlySummary: {
+          headline: "Falha na importação",
+          whatHappened: "Ocorreu um erro ao processar as linhas do arquivo.",
+          impact: "Alguns ou todos os itens podem não ter sido importados.",
+          whatToDoNow: "Verifique o formato do arquivo e tente novamente."
+        }
+      });
+    }
+    redirect("/importacao/itens?error=process_failed");
+  }
+
+  redirect("/importacao?success=1");
 }

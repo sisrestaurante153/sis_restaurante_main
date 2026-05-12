@@ -3,9 +3,9 @@ import { buildImportDashboardSnapshot } from "@/modules/import/server/import-exe
 import { getImportRepository } from "@/modules/import/server/import-repository";
 
 export async function GET() {
-  await requirePermission("import.run");
+  const session = await requirePermission("import.run");
 
-  const repository = getImportRepository();
+  const repository = getImportRepository(session.restaurantId);
   const [activeExecution, history] = await Promise.all([
     repository.getActiveImportExecution(),
     repository.listImportExecutions({ limit: 20 })

@@ -12,15 +12,16 @@ import { FichaHeaderActions } from "@/modules/engineering/ui/FichaHeaderActions"
 import { FichaForm } from "@/modules/engineering/ui/ficha-form";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { PageHeader } from "@/modules/platform/ui/page-header";
+import { requireSession } from "@/modules/access/server/session-cookie";
 
 type Params = Promise<{ fichaId: string }>;
 
 export default async function FichaDetailPage({ params }: { params: Params }) {
-  const { fichaId } = await params;
+  const [{ fichaId }, session] = await Promise.all([params, requireSession()]);
   const [ficha, itemOptions, modalityOptions, stageTypes, units] = await Promise.all([
-    getEngineeringRepository().getFichaDetail(fichaId),
-    getCatalogRepository().listItemOptions(),
-    getEngineeringRepository().listModalities(),
+    getEngineeringRepository(session.restaurantId).getFichaDetail(fichaId),
+    getCatalogRepository(session.restaurantId).listItemOptions(),
+    getEngineeringRepository(session.restaurantId).listModalities(),
     getMasterDataRepository().listStageTypes(),
     getMasterDataRepository().listUnits()
   ]);

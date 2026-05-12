@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath
   },
+  transpilePackages: [
+    "@mui/material",
+    "@mui/system",
+    "@mui/icons-material",
+    "@mui/lab",
+    "@mui/x-data-grid",
+    "@mui/x-date-pickers",
+    "@mui/utils",
+    "@mui/private-theming"
+  ],
   experimental: {
     typedRoutes: true,
     serverActions: {

@@ -20,6 +20,7 @@ async function resolveEngineeringActor() {
     if (error instanceof Error && error.message.includes("outside a request scope")) {
       return {
         userId: null,
+        restaurantId: "rest_padrao",
         name: "Sistema",
         email: "system@sis-restaurante.local",
         roleCodes: ["admin"]
@@ -45,7 +46,7 @@ export async function saveFichaAction(
     };
   }
 
-  const repository = getEngineeringRepository();
+  const repository = getEngineeringRepository(actor.restaurantId);
   const before = parsed.data.id ? await repository.getFichaDetail(parsed.data.id) : null;
 
   let ficha;
@@ -80,8 +81,8 @@ export async function duplicateFichaAction(formData: FormData) {
     redirect("/fichas");
   }
 
-  const source = await getEngineeringRepository().getFichaDetail(fichaId);
-  const ficha = await getEngineeringRepository().duplicateFicha(fichaId);
+  const source = await getEngineeringRepository(actor.restaurantId).getFichaDetail(fichaId);
+  const ficha = await getEngineeringRepository(actor.restaurantId).duplicateFicha(fichaId);
   await createAuditService().record({
     actorId: actor.userId,
     actorName: actor.name,
@@ -103,8 +104,8 @@ export async function inactivateFichaAction(formData: FormData) {
     redirect("/fichas");
   }
 
-  const before = await getEngineeringRepository().getFichaDetail(fichaId);
-  const ficha = await getEngineeringRepository().inactivateFicha(fichaId);
+  const before = await getEngineeringRepository(actor.restaurantId).getFichaDetail(fichaId);
+  const ficha = await getEngineeringRepository(actor.restaurantId).inactivateFicha(fichaId);
   await createAuditService().record({
     actorId: actor.userId,
     actorName: actor.name,

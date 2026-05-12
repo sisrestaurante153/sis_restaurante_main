@@ -68,39 +68,51 @@ export function buildImportDashboardSnapshot(input: {
   };
 }
 
-export function getImportFeedbackMessage(params: { created?: string; error?: string; operational?: string }) {
+export function getImportFeedbackMessage(params: {
+  created?: string;
+  error?: string;
+  operational?: string;
+  success?: string;
+}) {
+  if (params.success === "1") {
+    return {
+      severity: "success" as const,
+      message: "Importação configurável concluída. Os itens já estão disponíveis no cadastro."
+    };
+  }
+
   if (params.created === "1") {
     if (params.operational === "1") {
       return {
         severity: "success" as const,
-        message: "CSV operacional recebido e processado. A execucao entrou no historico da area de importacao."
+        message: "CSV operacional recebido e processado. A execução entrou no histórico da área de importação."
       };
     }
 
     return {
       severity: "success" as const,
-      message: "Arquivo recebido. A execucao entrou na fila e o status sera atualizado automaticamente."
+      message: "Arquivo recebido. A execução entrou na fila e o status será atualizado automaticamente."
     };
   }
 
   if (params.error === "active_execution") {
     return {
       severity: "warning" as const,
-      message: "Existe uma importacao ativa. Aguarde a conclusao antes de enviar outro arquivo."
+      message: "Existe uma importação ativa. Aguarde a conclusão antes de enviar outro arquivo."
     };
   }
 
   if (params.error === "invalid_file") {
     return {
       severity: "error" as const,
-      message: "Selecione um arquivo .xlsx valido para iniciar a importacao."
+      message: "Selecione um arquivo .xlsx válido para iniciar a importação."
     };
   }
 
   if (params.error === "upload_failed") {
     return {
       severity: "error" as const,
-      message: "Nao foi possivel preparar o arquivo para importacao. Tente novamente."
+      message: "Não foi possível preparar o arquivo para importação. Tente novamente."
     };
   }
 

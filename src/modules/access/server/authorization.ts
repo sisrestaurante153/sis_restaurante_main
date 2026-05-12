@@ -9,6 +9,7 @@ import { getCurrentSession, requireSession } from "@/modules/access/server/sessi
 
 export interface ActorContext {
   userId: string;
+  restaurantId: string;
   roleCodes: string[];
 }
 
@@ -25,6 +26,7 @@ export async function getCurrentActor() {
 
   return {
     userId: session.userId,
+    restaurantId: session.restaurantId,
     name: session.name,
     email: session.email,
     roleCodes: session.roleCodes
@@ -38,6 +40,7 @@ export async function requirePermission(permission: PermissionCode) {
     assertActorPermission(
       {
         userId: session.userId,
+        restaurantId: session.restaurantId,
         roleCodes: session.roleCodes
       },
       permission

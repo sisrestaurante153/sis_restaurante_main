@@ -1,5 +1,3 @@
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
 import { requirePermission } from "@/modules/access/server/authorization";
 import {
   buildImportDashboardSnapshot,
@@ -7,18 +5,19 @@ import {
 } from "@/modules/import/server/import-execution-presenter";
 import { getImportRepository } from "@/modules/import/server/import-repository";
 import { ImportWorkspace } from "@/modules/import/ui/import-workspace";
-import { PageHeader } from "@/components/layout/PageHeader";
 
 type SearchParams = Promise<{
   created?: string;
   error?: string;
   execucao?: string;
+  operational?: string;
+  success?: string;
 }>;
 
 export default async function ImportPage({ searchParams }: { searchParams?: SearchParams }) {
-  await requirePermission("import.run");
+  const session = await requirePermission("import.run");
 
-  const repository = getImportRepository();
+  const repository = getImportRepository(session.restaurantId);
   const [activeExecution, history, params] = await Promise.all([
     repository.getActiveImportExecution(),
     repository.listImportExecutions({ limit: 20 }),
@@ -31,21 +30,20 @@ export default async function ImportPage({ searchParams }: { searchParams?: Sear
   const feedback = getImportFeedbackMessage(params ?? {});
 
   return (
-    <Stack spacing={3}>
-      <PageHeader
-        breadcrumbs={[
-          { label: "Home", href: "/dashboard" },
-          { label: "Importacao" }
-        ]}
-        title="Area de importacao"
-        description="Envio do XLSX legado, acompanhamento da fila interna, leitura clara do desfecho da execucao e acesso rapido as pendencias."
-      />
-
-      <Alert severity="info">
-        O upload cria a execucao e preserva o arquivo original. O parse Python e a carga Prisma seguem no worker interno da mesma aplicacao.
-      </Alert>
+    <div className="flex flex-col gap-8 pb-8">
+      <div>
+        <span className="text-[10px] font-bold tracking-widest text-orange-600 uppercase mb-2 block">
+          FERRAMENTAS DE DADOS
+        </span>
+        <h1 className="text-3xl font-display font-bold text-blue-900 mb-2">
+          Área de Importação
+        </h1>
+        <p className="text-ink-500 font-body text-sm max-w-2xl">
+          Envie planilhas do legado ou do operacional e acompanhe as execuções de importação do catálogo de itens.
+        </p>
+      </div>
 
       <ImportWorkspace initialDashboard={dashboard} feedback={feedback} />
-    </Stack>
+    </div>
   );
 }

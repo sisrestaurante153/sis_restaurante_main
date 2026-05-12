@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { getImportRepository } from "@/modules/import/server/import-repository";
+import { requireSession } from "@/modules/access/server/session-cookie";
 import { PendingConflictsList } from "@/modules/import/ui/pending-conflicts-list";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageFeedbackSnackbar } from "@/components/ui/PageFeedbackSnackbar";
@@ -12,12 +13,15 @@ type SearchParams = Promise<{
 }>;
 
 export default async function ImportPendingPage({ searchParams }: { searchParams?: SearchParams }) {
-  const params = (await searchParams) ?? {};
+  const [session, params] = await Promise.all([
+    requireSession(),
+    searchParams ?? Promise.resolve({} as { resolved?: string; error?: string; execucao?: string })
+  ]);
   const [conflicts, itemOptions] = await Promise.all([
-    getImportRepository().listPendingConflicts({
+    getImportRepository(session.restaurantId).listPendingConflicts({
       executionId: params.execucao
     }),
-    getCatalogRepository().listItemOptions()
+    getCatalogRepository(session.restaurantId).listItemOptions()
   ]);
   const feedback =
     params.resolved === "1"

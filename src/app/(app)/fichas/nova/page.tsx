@@ -8,6 +8,7 @@ import { getEngineeringRepository } from "@/modules/engineering/server/engineeri
 import { FichaForm } from "@/modules/engineering/ui/ficha-form";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { PageHeader } from "@/modules/platform/ui/page-header";
+import { requireSession } from "@/modules/access/server/session-cookie";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -16,9 +17,10 @@ function getSingle(searchParam: string | string[] | undefined, fallback = "") {
 }
 
 export default async function NewFichaPage({ searchParams }: { searchParams?: SearchParams }) {
+  const session = await requireSession();
   const [itemOptions, modalityOptions, stageTypes, units] = await Promise.all([
-    getCatalogRepository().listItemOptions(),
-    getEngineeringRepository().listModalities(),
+    getCatalogRepository(session.restaurantId).listItemOptions(),
+    getEngineeringRepository(session.restaurantId).listModalities(),
     getMasterDataRepository().listStageTypes(),
     getMasterDataRepository().listUnits()
   ]);

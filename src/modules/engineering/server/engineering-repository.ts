@@ -409,7 +409,11 @@ async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) 
   });
 }
 
-async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: SaveFichaInput) {
+async function resolveCanonicalFichaItem(
+  tx: Prisma.TransactionClient,
+  input: SaveFichaInput,
+  restaurantId: string
+) {
   if (input.itemId) {
     const existing = await tx.item.findUniqueOrThrow({
       where: { cd_item: input.itemId },
@@ -431,7 +435,12 @@ async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: Sa
 
   const normalizedName = toNormalizedName(input.displayName);
   const existing = await tx.item.findUnique({
-    where: { nm_normalizado: normalizedName },
+    where: {
+      nm_normalizado_cd_restaurante: {
+        nm_normalizado: normalizedName,
+        cd_restaurante: restaurantId
+      }
+    },
     include: {
       unidadeUsoPadrao: true
     }
@@ -452,6 +461,7 @@ async function resolveCanonicalFichaItem(tx: Prisma.TransactionClient, input: Sa
       tp_item: input.itemType,
       cd_unidade_estoque: yieldUnit.cd_unidade_medida,
       cd_unidade_uso_padrao: yieldUnit.cd_unidade_medida,
+      cd_restaurante: restaurantId,
       sn_ativo: true
     },
     include: {
@@ -574,10 +584,14 @@ function buildFallbackStagesFromComponents<
 
 async function queryFicha(
   client: Prisma.TransactionClient | NonNullable<ReturnType<typeof getPrismaClient>>,
-  fichaId: string
+  fichaId: string,
+  restaurantId: string
 ) {
   return client.fichaTecnica.findUnique({
-    where: { cd_ficha_tecnica: fichaId },
+    where: {
+      cd_ficha_tecnica: fichaId,
+      cd_restaurante: restaurantId
+    },
     include: {
       itemResultante: {
         include: {
@@ -869,7 +883,7 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   };
 }
 
-async function listFichasWithPrisma(input: ListFichasInput) {
+async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -884,6 +898,7 @@ async function listFichasWithPrisma(input: ListFichasInput) {
       : null;
   const where: Prisma.FichaTecnicaWhereInput = {
     AND: [
+      { cd_restaurante: restaurantId },
       input.status && input.status !== "all" ? { tp_status: input.status } : {},
       query
         ? {
@@ -958,7 +973,7 @@ async function listFichasWithPrisma(input: ListFichasInput) {
   }
 }
 
-async function getFichaDetailWithPrisma(fichaId: string) {
+async function getFichaDetailWithPrisma(fichaId: string, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -967,14 +982,14 @@ async function getFichaDetailWithPrisma(fichaId: string) {
   }
 
   try {
-    const ficha = await queryFicha(prisma, fichaId);
+    const ficha = await queryFicha(prisma, fichaId, restaurantId);
     return ficha ? mapFichaDetail(ficha) : null;
   } catch {
     return null;
   }
 }
 
-async function saveFichaWithPrisma(input: SaveFichaInput) {
+async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -985,9 +1000,12 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
   try {
     const ficha = await prisma.$transaction(async (tx) => {
       const modality = await ensureModality(tx, input.modalityId);
-      const item = await resolveCanonicalFichaItem(tx, input);
+      const item = await resolveCanonicalFichaItem(tx, input, restaurantId);
       const yieldUnit = await ensureUnit(tx, input.yieldUnitCode);
-      const resultUsageUnit = item.unidadeUsoPadrao?.ds_codigo ?? "kg";
+
+      // Explicitly cast to include the relation if TS is lost
+      const itemWithUnits = item as Prisma.ItemGetPayload<{ include: { unidadeUsoPadrao: true } }>;
+      const resultUsageUnit = itemWithUnits.unidadeUsoPadrao?.ds_codigo ?? "kg";
       const normalizedFinalWeight =
         input.yieldMode === "peso_final" && input.finalWeight
           ? normalizeQuantityToCanonical(input.finalWeight, resultUsageUnit).toString()
@@ -1116,7 +1134,7 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
       await recalculateCascade(prisma, [ficha.cd_item_resultante], "ficha.save.web");
     }
 
-    return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica);
+    return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica, restaurantId);
   } catch (error) {
     // Bug-fix 2026-04-21 (fichas-nova-server-error): previously a silent
     // `catch { return null }` here masked real Prisma errors (FK violations,
@@ -1130,7 +1148,7 @@ async function saveFichaWithPrisma(input: SaveFichaInput) {
   }
 }
 
-async function duplicateFichaWithPrisma(fichaId: string) {
+async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -1140,7 +1158,7 @@ async function duplicateFichaWithPrisma(fichaId: string) {
 
   try {
     const duplicated = await prisma.$transaction(async (tx) => {
-      const source = await queryFicha(tx, fichaId);
+      const source = await queryFicha(tx, fichaId, restaurantId);
 
       if (!source) {
         throw new Error(`Ficha ${fichaId} nao encontrada.`);
@@ -1166,7 +1184,8 @@ async function duplicateFichaWithPrisma(fichaId: string) {
           vl_preco_venda: source.vl_preco_venda,
           vl_pct_despesa_variavel: source.vl_pct_despesa_variavel,
           ds_modo_preparo: source.ds_modo_preparo,
-          ds_observacoes: source.ds_observacoes
+          ds_observacoes: source.ds_observacoes,
+          cd_restaurante: restaurantId
         }
       });
 
@@ -1212,13 +1231,13 @@ async function duplicateFichaWithPrisma(fichaId: string) {
       return created.cd_ficha_tecnica;
     });
 
-    return getFichaDetailWithPrisma(duplicated);
+    return getFichaDetailWithPrisma(duplicated, restaurantId);
   } catch {
     return null;
   }
 }
 
-async function inactivateFichaWithPrisma(fichaId: string) {
+async function inactivateFichaWithPrisma(fichaId: string, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -1229,7 +1248,10 @@ async function inactivateFichaWithPrisma(fichaId: string) {
   try {
     const ficha = await prisma.$transaction(async (tx) => {
       const updated = await tx.fichaTecnica.update({
-        where: { cd_ficha_tecnica: fichaId },
+        where: {
+          cd_ficha_tecnica: fichaId,
+          cd_restaurante: restaurantId
+        },
         data: {
           tp_status: "inativa"
         }
@@ -1240,13 +1262,13 @@ async function inactivateFichaWithPrisma(fichaId: string) {
     });
 
     await recalculateCascade(prisma, [ficha.cd_item_resultante], "ficha.inactivate.web");
-    return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica);
+    return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica, restaurantId);
   } catch {
     return null;
   }
 }
 
-async function listCompositionRowsWithPrisma() {
+async function listCompositionRowsWithPrisma(restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -1256,8 +1278,9 @@ async function listCompositionRowsWithPrisma() {
 
   try {
     const fichas = await prisma.fichaTecnica.findMany({
+      where: { cd_restaurante: restaurantId },
       orderBy: { ts_atualizacao: "desc" },
-        include: {
+      include: {
           itemResultante: {
             include: {
               custosSnapshot: {
@@ -1315,7 +1338,7 @@ async function listCompositionRowsWithPrisma() {
   }
 }
 
-async function listCostSummariesWithPrisma() {
+async function listCostSummariesWithPrisma(restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -1325,6 +1348,7 @@ async function listCostSummariesWithPrisma() {
 
   try {
     const fichas = await prisma.fichaTecnica.findMany({
+      where: { cd_restaurante: restaurantId },
       orderBy: { ts_atualizacao: "desc" },
       include: {
         itemResultante: {
@@ -1380,7 +1404,7 @@ async function listCostSummariesWithPrisma() {
   }
 }
 
-async function listAssemblyScenariosWithPrisma() {
+async function listAssemblyScenariosWithPrisma(restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -1391,6 +1415,7 @@ async function listAssemblyScenariosWithPrisma() {
   try {
     const fichas = await prisma.fichaTecnica.findMany({
       where: {
+        cd_restaurante: restaurantId,
         itemResultante: {
           tp_item: {
             in: ["prato", "porcao", "marmita", "combo"]
@@ -1606,7 +1631,7 @@ function toFichaDetail(ficha: DemoFichaRecord) {
   });
 }
 
-export function getEngineeringRepository() {
+export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
   return {
     async listModalities() {
       const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
@@ -1638,7 +1663,7 @@ export function getEngineeringRepository() {
     },
 
     async listFichas({ page, pageSize, query, status = "all" }: ListFichasInput) {
-      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status });
+      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status }, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1665,7 +1690,7 @@ export function getEngineeringRepository() {
     },
 
     async getFichaDetail(fichaId: string) {
-      const prismaResult = await getFichaDetailWithPrisma(fichaId);
+      const prismaResult = await getFichaDetailWithPrisma(fichaId, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1675,7 +1700,7 @@ export function getEngineeringRepository() {
     },
 
     async saveFicha(input: SaveFichaInput) {
-      const prismaResult = await saveFichaWithPrisma(input);
+      const prismaResult = await saveFichaWithPrisma(input, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1783,7 +1808,7 @@ export function getEngineeringRepository() {
     },
 
     async duplicateFicha(fichaId: string) {
-      const prismaResult = await duplicateFichaWithPrisma(fichaId);
+      const prismaResult = await duplicateFichaWithPrisma(fichaId, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1817,7 +1842,7 @@ export function getEngineeringRepository() {
     },
 
     async inactivateFicha(fichaId: string) {
-      const prismaResult = await inactivateFichaWithPrisma(fichaId);
+      const prismaResult = await inactivateFichaWithPrisma(fichaId, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1838,7 +1863,7 @@ export function getEngineeringRepository() {
     },
 
     async listCompositionRows() {
-      const prismaResult = await listCompositionRowsWithPrisma();
+      const prismaResult = await listCompositionRowsWithPrisma(restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1853,7 +1878,7 @@ export function getEngineeringRepository() {
     },
 
     async listCostSummaries() {
-      const prismaResult = await listCostSummariesWithPrisma();
+      const prismaResult = await listCostSummariesWithPrisma(restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1873,7 +1898,7 @@ export function getEngineeringRepository() {
     },
 
     async listAssemblyScenarios() {
-      const prismaResult = await listAssemblyScenariosWithPrisma();
+      const prismaResult = await listAssemblyScenariosWithPrisma(restaurantId);
       if (prismaResult) {
         return prismaResult;
       }

@@ -1,4 +1,5 @@
 import { getEngineeringRepository } from "@/modules/engineering/server/engineering-repository";
+import { requirePermission } from "@/modules/access/server/authorization";
 import {
   DesktopNewFichaAction,
   FichasListingView
@@ -22,7 +23,8 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
     | "all";
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "10"));
-  const repository = getEngineeringRepository();
+  const actor = await requirePermission("ficha.read");
+  const repository = getEngineeringRepository(actor.restaurantId);
   const result = await repository.listFichas({
     query,
     status,

@@ -133,7 +133,7 @@ describe.skipIf(!runIntegration)("load legacy import integration", () => {
       executionId: execution.cd_importacao
     });
 
-    const persisted = await prisma.item.findUniqueOrThrow({
+    const persisted = await prisma.item.findFirstOrThrow({
       where: {
         nm_normalizado: "integracao-load-legado-alho-3kg"
       },
@@ -391,7 +391,7 @@ describe.skipIf(!runIntegration)("load legacy import integration", () => {
       executionId: execution.cd_importacao
     });
 
-    const persisted = await prisma.item.findUniqueOrThrow({
+    const persisted = await prisma.item.findFirstOrThrow({
       where: {
         nm_normalizado: "integracao-load-legado-prato"
       },

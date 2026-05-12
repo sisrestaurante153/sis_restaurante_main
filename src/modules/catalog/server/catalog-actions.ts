@@ -18,7 +18,8 @@ async function resolveCatalogActor() {
   } catch (error) {
     if (error instanceof Error && error.message.includes("outside a request scope")) {
       return {
-        userId: null,
+        userId: null as string | null,
+        restaurantId: "rest_padrao",
         name: "Sistema",
         email: "system@sis-restaurante.local",
         roleCodes: ["admin"]
@@ -44,7 +45,7 @@ export async function saveItemAction(
     };
   }
 
-  const repository = getCatalogRepository();
+  const repository = getCatalogRepository(actor.restaurantId);
   const before = parsed.data.id ? await repository.getItemDetail(parsed.data.id) : null;
   let item;
 
@@ -84,7 +85,7 @@ export async function deleteItemAction(formData: FormData) {
     redirect("/itens?error=item_id");
   }
 
-  const repository = getCatalogRepository();
+  const repository = getCatalogRepository(actor.restaurantId);
   const before = await repository.getItemDetail(itemId);
 
   if (!before) {

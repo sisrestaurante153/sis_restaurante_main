@@ -42,7 +42,7 @@ interface ImportWorkspaceProps {
 
 function formatDateTime(value: string | null) {
   if (!value) {
-    return "Nao informado";
+    return "Não informado";
   }
 
   return new Intl.DateTimeFormat("pt-BR", {
@@ -55,8 +55,8 @@ function formatStatus(status: string) {
   const labelMap: Record<string, string> = {
     pendente: "Pendente",
     processando: "Processando",
-    concluida: "Concluida",
-    concluida_com_conflitos: "Concluida com conflitos",
+    concluida: "Concluída",
+    concluida_com_conflitos: "Concluída com conflitos",
     falha: "Falha"
   };
 
@@ -138,24 +138,42 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
   const uploadBlocked = Boolean(dashboard.activeExecution);
   const latestResult = dashboard.latestResult;
 
+  const cardStyle = {
+    background: "#fff",
+    border: "0.5px solid #D3D1C7",
+    borderRadius: "10px",
+    overflow: "hidden",
+    boxShadow: "none"
+  };
+
+  const sectionHeaderStyle = {
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: "0.1em",
+    color: "#888780",
+    textTransform: "uppercase" as const,
+    mb: 0.5,
+    fontFamily: "Manrope, sans-serif"
+  };
+
   return (
     <Stack spacing={3}>
-      <Card>
+      <Card sx={cardStyle}>
         <CardContent sx={{ p: 3 }}>
           <Stack spacing={2.5}>
-            <Typography component="h2" variant="h4">
-              Nova importacao
+            <Typography sx={sectionHeaderStyle}>
+              Nova importação
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Envie um unico arquivo `.xlsx` do legado. O processamento segue de forma assincrona no worker interno.
+            <Typography variant="body2" color="text.secondary" sx={{ fontFamily: "Manrope, sans-serif" }}>
+              Envie um único arquivo <code>.xlsx</code> do legado. O processamento segue de forma assíncrona no worker interno.
             </Typography>
             {uploadBlocked ? (
               <Alert severity="warning">
-                Aguarde a conclusao da execucao ativa antes de enviar outro arquivo.
+                Aguarde a conclusão da execução ativa antes de enviar outro arquivo.
               </Alert>
             ) : (
               <Alert severity="info">
-                O arquivo original sera preservado com hash e metadata para auditoria e reprocessamento.
+                O arquivo original será preservado com hash e metadata para auditoria e reprocessamento.
               </Alert>
             )}
             <Box component="form" action={createImportExecutionAction}>
@@ -174,7 +192,7 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                   />
                 </Button>
                 <Button type="submit" variant="contained" disabled={uploadBlocked}>
-                  Iniciar importacao
+                  Iniciar importação
                 </Button>
               </Stack>
               {selectedWorkbookName ? (
@@ -187,17 +205,17 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
         </CardContent>
       </Card>
 
-      <Card>
+      <Card sx={cardStyle}>
         <CardContent sx={{ p: 3 }}>
           <Stack spacing={2.5}>
-            <Typography component="h2" variant="h4">
-              Importacao operacional de itens
+            <Typography sx={sectionHeaderStyle}>
+              Importação operacional de itens
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Atualize apenas a estrutura operacional dos itens via `.csv`, com historico, rastreabilidade e mapeamento automatico das colunas conhecidas.
+            <Typography variant="body2" color="text.secondary" sx={{ fontFamily: "Manrope, sans-serif" }}>
+              Atualize apenas a estrutura operacional dos itens via <code>.csv</code>, com histórico, rastreabilidade e mapeamento automático das colunas conhecidas.
             </Typography>
             <Alert severity="info">
-              Esta trilha nao importa fichas tecnicas legadas. Ela serve para manutencao recorrente do cadastro operacional.
+              Esta trilha não importa fichas técnicas legadas. Ela serve para manutenção recorrente do cadastro operacional.
             </Alert>
             <Box component="form" action={createOperationalItemImportAction}>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
@@ -228,11 +246,33 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
         </CardContent>
       </Card>
 
-      <Card>
+      <Card sx={cardStyle}>
+        <CardContent sx={{ p: 3 }}>
+          <Stack spacing={2.5}>
+            <Typography sx={sectionHeaderStyle}>
+              Importação configurável de itens
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontFamily: "Manrope, sans-serif" }}>
+              Envie sua planilha em qualquer formato e escolha manualmente o mapeamento de colunas (De/Para).
+            </Typography>
+            <Alert severity="info">
+              Ideal para quando a planilha não segue o padrão automático ou vem de fontes externas variadas.
+            </Alert>
+            <Box>
+              <Button component={Link} href="/importacao/itens" variant="contained">
+                Abrir importador configurável
+              </Button>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+
+
+      <Card sx={cardStyle}>
         <CardContent sx={{ p: 3 }}>
           <Stack spacing={2}>
-            <Typography component="h2" variant="h4">
-              Execucao ativa
+            <Typography sx={sectionHeaderStyle}>
+              Execução ativa
             </Typography>
             {dashboard.activeExecution ? (
               <Stack spacing={1.5}>
@@ -244,23 +284,23 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                   Arquivo em processamento: <strong>{dashboard.activeExecution.originalFileName}</strong>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Inicio: {formatDateTime(dashboard.activeExecution.startedAt)}
+                  Início: {formatDateTime(dashboard.activeExecution.startedAt)}
                 </Typography>
                 <Alert severity="info">
-                  O status desta execucao sera atualizado automaticamente enquanto o worker interno estiver processando a fila.
+                  O status desta execução será atualizado automaticamente enquanto o worker interno estiver processando a fila.
                 </Alert>
               </Stack>
             ) : (
-              <Alert severity="success">Nenhuma importacao ativa neste momento.</Alert>
+              <Alert severity="success">Nenhuma importação ativa neste momento.</Alert>
             )}
           </Stack>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card sx={cardStyle}>
         <CardContent sx={{ p: 3 }}>
           <Stack spacing={2}>
-            <Typography component="h2" variant="h4">
+            <Typography sx={sectionHeaderStyle}>
               Resultado operacional
             </Typography>
             {latestResult ? (
@@ -304,7 +344,7 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                   </Stack>
                 ) : (
                   <Typography variant="body2" color="text.secondary">
-                    Esta execucao ainda nao possui resumo amigavel publicado.
+                    Esta execução ainda não possui resumo amigável publicado.
                   </Typography>
                 )}
 
@@ -350,17 +390,17 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                 ) : null}
               </Stack>
             ) : (
-              <Alert severity="info">Nenhuma execucao concluida registrada ainda.</Alert>
+              <Alert severity="info">Nenhuma execução concluída registrada ainda.</Alert>
             )}
           </Stack>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card sx={cardStyle}>
         <CardContent sx={{ p: 3 }}>
           <Stack spacing={2.5}>
-            <Typography component="h2" variant="h4">
-              Historico de execucoes
+            <Typography sx={sectionHeaderStyle}>
+              Histórico de execuções
             </Typography>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
@@ -374,8 +414,8 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                 <option value="todos">Todos</option>
                 <option value="pendente">Pendente</option>
                 <option value="processando">Processando</option>
-                <option value="concluida">Concluida</option>
-                <option value="concluida_com_conflitos">Concluida com conflitos</option>
+                <option value="concluida">Concluída</option>
+                <option value="concluida_com_conflitos">Concluída com conflitos</option>
                 <option value="falha">Falha</option>
               </TextField>
               <TextField
@@ -390,11 +430,11 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Arquivo</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Inicio</TableCell>
-                  <TableCell>Fim</TableCell>
-                  <TableCell>Pendencias</TableCell>
+                  <TableCell sx={{ fontSize: 10, fontWeight: 600, color: "#888780", textTransform: "uppercase" }}>Arquivo</TableCell>
+                  <TableCell sx={{ fontSize: 10, fontWeight: 600, color: "#888780", textTransform: "uppercase" }}>Status</TableCell>
+                  <TableCell sx={{ fontSize: 10, fontWeight: 600, color: "#888780", textTransform: "uppercase" }}>Início</TableCell>
+                  <TableCell sx={{ fontSize: 10, fontWeight: 600, color: "#888780", textTransform: "uppercase" }}>Fim</TableCell>
+                  <TableCell sx={{ fontSize: 10, fontWeight: 600, color: "#888780", textTransform: "uppercase" }}>Pendências</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -402,7 +442,7 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                   <TableRow key={execution.id} hover>
                     <TableCell>
                       <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight={600}>
+                        <Typography variant="body2" fontWeight={600} sx={{ fontFamily: "Manrope, sans-serif" }}>
                           {execution.originalFileName}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -410,16 +450,16 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                         </Typography>
                       </Stack>
                     </TableCell>
-                    <TableCell>{formatStatus(execution.status)}</TableCell>
-                    <TableCell>{formatDateTime(execution.startedAt ?? execution.createdAt)}</TableCell>
-                    <TableCell>{formatDateTime(execution.finishedAt)}</TableCell>
-                    <TableCell>{execution.conflictCount}</TableCell>
+                    <TableCell sx={{ fontSize: 12 }}>{formatStatus(execution.status)}</TableCell>
+                    <TableCell sx={{ fontSize: 12 }}>{formatDateTime(execution.startedAt ?? execution.createdAt)}</TableCell>
+                    <TableCell sx={{ fontSize: 12 }}>{formatDateTime(execution.finishedAt)}</TableCell>
+                    <TableCell sx={{ fontSize: 12 }}>{execution.conflictCount}</TableCell>
                   </TableRow>
                 ))}
                 {filteredHistory.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5}>
-                      <Alert severity="info">Nenhuma execucao encontrada com os filtros atuais.</Alert>
+                      <Alert severity="info">Nenhuma execução encontrada com os filtros atuais.</Alert>
                     </TableCell>
                   </TableRow>
                 ) : null}
