@@ -1,62 +1,42 @@
 import { requirePermission } from "@/modules/access/server/authorization";
+import { getBillingRepository } from "@/modules/billing/server/billing-repository";
 import { BillingActionsMenu } from "./billing-actions-menu";
 import { BillingSubscriptionList } from "./billing-subscription-list";
 import type { SubscriptionRow } from "./billing-subscription-list";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 
 // ---------------------------------------------------------------------------
-// Mock data — substituir por repositório real quando billing for implementado
+// Helpers de estilo
 // ---------------------------------------------------------------------------
 
-type PlanCode = "Starter" | "Pro" | "Enterprise";
+type PlanCode = "starter" | "pro" | "enterprise";
 
-interface Payment {
-  id: string;
-  tenant: string;
-  date: string;
-  value: number;
-  plan: PlanCode;
-  status: "paid" | "failed" | "pending";
-}
-
-const subscriptions: SubscriptionRow[] = [
-  { id: "rest_001", name: "Restaurante Bella Italia", plan: "Pro", status: "active", nextBillingDate: "2026-06-11", monthlyValue: 299, daysOverdue: 0 },
-  { id: "rest_002", name: "Pizzaria do João", plan: "Starter", status: "trial", nextBillingDate: "2026-05-18", monthlyValue: 99, daysOverdue: 0, trialEndsAt: "2026-05-18" },
-  { id: "rest_003", name: "Churrascaria Gaúcha", plan: "Pro", status: "overdue", nextBillingDate: "2026-04-11", monthlyValue: 299, daysOverdue: 30 },
-  { id: "rest_004", name: "Sushi House", plan: "Enterprise", status: "active", nextBillingDate: "2026-06-15", monthlyValue: 599, daysOverdue: 0 },
-  { id: "rest_005", name: "Café da Manhã Feliz", plan: "Starter", status: "overdue", nextBillingDate: "2026-04-25", monthlyValue: 99, daysOverdue: 16 },
-  { id: "rest_006", name: "Bistrô Francês", plan: "Pro", status: "cancelled", nextBillingDate: "—", monthlyValue: 299, daysOverdue: 0 }
-];
-
-const payments: Payment[] = [
-  { id: "pay_001", tenant: "Restaurante Bella Italia", date: "2026-05-11", value: 299, plan: "Pro", status: "paid" },
-  { id: "pay_002", tenant: "Sushi House", date: "2026-05-10", value: 599, plan: "Enterprise", status: "paid" },
-  { id: "pay_003", tenant: "Churrascaria Gaúcha", date: "2026-04-11", value: 299, plan: "Pro", status: "failed" },
-  { id: "pay_004", tenant: "Pizzaria do João", date: "2026-04-15", value: 99, plan: "Starter", status: "paid" },
-  { id: "pay_005", tenant: "Café da Manhã Feliz", date: "2026-04-25", value: 99, plan: "Starter", status: "failed" },
-  { id: "pay_006", tenant: "Bistrô Francês", date: "2026-04-30", value: 299, plan: "Pro", status: "paid" }
-];
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const PLAN_LABEL: Record<PlanCode, string> = {
+  starter: "Starter",
+  pro: "Pro",
+  enterprise: "Enterprise"
+};
 
 const PLAN_STYLE: Record<PlanCode, string> = {
-  Starter: "bg-orange-50 text-orange-700 border border-orange-200",
-  Pro: "bg-blue-50 text-blue-700 border border-blue-200",
-  Enterprise: "bg-purple-50 text-purple-700 border border-purple-200"
+  starter: "bg-orange-50 text-orange-700 border border-orange-200",
+  pro: "bg-blue-50 text-blue-700 border border-blue-200",
+  enterprise: "bg-purple-50 text-purple-700 border border-purple-200"
 };
 
 const PAYMENT_STATUS_STYLE: Record<string, string> = {
-  paid: "bg-success-bg text-success",
-  failed: "bg-error/10 text-error",
-  pending: "bg-warning-bg text-warning"
+  CONFIRMED: "bg-success-bg text-success",
+  RECEIVED: "bg-success-bg text-success",
+  OVERDUE: "bg-error/10 text-error",
+  PENDING: "bg-warning-bg text-warning",
+  REFUNDED: "bg-ink-100 text-ink-500"
 };
 
 const PAYMENT_STATUS_LABEL: Record<string, string> = {
-  paid: "Pago",
-  failed: "Falhou",
-  pending: "Pendente"
+  CONFIRMED: "Pago",
+  RECEIVED: "Recebido",
+  OVERDUE: "Vencido",
+  PENDING: "Pendente",
+  REFUNDED: "Estornado"
 };
 
 function formatCurrency(value: number) {
@@ -70,6 +50,12 @@ function formatCurrency(value: number) {
 export default async function BillingPage() {
   await requirePermission("billing.manage");
 
+  const repo = getBillingRepository();
+  const [subscriptions, payments] = await Promise.all([
+    repo.listSubscriptions(),
+    repo.listPayments()
+  ]);
+
   const totalActive = subscriptions.filter((s) => s.status === "active").length;
   const totalTrial = subscriptions.filter((s) => s.status === "trial").length;
   const totalOverdue = subscriptions.filter((s) => s.status === "overdue").length;
@@ -78,6 +64,18 @@ export default async function BillingPage() {
     .reduce((sum, s) => sum + s.monthlyValue, 0);
 
   const overdueList = subscriptions.filter((s) => s.status === "overdue");
+
+  // Mapeia para o formato esperado pelo BillingSubscriptionList
+  const subscriptionRows: SubscriptionRow[] = subscriptions.map((s) => ({
+    id: s.id,
+    name: s.restaurantName,
+    plan: PLAN_LABEL[s.plan] as SubscriptionRow["plan"],
+    status: s.status as SubscriptionRow["status"],
+    nextBillingDate: s.nextBillingDate ?? "—",
+    monthlyValue: s.monthlyValue,
+    daysOverdue: s.daysOverdue,
+    trialEndsAt: s.trialEndsAt ?? undefined
+  }));
 
   return (
     <div className="flex flex-col gap-8 pb-8">
@@ -143,14 +141,14 @@ export default async function BillingPage() {
               <tbody className="divide-y divide-ink-100">
                 {overdueList.map((sub) => (
                   <tr key={sub.id} className="hover:bg-error/5 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-blue-900">{sub.name}</td>
+                    <td className="px-6 py-4 font-semibold text-blue-900">{sub.restaurantName}</td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${PLAN_STYLE[sub.plan]}`}>
-                        {sub.plan}
+                        {PLAN_LABEL[sub.plan]}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-ink-700">{formatCurrency(sub.monthlyValue)}</td>
-                    <td className="px-4 py-4 text-ink-600">{sub.nextBillingDate}</td>
+                    <td className="px-4 py-4 text-ink-600">{sub.nextBillingDate ?? "—"}</td>
                     <td className="px-4 py-4 text-right">
                       <span className="inline-flex items-center gap-1 font-bold text-error">
                         <ErrorRoundedIcon sx={{ fontSize: 14 }} />
@@ -159,10 +157,10 @@ export default async function BillingPage() {
                     </td>
                     <td className="px-2 py-4">
                       <BillingActionsMenu
-                        tenantName={sub.name}
+                        tenantName={sub.restaurantName}
                         status={sub.status}
                         currentMonthlyValue={sub.monthlyValue}
-                        onPriceChange={undefined}
+                        onPriceChange={() => {}}
                       />
                     </td>
                   </tr>
@@ -173,49 +171,60 @@ export default async function BillingPage() {
         </div>
       )}
 
-      {/* Lista de Assinaturas — client component gerencia edições de preço */}
-      <BillingSubscriptionList subscriptions={subscriptions} />
+      {/* Lista de Assinaturas */}
+      <BillingSubscriptionList subscriptions={subscriptionRows} />
 
       {/* Histórico de Pagamentos */}
       <div className="bg-white rounded-2xl border border-ink-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-ink-100">
           <h2 className="font-display font-semibold text-base text-blue-900">Histórico de Pagamentos</h2>
-          <p className="text-xs text-ink-400 mt-0.5">Detalhamento de cobranças por tenant.</p>
+          <p className="text-xs text-ink-400 mt-0.5">Detalhamento de cobranças por tenant — sincronizado via webhook Asaas.</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-ink-50 text-left">
-                <th className="px-6 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Tenant</th>
-                <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Data</th>
-                <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Plano</th>
-                <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider text-right">Valor</th>
-                <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-100">
-              {payments.map((pay) => (
-                <tr key={pay.id} className="hover:bg-ink-50/60 transition-colors">
-                  <td className="px-6 py-4 font-semibold text-blue-900">{pay.tenant}</td>
-                  <td className="px-4 py-4 text-ink-600 tabular-nums">{pay.date}</td>
-                  <td className="px-4 py-4">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${PLAN_STYLE[pay.plan]}`}>
-                      {pay.plan}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-right font-medium text-ink-800 tabular-nums">
-                    {formatCurrency(pay.value)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${PAYMENT_STATUS_STYLE[pay.status]}`}>
-                      {PAYMENT_STATUS_LABEL[pay.status]}
-                    </span>
-                  </td>
+
+        {payments.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-ink-400">
+            Nenhum pagamento registrado ainda. Os dados aparecerão aqui após a integração Asaas ser ativada.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-ink-50 text-left">
+                  <th className="px-6 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Tenant</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Vencimento</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Plano</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Forma</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider text-right">Valor</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-ink-500 uppercase tracking-wider">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-ink-100">
+                {payments.map((pay) => (
+                  <tr key={pay.id} className="hover:bg-ink-50/60 transition-colors">
+                    <td className="px-6 py-4 font-semibold text-blue-900">{pay.tenant}</td>
+                    <td className="px-4 py-4 text-ink-600 tabular-nums">{pay.dueDate}</td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${PLAN_STYLE[pay.plan]}`}>
+                        {PLAN_LABEL[pay.plan]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-ink-500 text-xs">
+                      {pay.paymentMethod === "CREDIT_CARD" ? "Cartão" : pay.paymentMethod === "PIX" ? "Pix" : "—"}
+                    </td>
+                    <td className="px-4 py-4 text-right font-medium text-ink-800 tabular-nums">
+                      {formatCurrency(pay.value)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${PAYMENT_STATUS_STYLE[pay.status] ?? "bg-ink-100 text-ink-500"}`}>
+                        {PAYMENT_STATUS_LABEL[pay.status] ?? pay.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
     </div>

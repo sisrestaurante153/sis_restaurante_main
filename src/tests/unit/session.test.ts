@@ -29,6 +29,8 @@ function buildPayload(overrides: Partial<SessionPayload> = {}): SessionPayload {
     email: "admin@sis-restaurante.local",
     name: "Administrador",
     roleCodes: ["admin"],
+    subscriptionStatus: "active",
+    trialEndsAt: null,
     issuedAt: "2026-03-13T18:00:00.000Z",
     expiresAt: "2026-03-20T18:00:00.000Z",
     ...overrides

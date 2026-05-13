@@ -56,7 +56,7 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/billing\/.*$/, permission: "billing.manage" }
 ];
 
-const publicPaths = ["/", "/login", "/forbidden", "/api/health"];
+const publicPaths = ["/", "/login", "/registro", "/bem-vindo", "/forbidden", "/api/health"];
 
 export function getPermissionsForRoles(roleCodes: readonly string[]) {
   const permissions = roleCodes.flatMap((roleCode) =>

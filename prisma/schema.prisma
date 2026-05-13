@@ -19,8 +19,46 @@ model Restaurante {
   itens       Item[]
   fichas      FichaTecnica[]
   importacoes ImportacaoExecucao[]
+  assinatura  Assinatura?
 
   @@map("restaurante")
+}
+
+model Assinatura {
+  cd_assinatura         String             @id @default(cuid())
+  cd_restaurante        String             @unique
+  cd_asaas_customer     String?
+  cd_asaas_subscription String?
+  tp_plano              String
+  tp_status             assinatura_status  @default(trial)
+  vl_mensal             Decimal            @db.Decimal(10, 2)
+  ts_proximo_vencimento DateTime?          @db.Timestamptz(6)
+  ts_trial_fim          DateTime?          @db.Timestamptz(6)
+  nr_dias_inadimplente  Int                @default(0)
+  ts_criacao            DateTime           @default(now()) @db.Timestamptz(6)
+  ts_atualizacao        DateTime           @default(now()) @db.Timestamptz(6)
+
+  restaurante Restaurante      @relation(fields: [cd_restaurante], references: [cd_restaurante], onDelete: Cascade)
+  pagamentos  PagamentoAsaas[]
+
+  @@map("assinatura")
+}
+
+model PagamentoAsaas {
+  cd_pagamento       String    @id @default(cuid())
+  cd_assinatura      String
+  cd_asaas_payment   String    @unique
+  tp_status          String
+  tp_forma_pagamento String?
+  vl_pagamento       Decimal   @db.Decimal(10, 2)
+  ts_vencimento      DateTime  @db.Timestamptz(6)
+  ts_pagamento       DateTime? @db.Timestamptz(6)
+  ts_criacao         DateTime  @default(now()) @db.Timestamptz(6)
+
+  assinatura Assinatura @relation(fields: [cd_assinatura], references: [cd_assinatura], onDelete: Cascade)
+
+  @@index([cd_assinatura, ts_vencimento], map: "idx_pagamento_assinatura")
+  @@map("pagamento_asaas")
 }
 
 model Item {
@@ -576,4 +614,12 @@ enum unidade_tipo {
   massa
   volume
   contagem
+}
+
+enum assinatura_status {
+  trial
+  active
+  overdue
+  cancelled
+  suspended
 }

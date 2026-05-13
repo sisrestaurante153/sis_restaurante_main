@@ -30,7 +30,9 @@ export async function POST(request: Request) {
     restaurantId,
     email: result.user.email,
     name: result.user.nome,
-    roleCodes: result.user.roleCodes
+    roleCodes: result.user.roleCodes,
+    subscriptionStatus: localUser?.subscriptionStatus ?? "active",
+    trialEndsAt: localUser?.trialEndsAt ?? null
   });
 
   const response = NextResponse.json({ ok: true });

@@ -1,4 +1,3 @@
-import path from "node:path";
 import { requirePermission } from "@/modules/access/server/authorization";
 import { readStoredArtifact } from "@/modules/import/server/import-storage";
 import { getImportRepository } from "@/modules/import/server/import-repository";
@@ -72,7 +71,7 @@ export async function GET(request: Request) {
 
   try {
     const file = await readStoredArtifact(artifactPath);
-    const fileName = path.basename(file.absolutePath);
+    const fileName = (file as { fileName?: string }).fileName ?? artifactPath.split("/").pop() ?? "arquivo";
 
     return new Response(file.content, {
       headers: {

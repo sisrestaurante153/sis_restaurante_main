@@ -6,6 +6,8 @@ export interface SessionPayload {
   email: string;
   name: string;
   roleCodes: string[];
+  subscriptionStatus: string;
+  trialEndsAt: string | null;
   issuedAt: string;
   expiresAt: string;
 }
