@@ -71,7 +71,7 @@ export function LandingPage() {
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm font-semibold text-blue-800">Entrar</Link>
-            <Link href="/login" className="btn-primary py-2.5 px-4 text-xs">Teste grátis</Link>
+            <Link href="/registro" className="btn-primary py-2.5 px-4 text-xs">Teste grátis</Link>
           </div>
         </div>
       </header>
@@ -91,7 +91,7 @@ export function LandingPage() {
               Ficha técnica, controle de CMV e precificação com margem garantida. Pare de precificar no &quot;achismo&quot; e comece a lucrar em cada venda.
             </p>
             <div className="flex flex-wrap gap-3 mb-6">
-              <Link href="/login" className="btn-primary text-base px-7 py-4">Comece grátis por 14 dias →</Link>
+              <Link href="/registro" className="btn-primary text-base px-7 py-4">Comece grátis por 14 dias →</Link>
               <a href="#how" className="btn-ghost text-base px-7 py-4">Ver como funciona</a>
             </div>
             <div className="flex items-center gap-3 text-[13px] text-ink-500">
@@ -509,7 +509,7 @@ export function LandingPage() {
                 ))}
               </ul>
               <div className="font-display italic text-sm leading-relaxed text-orange-700 p-4 bg-orange-50 rounded-md mb-5">&quot;Comece a precificar corretamente e pare de vender sem saber seu lucro.&quot;</div>
-              <button className="btn-ghost w-full py-3.5 text-base">Começar grátis</button>
+              <Link href="/registro" className="btn-ghost w-full py-3.5 text-base text-center">Começar grátis</Link>
             </div>
 
             {/* PLANO PROFISSIONAL */}
@@ -541,7 +541,7 @@ export function LandingPage() {
                 ))}
               </ul>
               <div className="font-display italic text-sm leading-relaxed text-orange-300 p-4 bg-orange-500/15 rounded-md mb-5">&quot;Tenha controle real do custo, CMV e margem para tomar decisões com segurança.&quot;</div>
-              <button className="btn-primary w-full py-3.5 text-base">Começar grátis →</button>
+              <Link href="/registro" className="btn-primary w-full py-3.5 text-base text-center">Começar grátis →</Link>
             </div>
 
             {/* PLANO REDE */}
@@ -573,7 +573,7 @@ export function LandingPage() {
                 ))}
               </ul>
               <div className="font-display italic text-sm leading-relaxed text-orange-700 p-4 bg-orange-50 rounded-md mb-5">&quot;Padronização, escala e inteligência financeira para operações complexas.&quot;</div>
-              <button className="btn-ghost w-full py-3.5 text-base">Falar com vendas</button>
+              <Link href="/registro" className="btn-ghost w-full py-3.5 text-base text-center">Falar com vendas</Link>
             </div>
 
           </div>
@@ -622,7 +622,7 @@ export function LandingPage() {
         <div className="container-page text-center max-w-[720px] mx-auto relative z-10">
           <h2 className="font-display font-bold text-[clamp(36px,5vw,56px)] leading-[1.05] tracking-tight mb-5">Seus pratos merecem o <em className="italic text-orange-500">preço certo.</em></h2>
           <p className="text-lg text-white/75 max-w-[560px] mx-auto mb-8">14 dias grátis. Sem cartão. Sem enrolação. Em menos de uma semana, você sabe exatamente quanto cada prato do seu cardápio está te dando — ou te tirando.</p>
-          <button className="btn-primary px-8 py-4 text-base">Comece grátis agora →</button>
+          <Link href="/registro" className="btn-primary px-8 py-4 text-base">Comece grátis agora →</Link>
           <p className="mt-5 text-[13px] text-white/50">Não precisa instalar nada. Funciona no celular, tablet e computador.</p>
         </div>
       </section>
