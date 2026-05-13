@@ -10,13 +10,8 @@ export default function BemVindoPage() {
       <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-500">
 
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center">
-            <div className="w-4 h-4 bg-brand-orange rounded-full" />
-          </div>
-          <span className="text-2xl font-bold font-serif tracking-tight text-brand-dark">
-            SIS Restaurante
-          </span>
+        <div className="flex items-center justify-center">
+          <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
         </div>
 
         {/* Card principal */}

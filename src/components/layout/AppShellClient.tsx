@@ -109,34 +109,7 @@ function SidebarSurface({ currentUser, pendingCounts, onNavigate, showLogout }: 
           mb: 1
         }}
       >
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            borderRadius: 1.5,
-            background: "linear-gradient(to bottom right, #004A99, #001F3F)", // blue-700 to blue-900
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontSize: 16
-          }}
-        >
-          🍽
-        </Box>
-        <Typography
-          component="div"
-          sx={{
-            fontFamily: "Manrope, sans-serif",
-            fontSize: 14,
-            fontWeight: 800,
-            lineHeight: 1.1,
-            color: "#001F3F" // blue-900
-          }}
-        >
-          Custo de<br />
-          <Box component="span" sx={{ color: "#FF6B00" }}>RECEITA</Box>
-        </Typography>
+        <img src="/logo.jpg" alt="Logo" style={{ height: 36, width: "auto" }} />
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto", px: 0, pt: 0 }}>

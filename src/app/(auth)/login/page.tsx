@@ -13,11 +13,8 @@ export default async function LoginPage() {
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 -left-20 w-80 h-80 bg-brand-orange/20 rounded-full blur-3xl"></div>
 
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-            <div className="w-4 h-4 bg-brand-orange rounded-full"></div>
-          </div>
-          <span className="text-2xl font-bold font-serif tracking-tight">SIS Restaurante</span>
+        <div className="relative z-10">
+          <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
         </div>
 
         <div className="relative z-10 max-w-xl">
@@ -41,11 +38,8 @@ export default async function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-[420px] space-y-8 animate-in fade-in zoom-in-95 duration-500">
           <div className="flex flex-col space-y-2 text-center lg:text-left">
-            <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center">
-                <div className="w-4 h-4 bg-brand-orange rounded-full"></div>
-              </div>
-              <span className="text-2xl font-bold font-serif tracking-tight text-brand-dark">SIS Restaurante</span>
+            <div className="lg:hidden flex items-center justify-center mb-6">
+              <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
             </div>
             
             <h2 className="text-3xl font-bold tracking-tight text-brand-dark">

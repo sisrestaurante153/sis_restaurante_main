@@ -52,16 +52,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-md border-b border-ink-200 py-2.5">
         <div className="container-page flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center">
-            {/* Logo em SVG ou Imagem da marca */}
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center">
-                <span className="text-white text-lg">🍽</span>
-              </div>
-              <span className="font-display font-bold text-xl text-blue-900 leading-tight">
-                Custo de<br />
-                <span className="text-orange-600">RECEITA</span>
-              </span>
-            </div>
+            <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
           </Link>
           <nav className="hidden md:flex gap-8 items-center">
             <a href="#features" className="text-sm font-medium text-ink-700 hover:text-orange-600 transition-colors">Funcionalidades</a>
