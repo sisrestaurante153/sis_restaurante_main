@@ -503,8 +503,18 @@ async function saveItemWithPrisma(input: SaveItemInput & { restaurantId: string 
       const stockUnit = await ensureUnit(tx, stockUnitCode);
       const usageUnit = await ensureUnit(tx, usageUnitCode);
       const normalizedCode = input.code.trim();
-      const generatedCode = `CAD-${Date.now().toString().slice(-6)}`;
-      const code = normalizedCode || generatedCode;
+      let code = normalizedCode;
+      if (!normalizedCode) {
+        const existingCodes = await tx.item.findMany({
+          where: { cd_restaurante: input.restaurantId, ds_codigo_interno: { not: null } },
+          select: { ds_codigo_interno: true }
+        });
+        const maxNumeric = existingCodes.reduce((max, item) => {
+          const n = Number(item.ds_codigo_interno);
+          return Number.isInteger(n) && n > max ? n : max;
+        }, 0);
+        code = String(maxNumeric + 1);
+      }
       const duplicateCode = await tx.item.findFirst({
         where: {
           ds_codigo_interno: code,
@@ -514,15 +524,12 @@ async function saveItemWithPrisma(input: SaveItemInput & { restaurantId: string 
         select: { cd_item: true }
       });
 
-      if (duplicateCode) {
-        throw new CatalogRepositoryError("Codigo de item ja cadastrado.", {
-          code: ["Codigo ja cadastrado."]
-        });
-      }
+      // Se código já existe e não estamos editando explicitamente, reutiliza o id do existente
+      const resolvedId = input.id ?? duplicateCode?.cd_item;
 
-      const item = input.id
+      const item = resolvedId
         ? await tx.item.update({
-            where: { cd_item: input.id },
+            where: { cd_item: resolvedId },
             data: {
               ds_codigo_interno: code,
               nm_item: input.name,

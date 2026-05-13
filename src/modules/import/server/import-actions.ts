@@ -8,8 +8,26 @@ import { parseResolveConflictFormData } from "@/modules/import/domain/reconcilia
 import { getImportRepository } from "@/modules/import/server/import-repository";
 import { persistImportWorkbook } from "@/modules/import/server/import-storage";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
+import { getServerEnv } from "@/modules/platform/server/env";
+import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import * as XLSX from "xlsx";
 import { z } from "zod";
+
+async function ensureCategoriaOperacional(nome: string) {
+  if (!nome || nome.trim() === "") return;
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) return;
+  const nm = nome.trim();
+  const ds = nm.slice(0, 50).replace(/\s+/g, "-").toUpperCase();
+  await prisma.categoriaOperacional.upsert({
+    where: { nm_categoria: nm },
+    update: {},
+    create: { ds_codigo: ds, nm_categoria: nm }
+  }).catch(() => {
+    // ignora conflito de ds_codigo duplicado — categoria já existe com outro nome mas mesmo código
+  });
+}
 
 async function resolveImportActor() {
   try {
@@ -238,6 +256,8 @@ export async function createMappedItemImportAction(formData: FormData) {
   }
 
   const mapping = MappingSchema.parse(JSON.parse(mappingJson));
+  const defaultValuesJson = formData.get("defaultValuesJson") as string | null;
+  const defaultValues: Record<string, string> = defaultValuesJson ? MappingSchema.parse(JSON.parse(defaultValuesJson)) : {};
   const repository = getImportRepository(actor.restaurantId);
   const catalogRepository = getCatalogRepository(actor.restaurantId);
 
@@ -264,69 +284,97 @@ export async function createMappedItemImportAction(formData: FormData) {
     });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const workbook = XLSX.read(buffer);
+    const workbook = XLSX.read(buffer, { type: "buffer", cellText: true });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
+    // raw: false usa o texto original da célula (preserva "10,00" em vez de converter para 1000)
+    // defval: "" inclui células vazias no objeto
+    // normaliza as chaves removendo espaços/BOM para bater com o mapeamento do client
+    const rows = (XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" }) as Record<string, unknown>[])
+      .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), v])));
+
+    // Normaliza número no formato brasileiro (1.234,56 → 1234.56) ou (10,00 → 10.00)
+    const parseBrNumber = (value: unknown): string => {
+      if (value === undefined || value === null || value === "") return "0";
+      const str = String(value).trim();
+      // Se já é número puro (sem vírgula), retorna direto
+      if (/^-?\d+(\.\d+)?$/.test(str)) return str;
+      // Formato BR: ponto como milhar, vírgula como decimal → 1.234,56
+      if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) return str.replace(/\./g, "").replace(",", ".");
+      // Só vírgula decimal → 10,00
+      if (/^\d+(,\d+)?$/.test(str)) return str.replace(",", ".");
+      return str;
+    };
 
     let itemsProcessed = 0;
+    let itemsSkipped = 0;
 
     for (const row of rows) {
       const getValue = (field: string) => {
         const columnName = mapping[field];
-        return columnName ? row[columnName] : undefined;
+        if (columnName) return row[columnName];
+        return defaultValues[field] ?? undefined;
       };
 
       const itemName = getValue("itemName");
       const type = getValue("type");
 
-      if (!itemName || !type) continue;
+      if (!itemName || !type) { itemsSkipped++; continue; }
 
-      // Basic cleanup for type
       let itemType = String(type).toLowerCase().trim() as Parameters<typeof catalogRepository.saveItem>[0]["type"];
       const validTypes = [
-        "insumo", "pre_preparo", "intermediario", "produto_pronto", 
+        "insumo", "pre_preparo", "intermediario", "produto_pronto",
         "prato", "porcao", "marmita", "combo", "embalagem", "apoio"
       ];
-      if (!validTypes.includes(itemType)) {
-        itemType = "insumo"; // fallback
+      if (!validTypes.includes(itemType)) itemType = "insumo";
+
+      try {
+        const existingItems = await catalogRepository.listItems({
+          page: 1,
+          pageSize: 10,
+          query: String(itemName),
+          status: "all",
+          type: "all"
+        });
+
+        const existingItem = existingItems.items.find(
+          (item) => item.name.trim().toLowerCase() === String(itemName).trim().toLowerCase()
+        );
+
+        const rawCode = getValue("internalCode");
+        const rawCodeStr = rawCode !== undefined && rawCode !== null ? String(rawCode).trim() : "";
+        const code = rawCodeStr !== "" && rawCodeStr !== "0" ? rawCodeStr : (existingItem?.code || "");
+        const operationalCategory = String(getValue("operationalCategory") || existingItem?.category || "Importado");
+
+        await ensureCategoriaOperacional(operationalCategory);
+
+        await catalogRepository.saveItem({
+          id: existingItem?.id,
+          code,
+          name: String(itemName),
+          type: itemType,
+          operationalCategory,
+          description: `Importado via planilha em ${new Date().toLocaleString("pt-BR")}`,
+          active: true,
+          purchases: [
+            {
+              supplierName: String(getValue("supplierName") || "Importacao"),
+              purchaseUnit: String(getValue("purchaseUnit") || "un"),
+              purchaseIsPrimary: true,
+              purchaseQuantity: parseBrNumber(getValue("purchaseQuantity") || "1"),
+              purchaseCost: parseBrNumber(getValue("purchaseCost") || "0"),
+              priceUpdatedAt: String(getValue("updatedAt") || new Date().toISOString()),
+              usageUnit: String(getValue("usageUnit") || getValue("purchaseUnit") || "un"),
+              usageQuantity: parseBrNumber(getValue("usageQuantity") || "1")
+            }
+          ]
+        });
+
+        itemsProcessed++;
+      } catch (itemError) {
+        console.error(`Import: erro ao salvar item "${itemName}":`, itemError);
+        itemsSkipped++;
       }
-
-      const existingItems = await catalogRepository.listItems({
-        page: 1,
-        pageSize: 10,
-        query: String(itemName),
-        status: "all",
-        type: "all"
-      });
-
-      const existingItem = existingItems.items.find(
-        (item) => item.name.trim().toLowerCase() === String(itemName).trim().toLowerCase()
-      );
-
-      await catalogRepository.saveItem({
-        id: existingItem?.id,
-        code: String(getValue("internalCode") || existingItem?.code || ""),
-        name: String(itemName),
-        type: itemType,
-        operationalCategory: String(getValue("operationalCategory") || existingItem?.category || "Importado"),
-        description: `Importado via mapeamento customizado em ${new Date().toLocaleString("pt-BR")}`,
-        active: true,
-        purchases: [
-          {
-            supplierName: String(getValue("supplierName") || "Importacao"),
-            purchaseUnit: String(getValue("purchaseUnit") || "un"),
-            purchaseIsPrimary: true,
-            purchaseQuantity: String(getValue("purchaseQuantity") || "1"),
-            purchaseCost: String(getValue("purchaseCost") || "0"),
-            priceUpdatedAt: String(getValue("updatedAt") || new Date().toISOString()),
-            usageUnit: String(getValue("usageUnit") || getValue("purchaseUnit") || "un"),
-            usageQuantity: String(getValue("usageQuantity") || "1")
-          }
-        ]
-      });
-
-      itemsProcessed++;
     }
 
     await repository.markImportExecutionCompleted(execution.id, {
@@ -334,7 +382,7 @@ export async function createMappedItemImportAction(formData: FormData) {
       friendlySummary: {
         headline: "Importação concluída com sucesso",
         whatHappened: `Foram processadas ${rows.length} linhas do arquivo ${file.name}.`,
-        impact: `${itemsProcessed} itens foram criados ou atualizados.`,
+        impact: `${itemsProcessed} itens criados ou atualizados${itemsSkipped > 0 ? `, ${itemsSkipped} ignorados por erro ou dados insuficientes` : ""}.`,
         whatToDoNow: "Você pode revisar os itens importados no cadastro de materiais.",
         nextAction: {
           label: "Ver Itens",

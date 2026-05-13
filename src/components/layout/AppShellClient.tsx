@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
@@ -109,7 +110,7 @@ function SidebarSurface({ currentUser, pendingCounts, onNavigate, showLogout }: 
           mb: 1
         }}
       >
-        <img src="/logo.jpg" alt="Logo" style={{ height: 36, width: "auto" }} />
+        <Image src="/logo.jpg" alt="Logo" width={120} height={36} style={{ height: 36, width: "auto" }} priority />
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto", px: 0, pt: 0 }}>

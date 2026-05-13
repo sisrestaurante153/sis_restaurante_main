@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import RestaurantMenuRoundedIcon from "@mui/icons-material/RestaurantMenuRounded";
@@ -11,7 +12,7 @@ export default function BemVindoPage() {
 
         {/* Logo */}
         <div className="flex items-center justify-center">
-          <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
+          <Image src="/logo.jpg" alt="Logo" width={120} height={40} className="h-10 w-auto" priority />
         </div>
 
         {/* Card principal */}

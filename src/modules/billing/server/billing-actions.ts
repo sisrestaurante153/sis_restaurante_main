@@ -56,13 +56,14 @@ export async function registrarRestauranteAction(
   }
 
   const env = getServerEnv();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const prisma = getPrismaClient(env.DATABASE_URL)!;
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) {
+    throw new Error("Não foi possível conectar ao banco de dados.");
+  }
 
   try {
     // 2. Cria restaurante + usuário local + assinatura em trial numa transação
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (prisma as any).$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx) => {
       const restaurante = await tx.restaurante.create({
         data: { nm_restaurante, sn_ativo: true }
       });

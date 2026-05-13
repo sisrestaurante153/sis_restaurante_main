@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -52,7 +53,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-md border-b border-ink-200 py-2.5">
         <div className="container-page flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center">
-            <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
+            <Image src="/logo.jpg" alt="Logo" width={120} height={40} className="h-10 w-auto" priority />
           </Link>
           <nav className="hidden md:flex gap-8 items-center">
             <a href="#features" className="text-sm font-medium text-ink-700 hover:text-orange-600 transition-colors">Funcionalidades</a>

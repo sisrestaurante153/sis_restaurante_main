@@ -122,8 +122,9 @@ export async function POST(request: Request) {
 async function prisma_findByAsaasId(asaasSubscriptionId: string) {
   const { getPrismaClient } = await import("@/modules/platform/infra/prisma");
   const { getServerEnv } = await import("@/modules/platform/server/env");
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any
-  const prisma = getPrismaClient(getServerEnv().DATABASE_URL)! as any;
+  const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
+  if (!prisma) return null;
+
   const row = await prisma.assinatura.findFirst({
     where: { cd_asaas_subscription: asaasSubscriptionId }
   });

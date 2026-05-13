@@ -23,10 +23,11 @@ function mapStatus(raw: string): SubscriptionStatus {
 
 export function getBillingRepository() {
   const env = getServerEnv();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const prisma = getPrismaClient(env.DATABASE_URL)!;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = prisma as any;
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) {
+    throw new Error("Não foi possível conectar ao banco de dados.");
+  }
+  const db = prisma;
 
   return {
     async listSubscriptions(): Promise<SubscriptionRecord[]> {
@@ -35,11 +36,11 @@ export function getBillingRepository() {
         orderBy: { ts_criacao: "desc" }
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return rows.map((row: any) => ({
+      return rows.map((row) => ({
         id: row.cd_assinatura,
         restaurantId: row.cd_restaurante,
-        restaurantName: row.restaurante.nm_restaurante,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        restaurantName: (row as any).restaurante.nm_restaurante,
         plan: row.tp_plano as PlanCode,
         status: mapStatus(row.tp_status),
         monthlyValue: Number(row.vl_mensal),
@@ -52,7 +53,6 @@ export function getBillingRepository() {
     },
 
     async listPayments(): Promise<PaymentRecord[]> {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rows = await db.pagamentoAsaas.findMany({
         include: {
           assinatura: { include: { restaurante: true } }
@@ -61,12 +61,13 @@ export function getBillingRepository() {
         take: 50
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return rows.map((row: any) => ({
+      return rows.map((row) => ({
         id: row.cd_pagamento,
         subscriptionId: row.cd_assinatura,
-        tenant: row.assinatura.restaurante.nm_restaurante,
-        plan: row.assinatura.tp_plano as PlanCode,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tenant: (row as any).assinatura.restaurante.nm_restaurante,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        plan: (row as any).assinatura.tp_plano as PlanCode,
         asaasPaymentId: row.cd_asaas_payment,
         status: row.tp_status as PaymentStatus,
         paymentMethod: row.tp_forma_pagamento as PaymentMethod | null,

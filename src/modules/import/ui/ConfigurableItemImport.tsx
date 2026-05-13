@@ -17,11 +17,25 @@ interface ColumnMapping {
   label: string;
   mappedColumn: string;
   required: boolean;
+  defaultOptions?: { value: string; label: string }[];
 }
+
+const ITEM_TYPE_OPTIONS = [
+  { value: "insumo", label: "Insumo" },
+  { value: "embalagem", label: "Embalagem" },
+  { value: "pre_preparo", label: "Pré-preparo" },
+  { value: "intermediario", label: "Intermediário" },
+  { value: "produto_pronto", label: "Produto Pronto" },
+  { value: "prato", label: "Prato" },
+  { value: "porcao", label: "Porção" },
+  { value: "marmita", label: "Marmita" },
+  { value: "combo", label: "Combo" },
+  { value: "apoio", label: "Apoio" },
+];
 
 const TARGET_FIELDS: Omit<ColumnMapping, "mappedColumn">[] = [
   { systemField: "itemName", label: "Nome do Item", required: true },
-  { systemField: "type", label: "Tipo do Item", required: true },
+  { systemField: "type", label: "Tipo do Item", required: true, defaultOptions: ITEM_TYPE_OPTIONS },
   { systemField: "operationalCategory", label: "Categoria", required: false },
   { systemField: "internalCode", label: "Código Interno", required: false },
   { systemField: "purchaseUnit", label: "Unidade de Compra", required: true },
@@ -39,6 +53,7 @@ export function ConfigurableItemImport() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
+  const [defaultValues, setDefaultValues] = useState<Record<string, string>>({});
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,9 +95,18 @@ export function ConfigurableItemImport() {
 
   const handleMappingChange = (systemField: string, column: string) => {
     setMapping(prev => ({ ...prev, [systemField]: column }));
+    setDefaultValues(prev => { const next = { ...prev }; delete next[systemField]; return next; });
   };
 
-  const isMappingValid = TARGET_FIELDS.filter(f => f.required).every(f => !!mapping[f.systemField]);
+  const handleDefaultValueChange = (systemField: string, value: string) => {
+    setDefaultValues(prev => ({ ...prev, [systemField]: value }));
+    setMapping(prev => { const next = { ...prev }; delete next[systemField]; return next; });
+  };
+
+  const isFieldFilled = (f: Omit<ColumnMapping, "mappedColumn">) =>
+    !!mapping[f.systemField] || !!defaultValues[f.systemField];
+
+  const isMappingValid = TARGET_FIELDS.filter(f => f.required).every(isFieldFilled);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -142,26 +166,46 @@ export function ConfigurableItemImport() {
                   <span>Coluna da Planilha</span>
                 </div>
                 {TARGET_FIELDS.map((field) => (
-                  <div key={field.systemField} className="grid grid-cols-2 gap-4 items-center p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                    <div className="flex flex-col">
+                  <div key={field.systemField} className="grid grid-cols-2 gap-4 items-start p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div className="flex flex-col pt-2">
                       <span className="font-medium text-sm">
                         {field.label}
                         {field.required && <span className="text-destructive ml-1">*</span>}
                       </span>
                     </div>
-                    <Select
-                      value={mapping[field.systemField] || ""}
-                      onValueChange={(val) => handleMappingChange(field.systemField, val)}
-                    >
-                      <SelectTrigger className={!mapping[field.systemField] && field.required ? "border-destructive/50" : ""}>
-                        <SelectValue placeholder="Selecione a coluna..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {headers.map(h => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-col gap-1.5">
+                      <Select
+                        value={mapping[field.systemField] || ""}
+                        onValueChange={(val) => handleMappingChange(field.systemField, val)}
+                      >
+                        <SelectTrigger className={!isFieldFilled(field) && field.required ? "border-destructive/50" : ""}>
+                          <SelectValue placeholder="Selecione a coluna..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {headers.map(h => (
+                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {field.defaultOptions && !mapping[field.systemField] && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground shrink-0">ou valor fixo:</span>
+                          <Select
+                            value={defaultValues[field.systemField] || ""}
+                            onValueChange={(val) => handleDefaultValueChange(field.systemField, val)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Definir padrão..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.defaultOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -254,8 +298,8 @@ export function ConfigurableItemImport() {
             <div className="flex gap-4">
               <Button variant="outline" onClick={() => setStep(2)}>Voltar ao Mapeamento</Button>
               <form action={async (formData) => {
-                // Add mapping and file to formData
                 formData.append("mappingJson", JSON.stringify(mapping));
+                formData.append("defaultValuesJson", JSON.stringify(defaultValues));
                 formData.append("file", file!);
                 await createMappedItemImportAction(formData);
               }}>

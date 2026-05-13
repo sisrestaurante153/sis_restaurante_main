@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirectIfAuthenticated } from "@/modules/access/server/auth-actions";
 import { RegistroForm } from "./registro-form";
 import { PLAN_LIST } from "@/modules/billing/domain/plans";
@@ -17,7 +18,7 @@ export default async function RegistroPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
+          <Image src="/logo.jpg" alt="Logo" width={120} height={40} className="h-10 w-auto" priority />
         </div>
 
         {/* Copy principal */}
@@ -60,7 +61,7 @@ export default async function RegistroPage() {
           {/* Header mobile */}
           <div className="flex flex-col space-y-2 text-center lg:text-left">
             <div className="lg:hidden flex items-center justify-center mb-4">
-              <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
+              <Image src="/logo.jpg" alt="Logo" width={120} height={40} className="h-10 w-auto" priority />
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-brand-dark">
               Criar sua conta

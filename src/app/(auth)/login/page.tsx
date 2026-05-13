@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirectIfAuthenticated } from "@/modules/access/server/auth-actions";
 import { LoginForm } from "@/modules/access/ui/login-form";
 
@@ -14,7 +15,7 @@ export default async function LoginPage() {
         <div className="absolute bottom-20 -left-20 w-80 h-80 bg-brand-orange/20 rounded-full blur-3xl"></div>
 
         <div className="relative z-10">
-          <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
+          <Image src="/logo.jpg" alt="Logo" width={120} height={40} className="h-10 w-auto" priority />
         </div>
 
         <div className="relative z-10 max-w-xl">
@@ -39,7 +40,7 @@ export default async function LoginPage() {
         <div className="w-full max-w-[420px] space-y-8 animate-in fade-in zoom-in-95 duration-500">
           <div className="flex flex-col space-y-2 text-center lg:text-left">
             <div className="lg:hidden flex items-center justify-center mb-6">
-              <img src="/logo.jpg" alt="Logo" className="h-10 w-auto" />
+              <Image src="/logo.jpg" alt="Logo" width={120} height={40} className="h-10 w-auto" priority />
             </div>
             
             <h2 className="text-3xl font-bold tracking-tight text-brand-dark">

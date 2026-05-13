@@ -130,24 +130,24 @@ export default async function ItemDetailPage({
       >
         <StickyActionBar>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} width="100%">
-            <Button
-              type="submit"
-              formAction={deleteItemAction}
-              name="itemId"
-              value={item.id}
-              fullWidth
-              color="error"
-              variant="outlined"
-              startIcon={<DeleteOutlineOutlinedIcon />}
-              sx={{
-                padding: "8px 18px",
-                borderColor: "#F09595",
-                color: "#A32D2D",
-                "&:hover": { backgroundColor: "#FCEBEB", borderColor: "#F09595" }
-              }}
-            >
-              Excluir item
-            </Button>
+            <form action={deleteItemAction} style={{ display: "contents" }}>
+              <input type="hidden" name="itemId" value={item.id} />
+              <Button
+                type="submit"
+                fullWidth
+                color="error"
+                variant="outlined"
+                startIcon={<DeleteOutlineOutlinedIcon />}
+                sx={{
+                  padding: "8px 18px",
+                  borderColor: "#F09595",
+                  color: "#A32D2D",
+                  "&:hover": { backgroundColor: "#FCEBEB", borderColor: "#F09595" }
+                }}
+              >
+                Excluir item
+              </Button>
+            </form>
             <FormSubmitButton
               variant="contained"
               startIcon={<SaveOutlinedIcon />}
