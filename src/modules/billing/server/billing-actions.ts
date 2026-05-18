@@ -6,7 +6,7 @@ import { getServerEnv } from "@/modules/platform/server/env";
 import { signUp } from "@/modules/access/server/auth-service";
 import { getBillingRepository } from "@/modules/billing/server/billing-repository";
 import { createAsaasCustomer, createAsaasSubscription, planToAsaasDescription } from "@/modules/billing/server/asaas-client";
-import type { PlanCode, PaymentMethod } from "@/modules/billing/domain/plans";
+import type { PaymentMethod } from "@/modules/billing/domain/plans";
 import { PLANS } from "@/modules/billing/domain/plans";
 
 // ---------------------------------------------------------------------------
@@ -18,7 +18,7 @@ const registroSchema = z.object({
   nm_responsavel: z.string().min(2, "Informe o nome do responsável."),
   email: z.string().email("Email inválido."),
   password: z.string().min(8, "Senha com no mínimo 8 caracteres."),
-  plano: z.enum(["starter", "pro", "enterprise"])
+  plano: z.string().min(1, "Selecione um plano.")
 });
 
 export interface RegistroState {
@@ -78,6 +78,13 @@ export async function registrarRestauranteAction(
         }
       });
 
+      // Busca configuração do plano no banco
+      const planConfig = await tx.configuracaoPlano.findUnique({
+        where: { ds_codigo: plano }
+      });
+
+      const monthlyValue = planConfig ? planConfig.vl_mensal : (PLANS[plano] || PLANS.pro).monthlyValue;
+
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
@@ -86,7 +93,7 @@ export async function registrarRestauranteAction(
           cd_restaurante: restaurante.cd_restaurante,
           tp_plano: plano,
           tp_status: "trial",
-          vl_mensal: PLANS[plano as PlanCode].monthlyValue,
+          vl_mensal: monthlyValue,
           ts_trial_fim: trialEndsAt
         }
       });
@@ -189,4 +196,59 @@ export async function ativarAssinaturaAction(
       message: "Erro ao ativar a assinatura. Tente novamente ou entre em contato com o suporte."
     };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Gerenciamento de Planos (Admin)
+// ---------------------------------------------------------------------------
+
+export async function getPlanConfigsAction() {
+  const repo = getBillingRepository();
+  await repo.ensureDefaultPlans();
+  const rows = await repo.listPlanConfigs();
+  return rows.map(r => ({
+    id: r.cd_plano,
+    code: r.ds_codigo,
+    label: r.nm_plano,
+    monthlyValue: Number(r.vl_mensal),
+    description: r.ds_descricao,
+    limits: {
+      users: r.nr_limite_usuarios,
+      items: r.nr_limite_itens,
+      fichas: r.nr_limite_fichas
+    }
+  }));
+}
+
+const planSchema = z.object({
+  code: z.string().min(2),
+  label: z.string().min(2),
+  monthlyValue: z.number().min(0),
+  description: z.string().min(5),
+  limits: z.object({
+    users: z.number().int().min(1),
+    items: z.number().int().min(1),
+    fichas: z.number().int().min(1)
+  })
+});
+
+export async function savePlanConfigAction(data: z.infer<typeof planSchema>) {
+  const parsed = planSchema.safeParse(data);
+  if (!parsed.success) throw new Error("Dados inválidos");
+
+  const repo = getBillingRepository();
+  await repo.upsertPlanConfig({
+    ds_codigo: parsed.data.code,
+    nm_plano: parsed.data.label,
+    vl_mensal: parsed.data.monthlyValue,
+    ds_descricao: parsed.data.description,
+    nr_limite_usuarios: parsed.data.limits.users,
+    nr_limite_itens: parsed.data.limits.items,
+    nr_limite_fichas: parsed.data.limits.fichas
+  });
+}
+
+export async function deletePlanConfigAction(code: string) {
+  const repo = getBillingRepository();
+  await repo.deletePlanConfig(code);
 }

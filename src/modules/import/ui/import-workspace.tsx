@@ -27,6 +27,7 @@ import type {
   ImportExecutionSnapshot
 } from "@/modules/import/server/import-execution-presenter";
 import {
+  cancelImportExecutionAction,
   createImportExecutionAction,
   createOperationalItemImportAction
 } from "@/modules/import/server/import-actions";
@@ -35,7 +36,7 @@ import { withBasePath } from "@/modules/platform/lib/base-path";
 interface ImportWorkspaceProps {
   initialDashboard: ImportDashboardSnapshot;
   feedback: {
-    severity: "success" | "warning" | "error";
+    severity: "success" | "warning" | "error" | "info";
     message: string;
   } | null;
 }
@@ -57,7 +58,8 @@ function formatStatus(status: string) {
     processando: "Processando",
     concluida: "Concluída",
     concluida_com_conflitos: "Concluída com conflitos",
-    falha: "Falha"
+    falha: "Falha",
+    cancelada: "Cancelada"
   };
 
   return labelMap[status] ?? status;
@@ -289,6 +291,26 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                 <Alert severity="info">
                   O status desta execução será atualizado automaticamente enquanto o worker interno estiver processando a fila.
                 </Alert>
+                <Box
+                  component="form"
+                  action={cancelImportExecutionAction}
+                  sx={{ pt: 0.5 }}
+                >
+                  <input type="hidden" name="executionId" value={dashboard.activeExecution.id} />
+                  <Button
+                    type="submit"
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    onClick={(event) => {
+                      if (!window.confirm("Cancelar esta importação? Itens já processados podem ter sido salvos parcialmente.")) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    Cancelar importação
+                  </Button>
+                </Box>
               </Stack>
             ) : (
               <Alert severity="success">Nenhuma importação ativa neste momento.</Alert>

@@ -73,6 +73,7 @@ export function getImportFeedbackMessage(params: {
   error?: string;
   operational?: string;
   success?: string;
+  cancelled?: string;
 }) {
   if (params.success === "1") {
     return {
@@ -113,6 +114,27 @@ export function getImportFeedbackMessage(params: {
     return {
       severity: "error" as const,
       message: "Não foi possível preparar o arquivo para importação. Tente novamente."
+    };
+  }
+
+  if (params.cancelled === "1") {
+    return {
+      severity: "warning" as const,
+      message: "Importação cancelada. Você já pode enviar um novo arquivo."
+    };
+  }
+
+  if (params.error === "already_finished") {
+    return {
+      severity: "info" as const,
+      message: "A importação já havia sido concluída antes do cancelamento chegar ao servidor."
+    };
+  }
+
+  if (params.error === "cancel_failed") {
+    return {
+      severity: "error" as const,
+      message: "Não foi possível cancelar a importação. Tente novamente."
     };
   }
 

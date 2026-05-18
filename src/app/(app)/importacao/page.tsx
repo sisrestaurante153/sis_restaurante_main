@@ -12,6 +12,7 @@ type SearchParams = Promise<{
   execucao?: string;
   operational?: string;
   success?: string;
+  cancelled?: string;
 }>;
 
 export default async function ImportPage({ searchParams }: { searchParams?: SearchParams }) {

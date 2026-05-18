@@ -61,6 +61,22 @@ model PagamentoAsaas {
   @@map("pagamento_asaas")
 }
 
+model ConfiguracaoPlano {
+  cd_plano           String   @id @default(cuid())
+  ds_codigo          String   @unique
+  nm_plano           String
+  vl_mensal          Decimal  @db.Decimal(10, 2)
+  ds_descricao       String
+  nr_limite_usuarios Int
+  nr_limite_itens    Int
+  nr_limite_fichas   Int
+  sn_ativo           Boolean  @default(true)
+  ts_criacao         DateTime @default(now()) @db.Timestamptz(6)
+  ts_atualizacao     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("configuracao_plano")
+}
+
 model Item {
   cd_item                  String @id @default(cuid())
   ds_codigo_interno        String?
@@ -584,6 +600,7 @@ enum importacao_status {
   concluida
   concluida_com_conflitos
   falha
+  cancelada
 }
 
 enum item_type {

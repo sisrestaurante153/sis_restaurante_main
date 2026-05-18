@@ -478,18 +478,14 @@ export function FichaForm({
         </Box>
       </FormSection>
 
-      {/* Phase 09.2 B3: Quadro Final renderizado APOS Finalizacao (pedido do
-          cliente — ordem nova). Usa snapshot publicado por ComponentsEditor. */}
-      {quadroFinalSummary ? (
-        <TotaisIndicadores
-          summary={{ ...quadroFinalSummary, yieldUnit: yieldUnitCode }}
-          salePriceInput={salePriceInput}
-          variableExpensePercentInput={variableExpensePercentInput}
-          onSalePriceChange={setSalePriceInput}
-          onVariableExpensePercentChange={setVariableExpensePercentInput}
-          onAssemblyEnabledChange={setAssemblyEnabled}
-        />
-      ) : null}
+      <TotaisIndicadores
+        summary={{ ...(quadroFinalSummary ?? formSummary), yieldUnit: yieldUnitCode }}
+        salePriceInput={salePriceInput}
+        variableExpensePercentInput={variableExpensePercentInput}
+        onSalePriceChange={setSalePriceInput}
+        onVariableExpensePercentChange={setVariableExpensePercentInput}
+        onAssemblyEnabledChange={setAssemblyEnabled}
+      />
 
       {children}
     </Stack>

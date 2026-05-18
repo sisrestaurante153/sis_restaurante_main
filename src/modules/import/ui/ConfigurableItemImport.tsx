@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import * as XLSX from "xlsx";
-import { Upload, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, ArrowRight, CheckCircle2, AlertCircle, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { createMappedItemImportAction } from "@/modules/import/server/import-actions";
-import { useFormStatus } from "react-dom";
 
 interface ColumnMapping {
   systemField: string;
@@ -34,18 +33,16 @@ const ITEM_TYPE_OPTIONS = [
 ];
 
 const TARGET_FIELDS: Omit<ColumnMapping, "mappedColumn">[] = [
-  { systemField: "itemName", label: "Nome do Item", required: true },
-  { systemField: "type", label: "Tipo do Item", required: true, defaultOptions: ITEM_TYPE_OPTIONS },
-  { systemField: "operationalCategory", label: "Categoria", required: false },
   { systemField: "internalCode", label: "Código Interno", required: false },
+  { systemField: "itemName", label: "Nome do Item", required: true },
+  { systemField: "type", label: "Tipo", required: true, defaultOptions: ITEM_TYPE_OPTIONS },
+  { systemField: "operationalCategory", label: "Seção", required: false },
+  { systemField: "supplierName", label: "Fornecedor", required: false },
   { systemField: "purchaseUnit", label: "Unidade de Compra", required: true },
-  { systemField: "purchaseQuantity", label: "Qtd. na Embalagem", required: true },
-  { systemField: "purchaseCost", label: "Custo de Compra", required: true },
-  { systemField: "conversionFactor", label: "Fator de Conversão", required: false },
+  { systemField: "purchaseQuantity", label: "Quantidade de Compra", required: true },
+  { systemField: "purchaseCost", label: "Preço de Compra", required: true },
   { systemField: "usageUnit", label: "Unidade de Uso", required: false },
-  { systemField: "usageQuantity", label: "Qtd. de Uso", required: false },
-  { systemField: "supplierName", label: "Nome do Fornecedor", required: false },
-  { systemField: "updatedAt", label: "Data de Atualização", required: false },
+  { systemField: "usageQuantity", label: "Quantidade de Uso", required: false },
 ];
 
 export function ConfigurableItemImport() {
@@ -55,6 +52,24 @@ export function ConfigurableItemImport() {
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [defaultValues, setDefaultValues] = useState<Record<string, string>>({});
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleImport = async () => {
+    if (!file || isProcessing) return;
+    setIsProcessing(true);
+    const formData = new FormData();
+    formData.append("mappingJson", JSON.stringify(mapping));
+    formData.append("defaultValuesJson", JSON.stringify(defaultValues));
+    formData.append("file", file);
+    await createMappedItemImportAction(formData);
+    // Servidor chama redirect() ao concluir — linha abaixo só executa em erros capturados antes do redirect
+    setIsProcessing(false);
+  };
+
+  const handleCancel = () => {
+    setIsProcessing(false);
+    setStep(2);
+  };
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
@@ -295,16 +310,34 @@ export function ConfigurableItemImport() {
                 Certifique-se de que os dados acima estão corretos. Esta ação atualizará o cadastro de itens.
               </p>
             </div>
-            <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(2)}>Voltar ao Mapeamento</Button>
-              <form action={async (formData) => {
-                formData.append("mappingJson", JSON.stringify(mapping));
-                formData.append("defaultValuesJson", JSON.stringify(defaultValues));
-                formData.append("file", file!);
-                await createMappedItemImportAction(formData);
-              }}>
-                <SubmitButton />
-              </form>
+            <div className="flex gap-4 items-center">
+              {!isProcessing && (
+                <Button variant="outline" onClick={() => setStep(2)}>Voltar ao Mapeamento</Button>
+              )}
+              {isProcessing && (
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancelar
+                </Button>
+              )}
+              <Button
+                disabled={isProcessing}
+                onClick={handleImport}
+                className="px-8 bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  "Iniciar Importação"
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -313,18 +346,3 @@ export function ConfigurableItemImport() {
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending} className="px-8 bg-green-600 hover:bg-green-700">
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Processando...
-        </>
-      ) : (
-        "Iniciar Importação"
-      )}
-    </Button>
-  );
-}

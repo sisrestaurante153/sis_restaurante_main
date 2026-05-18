@@ -4,42 +4,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-export function LandingPage() {
+import { type Plan, PLAN_LIST } from "@/modules/billing/domain/plans";
+
+export function LandingPage({ plans }: { plans?: Plan[] }) {
   // Estado para a seção "Qual plano é pra mim?"
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
+
+  const planList = plans && plans.length > 0 ? plans : PLAN_LIST;
 
   const getPlanResult = () => {
     if (!q1 || !q2) return null;
 
     if (q1 === "1") {
       return {
-        plan: "Essencial ou Profissional",
-        desc: "Se você tem até 30 pratos no cardápio, o <strong>Essencial</strong> (R$ 49/mês) resolve. Se já tem mais pratos ou quer várias pessoas da equipe acessando, vá de <strong>Profissional</strong> (R$ 99/mês).",
+        plan: `${planList[0]?.label || "Essencial"} ou ${planList[1]?.label || "Profissional"}`,
+        desc: `Se você tem até ${planList[0]?.limits.fichas || 30} pratos no cardápio, o <strong>${planList[0]?.label || "Essencial"}</strong> (R$ ${planList[0]?.monthlyValue || 49}/mês) resolve. Se já tem mais pratos ou quer várias pessoas da equipe acessando, vá de <strong>${planList[1]?.label || "Profissional"}</strong> (R$ ${planList[1]?.monthlyValue || 99}/mês).`,
         emoji: "🍽️",
       };
     } else if (q1 === "2-3" && q2 === "same") {
       return {
-        plan: "Profissional",
-        desc: "Uma única assinatura de <strong>R$ 99/mês</strong> atende todas as suas unidades. Como o cardápio e os fornecedores são iguais, a ficha técnica é centralizada e vale pra todas as lojas.",
+        plan: planList[1]?.label || "Profissional",
+        desc: `Uma única assinatura de <strong>R$ ${planList[1]?.monthlyValue || 99}/mês</strong> atende todas as suas unidades. Como o cardápio e os fornecedores são iguais, a ficha técnica é centralizada e vale pra todas as lojas.`,
         emoji: "🎯",
       };
     } else if (q1 === "2-3" && q2 === "different") {
       return {
-        plan: "Rede",
-        desc: "Como cada unidade tem particularidade própria, o <strong>Rede</strong> é o ideal. Base de R$ 1.000/mês + R$ 49,90 por unidade adicional. Inclui onboarding, treinamento e gerente de conta.",
+        plan: planList[2]?.label || "Rede",
+        desc: `Como cada unidade tem particularidade própria, o <strong>${planList[2]?.label || "Rede"}</strong> é o ideal. Base de R$ ${planList[2]?.monthlyValue || 1000}/mês. Inclui onboarding, treinamento e gerente de conta.`,
         emoji: "🏪",
       };
     } else if (q1 === "4+") {
       return {
-        plan: "Rede",
-        desc: "Com 4+ unidades, o <strong>Rede</strong> é a escolha certa. Consolidação de resultados, comparativo de CMV entre lojas, onboarding assistido e WhatsApp direto com gerente de conta.",
+        plan: planList[2]?.label || "Rede",
+        desc: `Com 4+ unidades, o <strong>${planList[2]?.label || "Rede"}</strong> é a escolha certa. Consolidação de resultados, comparativo de CMV entre lojas, onboarding assistido e WhatsApp direto com gerente de conta.`,
         emoji: "🏢",
       };
     } else {
       return {
-        plan: "Essencial ou Profissional",
-        desc: "Com só 1 operação, o plano <strong>Profissional</strong> cobre tudo que você precisa. Se cardápio for enxuto (até 30 pratos), o <strong>Essencial</strong> também resolve.",
+        plan: `${planList[0]?.label || "Essencial"} ou ${planList[1]?.label || "Profissional"}`,
+        desc: `Com só 1 operação, o plano <strong>${planList[1]?.label || "Profissional"}</strong> cobre tudo que você precisa. Se cardápio for enxuto, o <strong>${planList[0]?.label || "Essencial"}</strong> também resolve.`,
         emoji: "🍽️",
       };
     }
@@ -474,99 +478,43 @@ export function LandingPage() {
         <div className="container-page">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch mt-12">
             
-            {/* PLANO ESSENCIAL */}
-            <div className="bg-white rounded-2xl p-7 md:p-9 border border-ink-200 flex flex-col relative">
-              <div className="font-display font-semibold text-2xl mb-1.5 tracking-tight">Essencial</div>
-              <div className="text-xs font-semibold tracking-wider uppercase opacity-60 mb-3">Para quem está começando</div>
-              <div className="text-sm opacity-75 mb-5 leading-relaxed italic border-l-2 border-current pl-3">MEI, lanchonete, delivery pequeno, confeitaria, restaurante com cardápio enxuto.</div>
-              <div className="font-display font-bold text-[52px] leading-none tracking-tight mb-1">
-                <span className="text-[22px] align-top mr-0.5 opacity-60 font-medium">R$</span>49<span className="text-sm font-normal opacity-60 tracking-normal"> /mês</span>
-              </div>
-              <div className="text-xs opacity-60 mb-6">cobrança mensal · cancele quando quiser</div>
-              <ul className="list-none m-0 p-0 mb-7 flex-1 flex flex-col gap-2">
-                {[
-                  <>Até <strong>30 fichas técnicas</strong></>,
-                  "1 usuário",
-                  <>Ingredientes <strong>ilimitados</strong></>,
-                  "Importar lista de ingredientes",
-                  "Cálculo de custo por receita",
-                  "Termômetro de preço de venda",
-                  "Cálculo de CMV",
-                  "Suporte por e-mail + base de ajuda"
-                ].map((item, idx) => (
-                  <li key={idx} className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className="w-4 h-4 text-success shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {item}
+            {planList.slice(0, 3).map((plan, idx) => (
+              <div key={plan.code} className={`rounded-2xl p-7 md:p-9 border flex flex-col relative ${idx === 1 ? 'bg-blue-900 text-white md:scale-[1.02] shadow-xl border-blue-900' : 'bg-white border-ink-200'}`}>
+                {idx === 1 && <div className="absolute -top-3 right-7 bg-orange-600 text-white px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider">MAIS VENDIDO</div>}
+                <div className="font-display font-semibold text-2xl mb-1.5 tracking-tight">{plan.label}</div>
+                <div className="text-xs font-semibold tracking-wider uppercase opacity-60 mb-3">{idx === 0 ? "Para quem está começando" : idx === 1 ? "Para controle real de margem" : "Para operações complexas"}</div>
+                <div className="text-sm opacity-75 mb-5 leading-relaxed italic border-l-2 border-current pl-3">{plan.description}</div>
+                <div className="font-display font-bold text-[52px] leading-none tracking-tight mb-1">
+                  <span className="text-[22px] align-top mr-0.5 opacity-60 font-medium">R$</span>{plan.monthlyValue}<span className="text-sm font-normal opacity-60 tracking-normal"> /mês</span>
+                </div>
+                <div className="text-xs opacity-60 mb-6">cobrança mensal · cancele quando quiser</div>
+                <ul className="list-none m-0 p-0 mb-7 flex-1 flex flex-col gap-2">
+                  <li className="text-sm flex items-start gap-2.5 leading-relaxed">
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Até <strong>{plan.limits.fichas >= 9999 ? "Fichas ilimitadas" : `${plan.limits.fichas} fichas técnicas`}</strong>
                   </li>
-                ))}
-              </ul>
-              <div className="font-display italic text-sm leading-relaxed text-orange-700 p-4 bg-orange-50 rounded-md mb-5">&quot;Comece a precificar corretamente e pare de vender sem saber seu lucro.&quot;</div>
-              <Link href="/registro" className="btn-ghost w-full py-3.5 text-base text-center">Começar grátis</Link>
-            </div>
-
-            {/* PLANO PROFISSIONAL */}
-            <div className="bg-blue-900 text-white rounded-2xl p-7 md:p-9 border border-blue-900 flex flex-col relative md:scale-[1.02] shadow-xl">
-              <div className="absolute -top-3 right-7 bg-orange-600 text-white px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider">MAIS VENDIDO</div>
-              <div className="font-display font-semibold text-2xl mb-1.5 tracking-tight">Profissional</div>
-              <div className="text-xs font-semibold tracking-wider uppercase opacity-60 mb-3">Para controle real de margem</div>
-              <div className="text-sm opacity-75 mb-5 leading-relaxed italic border-l-2 border-current pl-3">Restaurante operando com volume, hamburgueria, pizzaria, dark kitchen.</div>
-              <div className="font-display font-bold text-[52px] leading-none tracking-tight mb-1">
-                <span className="text-[22px] align-top mr-0.5 opacity-60 font-medium">R$</span>99<span className="text-sm font-normal opacity-60 tracking-normal"> /mês</span>
-              </div>
-              <div className="text-xs opacity-60 mb-6">cobrança mensal · cancele quando quiser</div>
-              <ul className="list-none m-0 p-0 mb-7 flex-1 flex flex-col gap-2">
-                {[
-                  <><strong>Fichas técnicas ilimitadas</strong></>,
-                  <>Até <strong>5 usuários</strong> (Editor e Visualizador)</>,
-                  "Ingredientes ilimitados",
-                  "Importar lista de ingredientes",
-                  "Cálculo de custo por receita",
-                  "Termômetro de preço de venda",
-                  "Cálculo de CMV",
-                  <><strong>Categorias e grupos</strong> de produtos</>,
-                  "Suporte por e-mail + base de ajuda"
-                ].map((item, idx) => (
-                  <li key={idx} className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {item}
+                  <li className="text-sm flex items-start gap-2.5 leading-relaxed">
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Até <strong>{plan.limits.users} usuários</strong>
                   </li>
-                ))}
-              </ul>
-              <div className="font-display italic text-sm leading-relaxed text-orange-300 p-4 bg-orange-500/15 rounded-md mb-5">&quot;Tenha controle real do custo, CMV e margem para tomar decisões com segurança.&quot;</div>
-              <Link href="/registro" className="btn-primary w-full py-3.5 text-base text-center">Começar grátis →</Link>
-            </div>
-
-            {/* PLANO REDE */}
-            <div className="bg-white rounded-2xl p-7 md:p-9 border border-ink-200 flex flex-col relative">
-              <div className="font-display font-semibold text-2xl mb-1.5 tracking-tight">Rede</div>
-              <div className="text-xs font-semibold tracking-wider uppercase opacity-60 mb-3">Para operações complexas</div>
-              <div className="text-sm opacity-75 mb-5 leading-relaxed italic border-l-2 border-current pl-3">Redes, franquias, consultorias gastronômicas, grupos com várias marcas.</div>
-              <div className="font-display font-bold text-[38px] leading-none tracking-tight mb-1">
-                <span className="text-[22px] align-top mr-0.5 opacity-60 font-medium">R$</span>1.000<span className="text-sm font-normal opacity-60 tracking-normal"> /mês</span>
-              </div>
-              <div className="text-xs opacity-60 mb-6"><span className="font-semibold text-blue-700 opacity-100">+ R$ 49,90</span> por unidade adicional</div>
-              <ul className="list-none m-0 p-0 mb-7 flex-1 flex flex-col gap-2">
-                {[
-                  <><strong>Tudo do Profissional</strong> em cada unidade</>,
-                  "Usuários ilimitados com gestão de rede",
-                  "Centro de custo por unidade",
-                  "Preços de compra diferentes por loja",
-                  "Consolidação de resultados da rede",
-                  "Comparativo de CMV entre unidades",
-                  <><strong>Onboarding assistido</strong> da matriz</>,
-                  <><strong>Treinamento</strong> para a equipe</>,
-                  <><strong>Gerente de conta</strong> (1h/mês)</>,
-                  <>Suporte prioritário via <strong>WhatsApp</strong></>
-                ].map((item, idx) => (
-                  <li key={idx} className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className="w-4 h-4 text-success shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {item}
+                  <li className="text-sm flex items-start gap-2.5 leading-relaxed">
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Ingredientes <strong>ilimitados</strong>
                   </li>
-                ))}
-              </ul>
-              <div className="font-display italic text-sm leading-relaxed text-orange-700 p-4 bg-orange-50 rounded-md mb-5">&quot;Padronização, escala e inteligência financeira para operações complexas.&quot;</div>
-              <Link href="/registro" className="btn-ghost w-full py-3.5 text-base text-center">Falar com vendas</Link>
-            </div>
+                  {idx > 0 && (
+                    <li className="text-sm flex items-start gap-2.5 leading-relaxed">
+                      <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <strong>Categorias e grupos</strong> de produtos
+                    </li>
+                  )}
+                  <li className="text-sm flex items-start gap-2.5 leading-relaxed">
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Cálculo de CMV automático
+                  </li>
+                </ul>
+                <Link href="/registro" className={`${idx === 1 ? 'btn-primary' : 'btn-ghost'} w-full py-3.5 text-base text-center`}>Começar grátis</Link>
+              </div>
+            ))}
 
           </div>
 

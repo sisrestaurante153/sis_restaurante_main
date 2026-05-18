@@ -222,6 +222,73 @@ export function getBillingRepository() {
           ts_pagamento: data.paidAt ?? null
         }
       });
+    },
+
+    async listPlanConfigs() {
+      return db.configuracaoPlano.findMany({
+        where: { sn_ativo: true },
+        orderBy: { vl_mensal: "asc" }
+      });
+    },
+
+    async upsertPlanConfig(data: {
+      ds_codigo: string;
+      nm_plano: string;
+      vl_mensal: number;
+      ds_descricao: string;
+      nr_limite_usuarios: number;
+      nr_limite_itens: number;
+      nr_limite_fichas: number;
+    }): Promise<void> {
+      await db.configuracaoPlano.upsert({
+        where: { ds_codigo: data.ds_codigo },
+        create: {
+          ds_codigo: data.ds_codigo,
+          nm_plano: data.nm_plano,
+          vl_mensal: data.vl_mensal,
+          ds_descricao: data.ds_descricao,
+          nr_limite_usuarios: data.nr_limite_usuarios,
+          nr_limite_itens: data.nr_limite_itens,
+          nr_limite_fichas: data.nr_limite_fichas,
+          sn_ativo: true
+        },
+        update: {
+          nm_plano: data.nm_plano,
+          vl_mensal: data.vl_mensal,
+          ds_descricao: data.ds_descricao,
+          nr_limite_usuarios: data.nr_limite_usuarios,
+          nr_limite_itens: data.nr_limite_itens,
+          nr_limite_fichas: data.nr_limite_fichas,
+          ts_atualizacao: new Date()
+        }
+      });
+    },
+
+    async deletePlanConfig(code: string): Promise<void> {
+      await db.configuracaoPlano.update({
+        where: { ds_codigo: code },
+        data: { sn_ativo: false, ts_atualizacao: new Date() }
+      });
+    },
+
+    async ensureDefaultPlans(): Promise<void> {
+      const count = await db.configuracaoPlano.count();
+      if (count === 0) {
+        const { PLANS } = await import("@/modules/billing/domain/plans");
+        for (const plan of Object.values(PLANS)) {
+          await db.configuracaoPlano.create({
+            data: {
+              ds_codigo: plan.code,
+              nm_plano: plan.label,
+              vl_mensal: plan.monthlyValue,
+              ds_descricao: plan.description,
+              nr_limite_usuarios: plan.limits.users,
+              nr_limite_itens: plan.limits.items,
+              nr_limite_fichas: plan.limits.fichas
+            }
+          });
+        }
+      }
     }
   };
 }

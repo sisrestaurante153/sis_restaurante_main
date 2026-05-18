@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -405,32 +406,31 @@ export function FichaFlatGrid({
               />
 
               <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                <TextField
+                <Autocomplete
                   fullWidth
-                  select
                   size="small"
-                  label="Item"
-                  value={row.itemId}
-                  onChange={(event) => {
-                    const nextItem = itemOptions.find((item) => item.id === event.target.value);
+                  options={itemOptions}
+                  getOptionLabel={(opt) => opt.name}
+                  isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                  value={itemOptions.find((item) => item.id === row.itemId) ?? null}
+                  onChange={(_event, nextItem) => {
+                    if (!nextItem) return;
                     onUpdateRow(index, {
-                      itemId: event.target.value,
-                      usageUnit: nextItem?.usageUnit ?? row.usageUnit,
+                      itemId: nextItem.id,
+                      usageUnit: nextItem.usageUnit ?? row.usageUnit,
                       componentType:
-                        nextItem?.type === "embalagem"
+                        nextItem.type === "embalagem"
                           ? "embalagem"
-                          : nextItem?.type === "apoio"
+                          : nextItem.type === "apoio"
                             ? "apoio"
                             : "ingrediente"
                     });
                   }}
-                >
-                  {itemOptions.map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                  renderInput={(params) => (
+                    <TextField {...params} label="Item" />
+                  )}
+                  noOptionsText="Nenhum item encontrado"
+                />
                 <Stack direction="row" spacing={0.75} alignItems="center">
                   {row.levelLabel ? (
                     <Box

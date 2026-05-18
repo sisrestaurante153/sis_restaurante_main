@@ -11,26 +11,28 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
 import { registrarRestauranteAction, type RegistroState } from "@/modules/billing/server/billing-actions";
-import { PLAN_LIST } from "@/modules/billing/domain/plans";
+import { type Plan, PLAN_LIST } from "@/modules/billing/domain/plans";
 
 const PLAN_STYLE: Record<string, string> = {
   starter: "border-orange-200 bg-orange-50 text-orange-700",
-  pro: "border-blue-200 bg-blue-50 text-blue-700",
+  pro: "border-teal-200 bg-teal-50 text-teal-700",
   enterprise: "border-purple-200 bg-purple-50 text-purple-700"
 };
 
 const PLAN_SELECTED_RING: Record<string, string> = {
   starter: "ring-2 ring-orange-400",
-  pro: "ring-2 ring-blue-500",
+  pro: "ring-2 ring-teal-500",
   enterprise: "ring-2 ring-purple-500"
 };
 
 const initialState: RegistroState = { status: "idle" };
 
-export function RegistroForm() {
+export function RegistroForm({ plans }: { plans?: Plan[] }) {
   const [state, action] = useActionState(registrarRestauranteAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("pro");
+  
+  const planList = plans && plans.length > 0 ? plans : PLAN_LIST;
+  const [selectedPlan, setSelectedPlan] = useState(planList[1]?.code || planList[0]?.code || "pro");
 
   if (state.status === "success") {
     return (
@@ -118,10 +120,10 @@ export function RegistroForm() {
           Plano — 14 dias grátis, sem cartão agora
         </p>
         <div className="grid grid-cols-3 gap-2">
-          {PLAN_LIST.map((plan) => (
+          {planList.map((plan) => (
             <label
               key={plan.code}
-              className={`cursor-pointer rounded-xl border p-3 transition-all ${PLAN_STYLE[plan.code]} ${selectedPlan === plan.code ? PLAN_SELECTED_RING[plan.code] : "opacity-70 hover:opacity-100"}`}
+              className={`cursor-pointer rounded-xl border p-3 transition-all ${PLAN_STYLE[plan.code] || "border-gray-200 bg-gray-50 text-gray-700"} ${selectedPlan === plan.code ? (PLAN_SELECTED_RING[plan.code] || "ring-2 ring-gray-400") : "opacity-70 hover:opacity-100"}`}
             >
               <input
                 type="radio"

@@ -12,7 +12,8 @@ export type ImportExecutionEvent =
   | "start_processing"
   | "complete"
   | "complete_with_conflicts"
-  | "fail";
+  | "fail"
+  | "cancel";
 
 export interface FriendlyImportSummary {
   headline: string;
@@ -58,6 +59,10 @@ export function isImportExecutionActive(status: importacao_status) {
   return status === importacao_status.pendente || status === importacao_status.processando;
 }
 
+export function isImportExecutionCancellable(status: importacao_status) {
+  return status === importacao_status.pendente || status === importacao_status.processando;
+}
+
 export function assertCanCreateImportExecution(
   activeExecution:
     | {
@@ -94,6 +99,13 @@ export function getNextImportExecutionStatus(
 
   if (currentStatus === importacao_status.processando && event === "fail") {
     return importacao_status.falha;
+  }
+
+  if (
+    (currentStatus === importacao_status.pendente || currentStatus === importacao_status.processando) &&
+    event === "cancel"
+  ) {
+    return importacao_status.cancelada;
   }
 
   throw new InvalidImportExecutionTransitionError(currentStatus, event);

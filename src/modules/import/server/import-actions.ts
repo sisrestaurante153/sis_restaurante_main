@@ -83,6 +83,30 @@ export async function createImportExecutionAction(formData: FormData) {
   redirect(destination);
 }
 
+export async function cancelImportExecutionAction(formData: FormData) {
+  const actor = await resolveImportActor();
+  const executionId = formData.get("executionId")?.toString();
+
+  if (!executionId) {
+    redirect("/importacao?error=invalid_params");
+  }
+
+  const repository = getImportRepository(actor.restaurantId);
+
+  try {
+    const result = await repository.markImportExecutionCancelled(executionId);
+    if (!result) {
+      // Execução já concluída/cancelada antes do clique chegar ao servidor
+      redirect("/importacao?error=already_finished");
+    }
+  } catch (error) {
+    console.error("[importacao] cancel_failed", error);
+    redirect("/importacao?error=cancel_failed");
+  }
+
+  redirect("/importacao?cancelled=1");
+}
+
 export async function createOperationalItemImportAction(formData: FormData) {
   const actor = await resolveImportActor();
   const uploadedFile = formData.get("operationalWorkbook");

@@ -191,7 +191,7 @@ export interface DemoImportExecutionRecord {
   fileHash: string | null;
   mimeType: string | null;
   fileSizeBytes: number | null;
-  status: "pendente" | "processando" | "concluida" | "concluida_com_conflitos" | "falha";
+  status: "pendente" | "processando" | "concluida" | "concluida_com_conflitos" | "falha" | "cancelada";
   currentStage: string;
   friendlySummary: {
     headline: string;

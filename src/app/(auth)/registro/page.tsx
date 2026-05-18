@@ -1,11 +1,12 @@
 import Image from "next/image";
 import { redirectIfAuthenticated } from "@/modules/access/server/auth-actions";
 import { RegistroForm } from "./registro-form";
-import { PLAN_LIST } from "@/modules/billing/domain/plans";
+import { getPlanConfigsAction } from "@/modules/billing/server/billing-actions";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 
 export default async function RegistroPage() {
   await redirectIfAuthenticated();
+  const plans = await getPlanConfigsAction();
 
   return (
     <div className="min-h-screen flex w-full bg-brand-bg">
@@ -32,7 +33,7 @@ export default async function RegistroPage() {
 
           {/* Planos resumidos */}
           <div className="flex flex-col gap-4">
-            {PLAN_LIST.map((plan) => (
+            {plans.map((plan) => (
               <div key={plan.code} className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
                   <CheckRoundedIcon sx={{ fontSize: 14 }} />
@@ -72,7 +73,7 @@ export default async function RegistroPage() {
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
-            <RegistroForm />
+            <RegistroForm plans={plans} />
           </div>
 
           <div className="text-center text-xs text-muted-foreground">
@@ -83,3 +84,4 @@ export default async function RegistroPage() {
     </div>
   );
 }
+

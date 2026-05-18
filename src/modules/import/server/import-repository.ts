@@ -676,6 +676,44 @@ async function markImportExecutionFailedWithPrisma(
   });
 }
 
+async function markImportExecutionCancelledWithPrisma(executionId: string) {
+  const prisma = resolvePrismaClient();
+
+  if (!prisma) {
+    return null;
+  }
+
+  // $executeRaw evita a validação em memória do Prisma client (que pode estar
+  // cacheado numa versão anterior ao prisma generate).
+  // WHERE condicional é atômico: 0 rows afetadas se o status já mudou.
+  const friendlySummary = JSON.stringify({
+    headline: "Importação cancelada pelo usuário",
+    whatHappened: "O usuário cancelou manualmente a execução antes da conclusão.",
+    impact: "Itens processados até o momento podem ter sido salvos parcialmente.",
+    whatToDoNow: "Você pode iniciar uma nova importação a qualquer momento."
+  });
+
+  const result = await prisma.$executeRaw`
+    UPDATE importacao_execucao
+    SET
+      tp_status        = 'cancelada'::importacao_status,
+      ds_estagio_atual = 'cancelada',
+      ts_fim           = NOW(),
+      js_resumo_amigavel = ${friendlySummary}::jsonb
+    WHERE cd_importacao = ${executionId}
+      AND tp_status IN ('pendente'::importacao_status, 'processando'::importacao_status)
+  `;
+
+  if (result === 0) {
+    return null;
+  }
+
+  // Não relê do banco: o client em memória pode não conhecer 'cancelada'
+  // ainda (singleton anterior ao prisma generate). Retorna stub suficiente
+  // para o caller saber que a operação teve efeito.
+  return { id: executionId, status: "cancelada" as const };
+}
+
 function listImportExecutionsFromDemo(filters?: ImportExecutionFilters) {
   return getDemoStore().importExecutions
     .filter((execution) => (filters?.status ? execution.status === filters.status : true))
@@ -913,6 +951,26 @@ export function getImportRepository(restaurantId = "rest_padrao") {
           ...(input.artifacts ?? {})
         },
         operationalSummary: input.operationalSummary ?? execution.operationalSummary,
+        finishedAt: new Date().toISOString()
+      }));
+    },
+
+    async markImportExecutionCancelled(executionId: string) {
+      const prismaResult = await markImportExecutionCancelledWithPrisma(executionId);
+      if (prismaResult) {
+        return prismaResult;
+      }
+
+      return updateDemoExecution(executionId, (execution) => ({
+        ...execution,
+        status: getNextImportExecutionStatus(execution.status as importacao_status, "cancel"),
+        currentStage: "cancelada",
+        friendlySummary: {
+          headline: "Importação cancelada pelo usuário",
+          whatHappened: "O usuário cancelou manualmente a execução antes da conclusão.",
+          impact: "Itens processados até o momento podem ter sido salvos parcialmente.",
+          whatToDoNow: "Você pode iniciar uma nova importação a qualquer momento."
+        },
         finishedAt: new Date().toISOString()
       }));
     },

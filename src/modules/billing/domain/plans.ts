@@ -4,7 +4,8 @@ export type PaymentMethod = "CREDIT_CARD" | "PIX";
 export type PaymentStatus = "CONFIRMED" | "RECEIVED" | "OVERDUE" | "REFUNDED" | "PENDING";
 
 export interface Plan {
-  code: PlanCode;
+  id?: string;
+  code: string;
   label: string;
   monthlyValue: number;
   description: string;
@@ -15,7 +16,7 @@ export interface Plan {
   };
 }
 
-export const PLANS: Record<PlanCode, Plan> = {
+export const PLANS: Record<string, Plan> = {
   starter: {
     code: "starter",
     label: "Starter",

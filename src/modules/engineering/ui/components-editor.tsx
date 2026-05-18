@@ -92,7 +92,7 @@ function inferComponentType(itemType?: string): ComponentEditorRow["componentTyp
 
 function buildRowFromOption(
   itemOptions: ComponentOption[],
-  option = itemOptions[0],
+  option?: ComponentOption,
   level = 1
 ): ComponentEditorRow {
   return {
@@ -111,13 +111,12 @@ function buildCoccaoFinalRow(
   level: number
 ): ComponentEditorRow {
   const coccaoType = stageTypeOptions.find((option) => option.code === COCCAO_FINAL_CODE);
-  const option = itemOptions[0];
 
   return {
-    itemId: option?.id ?? "",
-    componentType: inferComponentType(option?.type),
+    itemId: "",
+    componentType: "ingrediente",
     quantityUsed: "1.0000",
-    usageUnit: option?.usageUnit ?? "kg",
+    usageUnit: "kg",
     levelLabel: `N${level}`,
     notes: "",
     stageTypeId: coccaoType?.id,
