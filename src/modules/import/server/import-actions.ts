@@ -13,6 +13,19 @@ import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import * as XLSX from "xlsx";
 import { z } from "zod";
 
+// Normaliza número para string com ponto decimal.
+// Aceita: JS number (raw: true), string PT-BR "1.234,56", string "10,00", string pura "10.00".
+function parseBrNumber(value: unknown): string {
+  if (value === undefined || value === null || value === "") return "0";
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "0";
+  const str = String(value).trim().replace(/R\$\s?/g, "").trim();
+  if (str === "") return "0";
+  if (/^-?\d+(\.\d+)?$/.test(str)) return str;
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) return str.replace(/\./g, "").replace(",", ".");
+  if (/^\d+(,\d+)?$/.test(str)) return str.replace(",", ".");
+  return str;
+}
+
 async function ensureCategoriaOperacional(nome: string) {
   if (!nome || nome.trim() === "") return;
   const env = getServerEnv();
@@ -317,24 +330,6 @@ export async function createMappedItemImportAction(formData: FormData) {
     const rows = (XLSX.utils.sheet_to_json(worksheet, { raw: true, defval: "" }) as Record<string, unknown>[])
       .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), v])));
 
-    // Normaliza número para string com ponto decimal.
-    // Aceita: JS number (raw: true), string PT-BR "1.234,56", string "10,00", string pura "10.00".
-    const parseBrNumber = (value: unknown): string => {
-      if (value === undefined || value === null || value === "") return "0";
-      // Célula numérica do Excel (raw: true) — valor já é float JS, usa direto.
-      if (typeof value === "number") return Number.isFinite(value) ? String(value) : "0";
-      // Célula de texto: remove símbolo de moeda e espaços antes de parsear.
-      const str = String(value).trim().replace(/R\$\s?/g, "").trim();
-      if (str === "") return "0";
-      // Número puro com ponto decimal → retorna direto.
-      if (/^-?\d+(\.\d+)?$/.test(str)) return str;
-      // Formato BR com milhar e decimal: 1.234,56
-      if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) return str.replace(/\./g, "").replace(",", ".");
-      // Só vírgula decimal: 10,00
-      if (/^\d+(,\d+)?$/.test(str)) return str.replace(",", ".");
-      return str;
-    };
-
     // Pre-carrega todos os itens existentes em 1 query para evitar N listItems por linha.
     const env = getServerEnv();
     const prismaForBulk = getPrismaClient(env.DATABASE_URL);
@@ -466,4 +461,99 @@ export async function createMappedItemImportAction(formData: FormData) {
   }
 
   redirect("/importacao?success=1");
+}
+
+// ─── Ações para importação progressiva (item a item, progresso visível no cliente) ───
+
+export async function preloadImportItemsAction() {
+  const actor = await resolveImportActor();
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) return [];
+  const items = await prisma.item.findMany({
+    where: { cd_restaurante: actor.restaurantId },
+    select: { cd_item: true, nm_item: true, ds_codigo_interno: true, nm_categoria_operacional: true }
+  });
+  return items.map((i) => ({
+    id: i.cd_item,
+    name: i.nm_item,
+    code: i.ds_codigo_interno ?? "",
+    category: i.nm_categoria_operacional ?? "Importado"
+  }));
+}
+
+const VALID_ITEM_TYPES = [
+  "insumo", "pre_preparo", "intermediario", "produto_pronto",
+  "prato", "porcao", "marmita", "combo", "embalagem", "apoio"
+] as const;
+
+export async function saveImportedItemAction(input: {
+  name: string;
+  type: string;
+  internalCode: string;
+  operationalCategory: string;
+  supplierName: string;
+  purchaseUnit: string;
+  purchaseQuantity: string;
+  purchaseCost: string;
+  usageUnit: string;
+  usageQuantity: string;
+  updatedAt: string;
+  existingItemId?: string;
+  existingItemCode?: string;
+  existingItemCategory?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const actor = await resolveImportActor();
+    const catalogRepository = getCatalogRepository(actor.restaurantId);
+
+    const rawType = input.type.toLowerCase().trim();
+    const itemType = (VALID_ITEM_TYPES.includes(rawType as typeof VALID_ITEM_TYPES[number]) ? rawType : "insumo") as typeof VALID_ITEM_TYPES[number];
+    const rawCodeStr = input.internalCode.trim();
+    const code = rawCodeStr !== "" && rawCodeStr !== "0" ? rawCodeStr : (input.existingItemCode ?? "");
+    const operationalCategory = input.operationalCategory || input.existingItemCategory || "Importado";
+
+    await ensureCategoriaOperacional(operationalCategory);
+    await catalogRepository.saveItem({
+      id: input.existingItemId,
+      code,
+      name: input.name,
+      type: itemType,
+      operationalCategory,
+      description: `Importado via planilha em ${new Date().toLocaleString("pt-BR")}`,
+      active: true,
+      skipCascadeRecalculate: true,
+      purchases: [{
+        supplierName: input.supplierName || "Importacao",
+        purchaseUnit: input.purchaseUnit || "un",
+        purchaseIsPrimary: true,
+        purchaseQuantity: parseBrNumber(input.purchaseQuantity || "1"),
+        purchaseCost: parseBrNumber(input.purchaseCost || "0"),
+        priceUpdatedAt: input.updatedAt || new Date().toISOString(),
+        usageUnit: input.usageUnit || input.purchaseUnit || "un",
+        usageQuantity: parseBrNumber(input.usageQuantity || "1")
+      }]
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Erro ao salvar item." };
+  }
+}
+
+export async function finalizeImportRecalculationAction(itemNames: string[]): Promise<{ ok: boolean }> {
+  if (!itemNames.length) return { ok: true };
+  try {
+    const actor = await resolveImportActor();
+    const env = getServerEnv();
+    const prisma = getPrismaClient(env.DATABASE_URL);
+    if (!prisma) return { ok: true };
+    const items = await prisma.item.findMany({
+      where: { cd_restaurante: actor.restaurantId, nm_item: { in: itemNames } },
+      select: { cd_item: true }
+    });
+    await getCatalogRepository(actor.restaurantId).recalculateItems(items.map((i) => i.cd_item));
+    return { ok: true };
+  } catch {
+    return { ok: true }; // falha silenciosa — os itens já foram salvos
+  }
 }
