@@ -6,11 +6,8 @@ import { fileURLToPath } from "node:url";
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { Prisma } from "@/generated/prisma/client";
 import {
-  FichaStatus,
-  ImportacaoLinhaStatus,
-  ImportacaoStatus,
-  PrismaClient,
-  UnidadeTipo
+  importacao_status,
+  PrismaClient
 } from "@/generated/prisma/client";
 import { buildDependencyClosure } from "@/modules/engineering/domain/composition";
 import {
@@ -93,12 +90,12 @@ function prismaClient() {
 
 async function ensureUnits(prisma: PrismaClient) {
   const units = [
-    { codigo: "kg", nome: "Quilograma", tipo: UnidadeTipo.massa },
-    { codigo: "g", nome: "Grama", tipo: UnidadeTipo.massa },
-    { codigo: "l", nome: "Litro", tipo: UnidadeTipo.volume },
-    { codigo: "ml", nome: "Mililitro", tipo: UnidadeTipo.volume },
-    { codigo: "un", nome: "Unidade", tipo: UnidadeTipo.contagem },
-    { codigo: "maço", nome: "Maço", tipo: UnidadeTipo.contagem }
+    { ds_codigo: "kg", nm_unidade: "Quilograma", tp_unidade: "massa" as const },
+    { ds_codigo: "g", nm_unidade: "Grama", tp_unidade: "massa" as const },
+    { ds_codigo: "l", nm_unidade: "Litro", tp_unidade: "volume" as const },
+    { ds_codigo: "ml", nm_unidade: "Mililitro", tp_unidade: "volume" as const },
+    { ds_codigo: "un", nm_unidade: "Unidade", tp_unidade: "contagem" as const },
+    { ds_codigo: "maço", nm_unidade: "Maço", tp_unidade: "contagem" as const }
   ];
 
   const byCode = new Map<
@@ -108,11 +105,11 @@ async function ensureUnits(prisma: PrismaClient) {
 
   for (const unit of units) {
     const persisted = await prisma.unidadeMedida.upsert({
-      where: { codigo: unit.codigo },
+      where: { ds_codigo: unit.ds_codigo },
       update: unit,
       create: unit
     });
-    byCode.set(unit.codigo, persisted);
+    byCode.set(unit.ds_codigo, persisted);
   }
 
   return byCode;
@@ -127,9 +124,9 @@ async function ensureSuppliers(prisma: PrismaClient) {
 
   for (const supplierName of suppliers) {
     const supplier = await prisma.fornecedor.upsert({
-      where: { nome: supplierName },
+      where: { nm_fornecedor: supplierName },
       update: {},
-      create: { nome: supplierName }
+      create: { nm_fornecedor: supplierName }
     });
     map.set(supplierName, supplier);
   }
@@ -166,23 +163,29 @@ async function upsertImportedItems(
       item.purchase_cost !== undefined &&
       purchaseUnit &&
       usageUnit &&
-      purchaseUnit.id !== usageUnit.id
+      purchaseUnit.cd_unidade_medida !== usageUnit.cd_unidade_medida
         ? item.purchase_cost / item.purchase_to_usage_factor
         : item.unit_cost_reference ?? item.purchase_cost;
     const persisted = await prisma.item.upsert({
-      where: { nomeNormalizado: item.canonical_name },
+      where: {
+        nm_normalizado_cd_restaurante: {
+          nm_normalizado: item.canonical_name,
+          cd_restaurante: "rest_padrao"
+        }
+      },
       update: {
-        nome: item.display_name,
-        tipoPrincipal: mapImportedItemType(item.item_type),
-        unidadeEstoqueId: usageUnit?.id ?? null,
-        unidadeUsoPadraoId: usageUnit?.id ?? null
+        nm_item: item.display_name,
+        tp_item: mapImportedItemType(item.item_type),
+        cd_unidade_estoque: usageUnit?.cd_unidade_medida ?? null,
+        cd_unidade_uso_padrao: usageUnit?.cd_unidade_medida ?? null
       },
       create: {
-        nome: item.display_name,
-        nomeNormalizado: item.canonical_name,
-        tipoPrincipal: mapImportedItemType(item.item_type),
-        unidadeEstoqueId: usageUnit?.id ?? null,
-        unidadeUsoPadraoId: usageUnit?.id ?? null
+        nm_item: item.display_name,
+        nm_normalizado: item.canonical_name,
+        tp_item: mapImportedItemType(item.item_type),
+        cd_unidade_estoque: usageUnit?.cd_unidade_medida ?? null,
+        cd_unidade_uso_padrao: usageUnit?.cd_unidade_medida ?? null,
+        cd_restaurante: "rest_padrao"
       }
     });
 
@@ -191,38 +194,38 @@ async function upsertImportedItems(
     if (
       purchaseUnit &&
       usageUnit &&
-      purchaseUnit.id !== usageUnit.id &&
+      purchaseUnit.cd_unidade_medida !== usageUnit.cd_unidade_medida &&
       item.purchase_to_usage_factor &&
       item.purchase_to_usage_factor > 0
     ) {
       await prisma.conversaoUnidade.upsert({
         where: {
-          itemId_unidadeOrigemId_unidadeDestinoId: {
-            itemId: persisted.id,
-            unidadeOrigemId: purchaseUnit.id,
-            unidadeDestinoId: usageUnit.id
+          cd_item_cd_unidade_origem_cd_unidade_destino: {
+            cd_item: persisted.cd_item,
+            cd_unidade_origem: purchaseUnit.cd_unidade_medida,
+            cd_unidade_destino: usageUnit.cd_unidade_medida
           }
         },
         update: {
-          fator: numericString(item.purchase_to_usage_factor, "0.000001")!,
-          origem: "importacao_legacy_excel"
+          vl_fator: numericString(item.purchase_to_usage_factor, "0.000001")!,
+          ds_origem: "importacao_legacy_excel"
         },
         create: {
-          itemId: persisted.id,
-          unidadeOrigemId: purchaseUnit.id,
-          unidadeDestinoId: usageUnit.id,
-          fator: numericString(item.purchase_to_usage_factor, "0.000001")!,
-          origem: "importacao_legacy_excel"
+          cd_item: persisted.cd_item,
+          cd_unidade_origem: purchaseUnit.cd_unidade_medida,
+          cd_unidade_destino: usageUnit.cd_unidade_medida,
+          vl_fator: numericString(item.purchase_to_usage_factor, "0.000001")!,
+          ds_origem: "importacao_legacy_excel"
         }
       });
     }
 
     await prisma.importacaoStaging.upsert({
       where: {
-        execucaoId_entidade_chaveExterna: {
-          execucaoId: importRunId,
-          entidade: "item",
-          chaveExterna: buildExternalKey(
+        cd_importacao_execucao_nm_entidade_ds_chave_externa: {
+          cd_importacao_execucao: importRunId,
+          nm_entidade: "item",
+          ds_chave_externa: buildExternalKey(
             "item",
             item.sheet_name,
             item.row_number,
@@ -231,24 +234,24 @@ async function upsertImportedItems(
         }
       },
       update: {
-        payloadJson: toJson(item),
-        status: ImportacaoLinhaStatus.imported,
-        itemId: persisted.id
+        js_payload: toJson(item),
+        tp_status: "imported",
+        cd_item: persisted.cd_item
       },
       create: {
-        execucaoId: importRunId,
-        entidade: "item",
-        chaveExterna: buildExternalKey(
+        cd_importacao_execucao: importRunId,
+        nm_entidade: "item",
+        ds_chave_externa: buildExternalKey(
           "item",
           item.sheet_name,
           item.row_number,
           item.canonical_name
         ),
-        sheetName: item.sheet_name,
-        rowNumber: item.row_number,
-        payloadJson: toJson(item),
-        status: ImportacaoLinhaStatus.imported,
-        itemId: persisted.id
+        nm_planilha: item.sheet_name,
+        nr_linha: item.row_number,
+        js_payload: toJson(item),
+        tp_status: "imported",
+        cd_item: persisted.cd_item
       }
     });
 
@@ -265,40 +268,40 @@ async function upsertImportedItems(
 
         await prisma.itemCompra.upsert({
           where: {
-            itemId_fornecedorId_unidadeCompraId: {
-              itemId: persisted.id,
-              fornecedorId: supplier.id,
-              unidadeCompraId: purchaseUnit.id
+            cd_item_cd_fornecedor_cd_unidade_compra: {
+              cd_item: persisted.cd_item,
+              cd_fornecedor: supplier.cd_fornecedor,
+              cd_unidade_compra: purchaseUnit.cd_unidade_medida
             }
           },
           update: {
-            quantidadePorEmbalagem: numericString(
+            vl_qtd_embalagem: numericString(
               item.package_units ?? 1,
               "1.0000"
             )!,
-            custoCompra: purchaseCost,
-            custoUnitarioBase: numericString(usageCostReference, "0.000000")!
+            vl_custo_compra: purchaseCost,
+            vl_custo_unitario_base: numericString(usageCostReference, "0.000000")!
           },
           create: {
-            itemId: persisted.id,
-            fornecedorId: supplier.id,
-            unidadeCompraId: purchaseUnit.id,
-            quantidadePorEmbalagem: numericString(
+            cd_item: persisted.cd_item,
+            cd_fornecedor: supplier.cd_fornecedor,
+            cd_unidade_compra: purchaseUnit.cd_unidade_medida,
+            vl_qtd_embalagem: numericString(
               item.package_units ?? 1,
               "1.0000"
             )!,
-            custoCompra: purchaseCost,
-            custoUnitarioBase: numericString(usageCostReference, "0.000000")!
+            vl_custo_compra: purchaseCost,
+            vl_custo_unitario_base: numericString(usageCostReference, "0.000000")!
           }
         });
 
         await prisma.custoSnapshotItem.create({
           data: {
-            itemId: persisted.id,
-            custoUnitarioAtual: numericString(usageCostReference, "0.000000")!,
-            custoPorKgOuUnidadeUso: numericString(usageCostReference, "0.000000"),
-            custoTotalAtual: unitCost,
-            origemRecalculo: "importacao_legacy_excel"
+            cd_item: persisted.cd_item,
+            vl_custo_unitario: numericString(usageCostReference, "0.000000")!,
+            vl_custo_kg_uso: numericString(usageCostReference, "0.000000"),
+            vl_custo_total: unitCost,
+            ds_origem_recalculo: "importacao_legacy_excel"
           }
         });
       }
@@ -324,22 +327,22 @@ async function applyAliases(
 
     await prisma.itemAlias.upsert({
       where: {
-        itemId_aliasNormalizado: {
-          itemId: item.id,
-          aliasNormalizado: normalizeAliasValue(alias.alias)
+        cd_item_nm_alias_normalizado: {
+          cd_item: item.cd_item,
+          nm_alias_normalizado: normalizeAliasValue(alias.alias)
         }
       },
       update: {
-        alias: alias.alias,
-        confianca: alias.confidence.toFixed(2),
-        origem: "importacao_excel"
+        nm_alias: alias.alias,
+        vl_confianca: alias.confidence.toFixed(2),
+        ds_origem: "importacao_excel"
       },
       create: {
-        itemId: item.id,
-        alias: alias.alias,
-        aliasNormalizado: normalizeAliasValue(alias.alias),
-        confianca: alias.confidence.toFixed(2),
-        origem: "importacao_excel"
+        cd_item: item.cd_item,
+        nm_alias: alias.alias,
+        nm_alias_normalizado: normalizeAliasValue(alias.alias),
+        vl_confianca: alias.confidence.toFixed(2),
+        ds_origem: "importacao_excel"
       }
     });
   }
@@ -368,27 +371,29 @@ async function importRecipes(
 
     const ficha = await prisma.fichaTecnica.upsert({
       where: {
-        itemResultanteId_versao: {
-          itemResultanteId: resultItem.id,
-          versao: 1
+        cd_item_resultante_nr_versao: {
+          cd_item_resultante: resultItem.cd_item,
+          nr_versao: 1
         }
       },
       update: {
-        status: FichaStatus.ativa,
-        modoRendimento: "peso_final",
-        pesoFinalInformado: numericString(recipe.yield_value, "1.0000")
+        tp_status: "ativa",
+        tp_modo_rendimento: "peso_final",
+        vl_peso_final: numericString(recipe.yield_value, "1.0000"),
+        cd_restaurante: "rest_padrao"
       },
       create: {
-        itemResultanteId: resultItem.id,
-        versao: 1,
-        status: FichaStatus.ativa,
-        modoRendimento: "peso_final",
-        pesoFinalInformado: numericString(recipe.yield_value, "1.0000")
+        cd_item_resultante: resultItem.cd_item,
+        nr_versao: 1,
+        tp_status: "ativa",
+        tp_modo_rendimento: "peso_final",
+        vl_peso_final: numericString(recipe.yield_value, "1.0000"),
+        cd_restaurante: "rest_padrao"
       }
     });
 
     await prisma.fichaComponente.deleteMany({
-      where: { fichaTecnicaId: ficha.id }
+      where: { cd_ficha_tecnica: ficha.cd_ficha_tecnica }
     });
 
     let order = 1;
@@ -429,31 +434,31 @@ async function importRecipes(
 
       await prisma.fichaComponente.create({
         data: {
-          fichaTecnicaId: ficha.id,
-          itemComponenteId: componentItem.id,
-          tipoComponente: mapImportedComponentType(component.componentType),
-          ordem: order,
-          quantidadeBruta: quantity,
-          quantidadeLimpa: numericString(component.net_weight, null),
-          unidadeUsoId: unit.id,
-          custoUnitarioSnapshot: numericString(component.unit_cost, null),
-          custoTotalSnapshot: numericString(component.unit_cost, null)
+          cd_ficha_tecnica: ficha.cd_ficha_tecnica,
+          cd_item_componente: componentItem.cd_item,
+          tp_componente: mapImportedComponentType(component.componentType),
+          nr_ordem: order,
+          vl_qtd_bruta: quantity,
+          vl_qtd_limpa: numericString(component.net_weight, null),
+          cd_unidade_uso: unit.cd_unidade_medida,
+          vl_custo_unitario_snapshot: numericString(component.unit_cost, null),
+          vl_custo_total_snapshot: numericString(component.unit_cost, null)
         }
       });
 
       order += 1;
       directEdges.push({
-        parentItemId: resultItem.id,
-        childItemId: componentItem.id
+        parentItemId: resultItem.cd_item,
+        childItemId: componentItem.cd_item
       });
     }
 
     await prisma.importacaoStaging.upsert({
       where: {
-        execucaoId_entidade_chaveExterna: {
-          execucaoId: importRunId,
-          entidade: "ficha_tecnica",
-          chaveExterna: buildExternalKey(
+        cd_importacao_execucao_nm_entidade_ds_chave_externa: {
+          cd_importacao_execucao: importRunId,
+          nm_entidade: "ficha_tecnica",
+          ds_chave_externa: buildExternalKey(
             "ficha",
             recipe.sheet_name,
             2,
@@ -462,26 +467,26 @@ async function importRecipes(
         }
       },
       update: {
-        payloadJson: toJson(recipe),
-        status: ImportacaoLinhaStatus.imported,
-        itemId: resultItem.id,
-        fichaTecnicaId: ficha.id
+        js_payload: toJson(recipe),
+        tp_status: "imported",
+        cd_item: resultItem.cd_item,
+        cd_ficha_tecnica: ficha.cd_ficha_tecnica
       },
       create: {
-        execucaoId: importRunId,
-        entidade: "ficha_tecnica",
-        chaveExterna: buildExternalKey(
+        cd_importacao_execucao: importRunId,
+        nm_entidade: "ficha_tecnica",
+        ds_chave_externa: buildExternalKey(
           "ficha",
           recipe.sheet_name,
           2,
           recipe.normalized_product_name
         ),
-        sheetName: recipe.sheet_name,
-        rowNumber: 2,
-        payloadJson: toJson(recipe),
-        status: ImportacaoLinhaStatus.imported,
-        itemId: resultItem.id,
-        fichaTecnicaId: ficha.id
+        nm_planilha: recipe.sheet_name,
+        nr_linha: 2,
+        js_payload: toJson(recipe),
+        tp_status: "imported",
+        cd_item: resultItem.cd_item,
+        cd_ficha_tecnica: ficha.cd_ficha_tecnica
       }
     });
   }
@@ -492,10 +497,10 @@ async function importRecipes(
   if (closure.length > 0) {
     await prisma.dependenciaItem.createMany({
       data: closure.map((row) => ({
-        itemAscendenteId: row.itemAscendenteId,
-        itemDescendenteId: row.itemDescendenteId,
-        profundidade: row.profundidade,
-        relacaoDireta: row.relacaoDireta
+        cd_item_ascendente: row.itemAscendenteId,
+        cd_item_descendente: row.itemDescendenteId,
+        nr_profundidade: row.profundidade,
+        sn_relacao_direta: row.relacaoDireta
       }))
     });
   }
@@ -511,23 +516,23 @@ async function persistConflicts(
   for (const conflict of conflicts) {
     await prisma.importacaoConflito.create({
       data: {
-        execucaoId: importRunId,
-        tipo: String(conflict.type ?? "unknown"),
-        rawName:
+        cd_importacao_execucao: importRunId,
+        tp_conflito: String(conflict.type ?? "unknown"),
+        ds_nome_bruto:
           typeof conflict.raw_name === "string" ? conflict.raw_name : null,
-        normalizedName:
+        nm_normalizado:
           typeof conflict.normalized_name === "string"
             ? conflict.normalized_name
             : null,
-        sheetName:
+        nm_planilha:
           typeof conflict.sheet_name === "string" ? conflict.sheet_name : null,
-        rowNumber:
+        nr_linha:
           typeof conflict.row_number === "number" ? conflict.row_number : null,
-        confidence:
+        vl_confianca:
           typeof conflict.confidence === "number"
             ? conflict.confidence.toFixed(4)
             : null,
-        detalhesJson: toJson(conflict)
+        js_detalhes: toJson(conflict)
       }
     });
   }
@@ -563,21 +568,21 @@ export async function loadLegacyImportReport(input: {
     (
       await prisma.importacaoExecucao.create({
         data: {
-          origemArquivo: report.source_workbook,
-          status: ImportacaoStatus.processando,
-          estagioAtual: "carregando_banco",
-          resumoJson: toJson(report.summary)
+          ds_origem_arquivo: report.source_workbook,
+          tp_status: importacao_status.processando,
+          ds_estagio_atual: "carregando_banco",
+          js_resumo: toJson(report.summary)
         }
       })
-    ).id;
+    ).cd_importacao;
 
   try {
     if (managedExternally) {
       await prisma.importacaoExecucao.update({
-        where: { id: importRunId },
+        where: { cd_importacao: importRunId },
         data: {
-          resumoJson: toJson(report.summary),
-          estagioAtual: "carregando_banco"
+          js_resumo: toJson(report.summary),
+          ds_estagio_atual: "carregando_banco"
         }
       });
     }
@@ -604,23 +609,23 @@ export async function loadLegacyImportReport(input: {
     if (itemsByCanonical.size > 0) {
       await recalculateCascade(
         prisma,
-        [...itemsByCanonical.values()].map((item) => item.id),
+        [...itemsByCanonical.values()].map((item) => item.cd_item),
         "importacao_legacy_excel.load"
       );
     }
 
     const status =
       report.conflicts.length > 0
-        ? ImportacaoStatus.concluida_com_conflitos
-        : ImportacaoStatus.concluida;
+        ? importacao_status.concluida_com_conflitos
+        : importacao_status.concluida;
 
     if (!managedExternally) {
       await prisma.importacaoExecucao.update({
-        where: { id: importRunId },
+        where: { cd_importacao: importRunId },
         data: {
-          status,
-          estagioAtual: "concluida",
-          finalizadoEm: new Date()
+          tp_status: status,
+          ds_estagio_atual: "concluida",
+          ts_fim: new Date()
         }
       });
     }
@@ -645,11 +650,11 @@ export async function loadLegacyImportReport(input: {
   } catch (error) {
     if (!managedExternally) {
       await prisma.importacaoExecucao.update({
-        where: { id: importRunId },
+        where: { cd_importacao: importRunId },
         data: {
-          status: ImportacaoStatus.falha,
-          estagioAtual: "falha",
-          finalizadoEm: new Date()
+          tp_status: importacao_status.falha,
+          ds_estagio_atual: "falha",
+          ts_fim: new Date()
         }
       });
     }

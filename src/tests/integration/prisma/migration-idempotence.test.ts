@@ -27,10 +27,10 @@ describe.skipIf(!runIntegration)("prisma migration idempotence (D-04)", () => {
     await closeIntegrationPrisma();
   });
 
-  it("apos migration inicial tem colunas unidade_uso_id e quantidade_uso", async () => {
+  it("apos migration inicial tem colunas cd_unidade_uso e vl_qtd_uso", async () => {
     const snap = await snapshotSchema();
-    expect(snap.cols.find((c) => c.column_name === "unidade_uso_id")).toBeDefined();
-    expect(snap.cols.find((c) => c.column_name === "quantidade_uso")).toBeDefined();
+    expect(snap.cols.find((c) => c.column_name === "cd_unidade_uso")).toBeDefined();
+    expect(snap.cols.find((c) => c.column_name === "vl_qtd_uso")).toBeDefined();
   });
 
   it("schema snapshot estavel apos migration inicial (W-05: idempotencia end-to-end e provada pela Task 3 BLOCKING checkpoint que roda docker compose run --rm migrate 2x)", async () => {
@@ -39,8 +39,8 @@ describe.skipIf(!runIntegration)("prisma migration idempotence (D-04)", () => {
     // Este teste confirma apenas o snapshot estavel (schema ja aplicado).
     const snap1 = await snapshotSchema();
     const count1 = await prisma.itemCompra.count({ where: { sn_principal: true } });
-    expect(snap1.cols.find((c) => c.column_name === "unidade_uso_id")).toBeDefined();
-    expect(snap1.cols.find((c) => c.column_name === "quantidade_uso")).toBeDefined();
+    expect(snap1.cols.find((c) => c.column_name === "cd_unidade_uso")).toBeDefined();
+    expect(snap1.cols.find((c) => c.column_name === "vl_qtd_uso")).toBeDefined();
     expect(count1).toBeGreaterThanOrEqual(0);
   });
 });

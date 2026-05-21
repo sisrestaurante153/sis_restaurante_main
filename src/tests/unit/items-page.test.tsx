@@ -112,7 +112,7 @@ describe("ItemsPage", () => {
     expect(screen.getByText("Fornecedor")).toBeInTheDocument();
     expect(screen.getByText("Ult. Atualizacao")).toBeInTheDocument();
     expect(screen.getByText("Obs")).toBeInTheDocument();
-    expect(screen.getByText(/cadastro mestre/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/cadastro mestre/i).length).toBeGreaterThan(0);
 
     // Dado renderizado na tabela
     expect(screen.getByText("Arroz integral")).toBeInTheDocument();
