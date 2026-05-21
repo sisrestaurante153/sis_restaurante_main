@@ -53,7 +53,9 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/importacao\/pendencias$/, permission: "import.run" },
   { pattern: /^\/auditoria$/, permission: "item.read" },
   { pattern: /^\/billing$/, permission: "billing.manage" },
-  { pattern: /^\/billing\/.*$/, permission: "billing.manage" }
+  { pattern: /^\/billing\/.*$/, permission: "billing.manage" },
+  { pattern: /^\/usuarios$/, permission: "billing.manage" },
+  { pattern: /^\/planos$/, permission: "billing.manage" }
 ];
 
 const publicPaths = ["/", "/login", "/registro", "/bem-vindo", "/forbidden", "/api/health"];
