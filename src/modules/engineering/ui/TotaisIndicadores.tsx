@@ -699,7 +699,7 @@ export function TotaisIndicadores({
                 aria-label="Preco de venda"
                 value={salePriceInput}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  onSalePriceChange(event.target.value)
+                  onSalePriceChange(event.target.value.replace(",", "."))
                 }
                 sx={{
                   background: "transparent",
@@ -756,7 +756,7 @@ export function TotaisIndicadores({
                 aria-label="Despesa variavel de venda (%PV)"
                 value={variableExpensePercentInput}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  onVariableExpensePercentChange(event.target.value)
+                  onVariableExpensePercentChange(event.target.value.replace(",", "."))
                 }
                 sx={{
                   background: "transparent",
@@ -820,6 +820,75 @@ export function TotaisIndicadores({
             Simulador em tempo real — altere o preco ou % de despesa acima
           </Box>
         </QfCard>
+      </Box>
+
+      {/* TABELA DE REFERÊNCIA DE CMV */}
+      <Box
+        sx={{
+          background: TOKENS.surface,
+          border: `0.5px solid ${TOKENS.border}`,
+          borderRadius: TOKENS.radius,
+          overflow: "hidden",
+          mb: 2
+        }}
+      >
+        <Box
+          sx={{
+            padding: "10px 18px 8px",
+            borderBottom: `0.5px solid ${TOKENS.border}`
+          }}
+        >
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 10,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: TOKENS.text2,
+              fontWeight: 600
+            }}
+          >
+            Referência de CMV
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "1px",
+            background: TOKENS.border
+          }}
+        >
+          {[
+            { range: "0% – 30%", status: "Crítico", emoji: "🔴", bg: TOKENS.vermL, fg: TOKENS.verm },
+            { range: "30% – 60%", status: "Atenção", emoji: "🟡", bg: TOKENS.ambarL, fg: TOKENS.ambar },
+            { range: "60%+", status: "Saudável", emoji: "🟢", bg: TOKENS.verdeL, fg: TOKENS.verde }
+          ].map((item) => (
+            <Box
+              key={item.range}
+              sx={{
+                background: item.bg,
+                padding: "10px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "3px"
+              }}
+            >
+              <Typography
+                component="span"
+                sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: TOKENS.text3, fontWeight: 500 }}
+              >
+                {item.range}
+              </Typography>
+              <Typography
+                component="span"
+                sx={{ fontSize: 13, fontWeight: 600, color: item.fg }}
+              >
+                {item.emoji} {item.status}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
       </Box>
 
       {/* LEITURA OPERACIONAL */}

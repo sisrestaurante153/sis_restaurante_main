@@ -276,6 +276,259 @@ function renderIdentificacao() {
   );
 }
 
+const MODALITY_OPTIONS = [
+  { id: "mod-salao", label: "Salao" },
+  { id: "mod-delivery", label: "Delivery" }
+];
+const STAGE_TYPE_OPTIONS = [
+  { id: "tipo-etapa-limpeza", code: "limpeza_pre_preparo", label: "Limpeza / Pre-Preparo" },
+  { id: "tipo-etapa-coccao", code: "coccao_preparo", label: "Coccao / Preparo" },
+  { id: "tipo-etapa-montagem", code: "montagem", label: "Montagem" }
+];
+
+describe("FichaForm — registro (nova ficha)", () => {
+  it("renderiza as quatro seções: Identificacao, Estrutura, Quadro final, Finalizacao", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={{
+          itemId: "",
+          itemName: "",
+          itemType: "pre_preparo",
+          groupOperational: "",
+          modality: { id: "", label: "" },
+          status: "ativa",
+          yieldMode: "percentual_perda",
+          percentLoss: "0.1000",
+          finalWeight: "",
+          portions: "1.0000",
+          preparationMode: "",
+          notes: ""
+        }}
+      />
+    );
+    expect(screen.getByText("Identificacao")).toBeInTheDocument();
+    expect(screen.getByText("Estrutura da ficha")).toBeInTheDocument();
+    expect(screen.getByText("Quadro final da ficha")).toBeInTheDocument();
+    expect(screen.getByText("Finalizacao")).toBeInTheDocument();
+  });
+
+  it("gera código numérico de 6 dígitos automaticamente no campo Cod.", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={{
+          itemId: "",
+          itemName: "",
+          itemType: "pre_preparo",
+          groupOperational: "",
+          modality: { id: "", label: "" },
+          status: "ativa",
+          yieldMode: "percentual_perda",
+          percentLoss: "0.1000",
+          finalWeight: "",
+          portions: "1.0000",
+          preparationMode: "",
+          notes: ""
+        }}
+      />
+    );
+    const codInput = screen.getByLabelText(/^cod\.?\s*\*?$/i) as HTMLInputElement;
+    expect(codInput.value).toMatch(/^\d{6}$/);
+  });
+
+  it("campo Produto começa vazio para nova ficha sem item vinculado", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={{
+          itemId: "",
+          itemName: "",
+          itemType: "pre_preparo",
+          groupOperational: "",
+          modality: { id: "", label: "" },
+          status: "ativa",
+          yieldMode: "percentual_perda",
+          percentLoss: "0.1000",
+          finalWeight: "",
+          portions: "1.0000",
+          preparationMode: "",
+          notes: ""
+        }}
+      />
+    );
+    const produtoInput = screen.getByLabelText(/produto/i) as HTMLInputElement;
+    expect(produtoInput.value).toBe("");
+  });
+
+  it("Status padrão é 'ativa' (input hidden) na nova ficha", () => {
+    const { container } = render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={{
+          itemId: "",
+          itemName: "",
+          itemType: "pre_preparo",
+          groupOperational: "",
+          modality: { id: "", label: "" },
+          status: "ativa",
+          yieldMode: "percentual_perda",
+          percentLoss: "0.1000",
+          finalWeight: "",
+          portions: "1.0000",
+          preparationMode: "",
+          notes: ""
+        }}
+      />
+    );
+    const hidden = container.querySelector('input[name="status"]') as HTMLInputElement;
+    expect(hidden?.value).toBe("ativa");
+  });
+
+  it("renderiza o botão Adicionar Itens para começar a estrutura da ficha", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={{
+          itemId: "",
+          itemName: "",
+          itemType: "pre_preparo",
+          groupOperational: "",
+          modality: { id: "", label: "" },
+          status: "ativa",
+          yieldMode: "percentual_perda",
+          percentLoss: "0.1000",
+          finalWeight: "",
+          portions: "1.0000",
+          preparationMode: "",
+          notes: ""
+        }}
+      />
+    );
+    expect(screen.getAllByRole("button", { name: /adicionar itens/i }).length).toBeGreaterThan(0);
+  });
+});
+
+describe("FichaForm — edição (ficha existente)", () => {
+  const FICHA_EDIT = {
+    id: "ficha-edit-1",
+    code: "FT-099",
+    itemId: "item-prato",
+    itemName: "Prato Bife de Alcatra Acebolado",
+    displayName: "Bife Acebolado Especial",
+    itemType: "prato",
+    groupOperational: "Montagem",
+    yieldUnitCode: "kg",
+    modality: { id: "mod-salao", label: "Salao" },
+    status: "ativa",
+    yieldMode: "peso_final",
+    percentLoss: "0.0000",
+    finalWeight: "0.7450",
+    portions: "1.0000",
+    preparationMode: "Montar e finalizar.",
+    notes: "Obs da ficha existente.",
+    createdAt: "2026-03-16T10:00:00.000Z",
+    updatedAt: "2026-03-17T08:20:00.000Z",
+    stages: []
+  };
+
+  it("campo Produto exibe o nome do produto vinculado", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={FICHA_EDIT}
+      />
+    );
+    expect(screen.getByDisplayValue("Bife Acebolado Especial")).toBeInTheDocument();
+  });
+
+  it("campo Cod. exibe o código existente (não gera novo)", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={FICHA_EDIT}
+      />
+    );
+    expect((screen.getByLabelText(/^cod\.?\s*\*?$/i) as HTMLInputElement).value).toBe("FT-099");
+  });
+
+  it("campo Grupo operacional exibe o grupo existente", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={FICHA_EDIT}
+      />
+    );
+    expect((screen.getByLabelText(/grupo operacional/i) as HTMLInputElement).value).toBe("Montagem");
+  });
+
+  it("campo Modo de preparo exibe o texto existente", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={FICHA_EDIT}
+      />
+    );
+    expect(screen.getByDisplayValue("Montar e finalizar.")).toBeInTheDocument();
+  });
+
+  it("campo Observacoes da ficha exibe o texto existente", () => {
+    render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={FICHA_EDIT}
+      />
+    );
+    expect(screen.getByDisplayValue("Obs da ficha existente.")).toBeInTheDocument();
+  });
+
+  it("Status 'ativa' é refletido no input hidden", () => {
+    const { container } = render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={FICHA_EDIT}
+      />
+    );
+    const hidden = container.querySelector('input[name="status"]') as HTMLInputElement;
+    expect(hidden?.value).toBe("ativa");
+  });
+
+  it("Status 'inativa' é refletido no input hidden", () => {
+    const { container } = render(
+      <FichaForm
+        itemOptions={itemOptions}
+        modalityOptions={MODALITY_OPTIONS}
+        stageTypeOptions={STAGE_TYPE_OPTIONS}
+        initialValues={{ ...FICHA_EDIT, status: "inativa" }}
+      />
+    );
+    const hidden = container.querySelector('input[name="status"]') as HTMLInputElement;
+    expect(hidden?.value).toBe("inativa");
+  });
+});
+
 describe("FichaForm Identificacao pixel-perfect (Phase 09-03)", () => {
   it("source contem gridTemplateColumns Row 1 '110px 1fr 150px 175px' (D-01)", () => {
     expect(FICHA_FORM_SOURCE).toContain("gridTemplateColumns: '110px 1fr 150px 175px'");

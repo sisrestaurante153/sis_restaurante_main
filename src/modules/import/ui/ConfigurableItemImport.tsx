@@ -32,6 +32,20 @@ const ITEM_TYPE_OPTIONS = [
   { value: "apoio", label: "Apoio" },
 ];
 
+// Aliases de auto-detecção por campo (case-insensitive). O primeiro alias é o label exibido.
+const FIELD_ALIASES: Record<string, string[]> = {
+  internalCode: ["Código Interno", "Codigo Interno", "Código", "Codigo", "Cod.", "Cod", "internalCode"],
+  itemName: ["Nome do Item", "Nome", "Descrição", "Descricao", "Item", "Produto", "itemName"],
+  type: ["Tipo", "Categoria", "type"],
+  operationalCategory: ["Seção", "Secao", "Categoria Operacional", "Grupo", "operationalCategory"],
+  supplierName: ["Fornecedor", "Fornec.", "supplierName"],
+  purchaseUnit: ["Unidade de Compra", "Unid. Compra", "Unid Compra", "Un. Compra", "purchaseUnit"],
+  purchaseQuantity: ["Quantidade de Compra", "Qtde Compra", "Qtd Compra", "Qtde Embalagem", "purchaseQuantity"],
+  purchaseCost: ["Preço de Compra", "Preco de Compra", "Preço", "Preco", "Custo", "purchaseCost"],
+  usageUnit: ["Unidade de Uso", "Unid. de Uso", "Unid Uso", "Un. Uso", "Unidade Uso", "usageUnit"],
+  usageQuantity: ["Quantidade de Uso", "Qtde de Uso", "Qtd de Uso", "Qtde Uso", "Qtd Uso", "usageQuantity"],
+};
+
 const TARGET_FIELDS: Omit<ColumnMapping, "mappedColumn">[] = [
   { systemField: "internalCode", label: "Código Interno", required: false },
   { systemField: "itemName", label: "Nome do Item", required: true },
@@ -88,13 +102,12 @@ export function ConfigurableItemImport() {
         const fileHeaders = data[0].map(h => String(h).trim());
         setHeaders(fileHeaders);
         
-        // Initial auto-mapping
+        // Auto-detecção usando aliases por campo
         const newMapping: Record<string, string> = {};
         TARGET_FIELDS.forEach(field => {
-          const matched = fileHeaders.find(h => 
-            h.toLowerCase() === field.label.toLowerCase() || 
-            h.toLowerCase() === field.systemField.toLowerCase()
-          );
+          const aliases = (FIELD_ALIASES[field.systemField] ?? [field.label, field.systemField])
+            .map(a => a.toLowerCase());
+          const matched = fileHeaders.find(h => aliases.includes(h.toLowerCase()));
           if (matched) newMapping[field.systemField] = matched;
         });
         setMapping(newMapping);
@@ -302,6 +315,21 @@ export function ConfigurableItemImport() {
               </div>
             </div>
           </Card>
+
+          {isProcessing && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-6 py-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-blue-800 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Importando itens...
+                </span>
+                <span className="text-blue-600 text-xs">Aguarde. Isso pode levar alguns segundos.</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                <div className="h-2 bg-blue-600 rounded-full animate-pulse w-3/4" />
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between bg-slate-50 p-6 rounded-xl border border-slate-200">
             <div className="space-y-1">

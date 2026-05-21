@@ -1,3 +1,5 @@
+import type { SubscriptionStatus } from "@/modules/billing/domain/plans";
+
 const encoder = new TextEncoder();
 
 export interface SessionPayload {
@@ -6,7 +8,7 @@ export interface SessionPayload {
   email: string;
   name: string;
   roleCodes: string[];
-  subscriptionStatus: string;
+  subscriptionStatus: SubscriptionStatus;
   trialEndsAt: string | null;
   issuedAt: string;
   expiresAt: string;

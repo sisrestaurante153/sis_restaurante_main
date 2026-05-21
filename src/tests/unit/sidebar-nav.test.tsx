@@ -10,24 +10,33 @@ vi.mock("next/navigation", () => ({
 
 describe("SidebarNav", () => {
   beforeEach(() => {
-    usePathnameMock.mockReturnValue("/custos");
+    usePathnameMock.mockReturnValue("/itens");
   });
 
-  it("renders grouped navigation sections with current route highlighted", () => {
+  it("renderiza as seções de navegação com rota ativa destacada", () => {
     render(<SidebarNav />);
 
-    // "Visao geral" (Dashboard) removed from sidebar to match HTML reference.
-    // Dashboard remains reachable via /dashboard URL.
-    expect(screen.queryByText("Visao geral")).not.toBeInTheDocument();
-    expect(screen.getByText("Cadastros")).toBeInTheDocument();
-    expect(screen.getByText("Operacao")).toBeInTheDocument();
-    expect(screen.getByText("Controle")).toBeInTheDocument();
+    // Seções presentes na navegação atual
+    expect(screen.getByText("Principal")).toBeInTheDocument();
+    expect(screen.getAllByText("Cadastros").length).toBeGreaterThanOrEqual(1);
 
-    const activeLink = screen.getByRole("link", { name: /custos/i });
+    // Dashboard está em "Principal"
+    expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+
+    // Itens e Fichas Tecnicas presentes
+    expect(screen.getByRole("link", { name: /^itens$/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /fichas tecnicas/i })).toBeInTheDocument();
+  });
+
+  it("rota ativa recebe aria-current='page'", () => {
+    usePathnameMock.mockReturnValue("/itens");
+    render(<SidebarNav />);
+
+    const activeLink = screen.getByRole("link", { name: /^itens$/i });
     expect(activeLink).toHaveAttribute("aria-current", "page");
   });
 
-  it("shows the pending count badge for manual reconciliation entries", () => {
+  it("exibe badge com contagem de pendências", () => {
     render(
       <SidebarNav
         pendingCounts={{
@@ -39,15 +48,16 @@ describe("SidebarNav", () => {
     expect(screen.getByText("4")).toBeInTheDocument();
   });
 
-  it("hides Dashboard and Composicao entries (match HTML reference)", () => {
-    render(<SidebarNav />);
+  it("seção Administracao só aparece para admin", () => {
+    render(<SidebarNav roleCodes={[]} />);
+    expect(screen.queryByText("Administracao")).not.toBeInTheDocument();
 
-    // Dashboard removed from sidebar (HTML reference does not list it).
-    expect(screen.queryByRole("link", { name: /dashboard/i })).not.toBeInTheDocument();
-    // Composicao removed from sidebar (HTML reference does not list it).
-    expect(screen.queryByRole("link", { name: /composicao/i })).not.toBeInTheDocument();
-    // Itens and Fichas Tecnicas still present.
-    expect(screen.getByRole("link", { name: /itens/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /fichas tecnicas/i })).toBeInTheDocument();
+    render(<SidebarNav roleCodes={["admin"]} />);
+    expect(screen.getAllByText("Administracao").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("link de Importacao está presente", () => {
+    render(<SidebarNav />);
+    expect(screen.getByRole("link", { name: /importacao/i })).toBeInTheDocument();
   });
 });

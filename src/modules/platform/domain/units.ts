@@ -16,8 +16,30 @@ function decimal(value: Prisma.Decimal | string | number) {
   return value instanceof Prisma.Decimal ? value : new Prisma.Decimal(value);
 }
 
+// Mapeia variações e typos comuns para o código canônico.
+const UNIT_CANONICAL: Record<string, string> = {
+  quilograma: "kg",
+  quilos: "kg",
+  kgs: "kg",
+  kgg: "kg",
+  grama: "g",
+  gramas: "g",
+  litro: "l",
+  litros: "l",
+  mililitro: "ml",
+  mililitros: "ml",
+  unidade: "un",
+  unidades: "un",
+  "maço": "maco",
+  mç: "maco",
+  peça: "pç",
+  pecas: "pç",
+  piece: "pç"
+};
+
 export function normalizeUnitCode(value: string) {
-  return value.trim().toLowerCase();
+  const lower = value.trim().toLowerCase();
+  return UNIT_CANONICAL[lower] ?? lower;
 }
 
 export function inferUnitTypeFromCode(value: string) {

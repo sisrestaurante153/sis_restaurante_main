@@ -1,6 +1,23 @@
 import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/modules/access/server/session-cookie", () => ({
+  SESSION_COOKIE_NAME: "sis_session",
+  requireSession: vi.fn(async () => ({
+    userId: "user-test",
+    restaurantId: "rest-test",
+    email: "test@test.com",
+    name: "Test User",
+    roleCodes: ["admin"],
+    subscriptionStatus: "active",
+    trialEndsAt: null
+  })),
+  getCurrentSession: vi.fn(async () => null),
+  createUserSession: vi.fn(async () => undefined),
+  clearUserSession: vi.fn(async () => undefined)
+}));
+
 import { DataGridListingSx } from "@/components/ui/data-grid-pattern";
 import ImportPendingPage from "@/app/(app)/importacao/pendencias/page";
 

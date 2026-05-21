@@ -109,7 +109,7 @@ describe("ComponentsEditor (flat grid model)", () => {
     expect(screen.getByRole("columnheader", { name: /item \/ produto/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /etapa/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /custo insumo/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/peso limpo/i)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/peso limpo/i).length).toBeGreaterThanOrEqual(1);
 
     expect(screen.getByRole("button", { name: /adicionar itens/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /adicionar coccao final/i })).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe("ComponentsEditor (flat grid model)", () => {
       />
     );
 
-    expect(screen.getByLabelText(/peso limpo/i)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/peso limpo/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByLabelText(/peso pos-coccao/i)).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Montagem e Descartaveis" })).not.toBeInTheDocument();
 

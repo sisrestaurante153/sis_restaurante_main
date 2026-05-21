@@ -13,6 +13,7 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -27,9 +28,7 @@ import type {
   ImportExecutionSnapshot
 } from "@/modules/import/server/import-execution-presenter";
 import {
-  cancelImportExecutionAction,
-  createImportExecutionAction,
-  createOperationalItemImportAction
+  cancelImportExecutionAction
 } from "@/modules/import/server/import-actions";
 import { withBasePath } from "@/modules/platform/lib/base-path";
 
@@ -102,8 +101,6 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
   const [dashboard, setDashboard] = useState(initialDashboard);
   const [statusFilter, setStatusFilter] = useState("todos");
   const [dateFilter, setDateFilter] = useState("");
-  const [selectedWorkbookName, setSelectedWorkbookName] = useState<string | null>(null);
-  const [selectedOperationalWorkbookName, setSelectedOperationalWorkbookName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!dashboard.activeExecution) {
@@ -137,7 +134,6 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
     });
   }, [dashboard.history, dateFilter, statusFilter]);
 
-  const uploadBlocked = Boolean(dashboard.activeExecution);
   const latestResult = dashboard.latestResult;
 
   const cardStyle = {
@@ -160,94 +156,6 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
 
   return (
     <Stack spacing={3}>
-      <Card sx={cardStyle}>
-        <CardContent sx={{ p: 3 }}>
-          <Stack spacing={2.5}>
-            <Typography sx={sectionHeaderStyle}>
-              Nova importação
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontFamily: "Manrope, sans-serif" }}>
-              Envie um único arquivo <code>.xlsx</code> do legado. O processamento segue de forma assíncrona no worker interno.
-            </Typography>
-            {uploadBlocked ? (
-              <Alert severity="warning">
-                Aguarde a conclusão da execução ativa antes de enviar outro arquivo.
-              </Alert>
-            ) : (
-              <Alert severity="info">
-                O arquivo original será preservado com hash e metadata para auditoria e reprocessamento.
-              </Alert>
-            )}
-            <Box component="form" action={createImportExecutionAction}>
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
-                <Button component="label" variant="outlined" disabled={uploadBlocked}>
-                  Selecionar .xlsx
-                  <input
-                    hidden
-                    type="file"
-                    name="workbook"
-                    accept=".xlsx"
-                    onChange={(event) => {
-                      const nextFile = event.currentTarget.files?.[0] ?? null;
-                      setSelectedWorkbookName(nextFile?.name ?? null);
-                    }}
-                  />
-                </Button>
-                <Button type="submit" variant="contained" disabled={uploadBlocked}>
-                  Iniciar importação
-                </Button>
-              </Stack>
-              {selectedWorkbookName ? (
-                <Typography sx={{ mt: 1.5 }} variant="body2" color="text.secondary">
-                  Arquivo selecionado: <strong>{selectedWorkbookName}</strong>
-                </Typography>
-              ) : null}
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      <Card sx={cardStyle}>
-        <CardContent sx={{ p: 3 }}>
-          <Stack spacing={2.5}>
-            <Typography sx={sectionHeaderStyle}>
-              Importação operacional de itens
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontFamily: "Manrope, sans-serif" }}>
-              Atualize apenas a estrutura operacional dos itens via <code>.csv</code>, com histórico, rastreabilidade e mapeamento automático das colunas conhecidas.
-            </Typography>
-            <Alert severity="info">
-              Esta trilha não importa fichas técnicas legadas. Ela serve para manutenção recorrente do cadastro operacional.
-            </Alert>
-            <Box component="form" action={createOperationalItemImportAction}>
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
-                <Button component="label" variant="outlined">
-                  Selecionar .csv
-                  <input
-                    hidden
-                    type="file"
-                    name="operationalWorkbook"
-                    accept=".csv,text/csv"
-                    onChange={(event) => {
-                      const nextFile = event.currentTarget.files?.[0] ?? null;
-                      setSelectedOperationalWorkbookName(nextFile?.name ?? null);
-                    }}
-                  />
-                </Button>
-                <Button type="submit" variant="contained">
-                  Atualizar itens
-                </Button>
-              </Stack>
-              {selectedOperationalWorkbookName ? (
-                <Typography sx={{ mt: 1.5 }} variant="body2" color="text.secondary">
-                  Arquivo selecionado: <strong>{selectedOperationalWorkbookName}</strong>
-                </Typography>
-              ) : null}
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
-
       <Card sx={cardStyle}>
         <CardContent sx={{ p: 3 }}>
           <Stack spacing={2.5}>
@@ -282,6 +190,16 @@ export function ImportWorkspace({ initialDashboard, feedback }: ImportWorkspaceP
                   <Chip label={formatStatus(dashboard.activeExecution.status)} color="warning" />
                   <Chip label={dashboard.activeExecution.currentStage} variant="outlined" />
                 </Stack>
+                <Box>
+                  <LinearProgress
+                    variant={dashboard.activeExecution.status === "processando" ? "indeterminate" : "determinate"}
+                    value={0}
+                    sx={{ borderRadius: 1, height: 6 }}
+                  />
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                    {dashboard.activeExecution.currentStage}
+                  </Typography>
+                </Box>
                 <Typography variant="body2">
                   Arquivo em processamento: <strong>{dashboard.activeExecution.originalFileName}</strong>
                 </Typography>

@@ -1,4 +1,34 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/modules/access/server/auth-service", () => ({
+  signInWithPassword: vi.fn(async (email: string, password: string) => {
+    if (email === "admin@sis-restaurante.local" && password === "admin123") {
+      return {
+        ok: true as const,
+        user: { id: "user-1", email, nome: "Admin", roleCodes: ["admin"] },
+        session: { access_token: "tok", expires_in: 3600 }
+      };
+    }
+    return { ok: false as const, message: "Invalid login credentials" };
+  })
+}));
+
+vi.mock("@/modules/access/server/auth-repository", () => ({
+  getAuthRepository: () => ({
+    findUserByEmail: async () => ({
+      restaurantId: "rest_padrao",
+      subscriptionStatus: "active",
+      trialEndsAt: null
+    })
+  })
+}));
+
+vi.mock("@/modules/access/server/session-cookie", () => ({
+  SESSION_COOKIE_NAME: "sis_session",
+  createUserSession: vi.fn(async () => undefined),
+  clearUserSession: vi.fn(async () => undefined)
+}));
+
 import { POST as loginPOST } from "@/app/api/auth/login/route";
 import { POST as logoutPOST } from "@/app/api/auth/logout/route";
 
@@ -34,7 +64,7 @@ describe("auth routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("set-cookie")).toContain("sis_session=");
+    expect(response.headers.get("set-cookie")).toContain("sb-access-token=tok");
   });
 
   it("rejects invalid credentials", async () => {

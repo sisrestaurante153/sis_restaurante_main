@@ -243,6 +243,14 @@ async function listSuppliersWithPrisma() {
   }
 }
 
+// Padrão de sufixos internos gerados por testes ou importações malformadas.
+// Unidades cujos códigos batem com esse padrão são excluídas do dropdown de UI.
+const INTERNAL_UNIT_CODE_PATTERN = /-(int|forn|eng|presenter)(-|$)/;
+
+function isInternalUnitCode(code: string) {
+  return INTERNAL_UNIT_CODE_PATTERN.test(code);
+}
+
 async function listUnitsWithPrisma() {
   const prisma = resolvePrisma();
   if (!prisma) {
@@ -255,16 +263,19 @@ async function listUnitsWithPrisma() {
     });
 
     const rows = await prisma.unidadeMedida.findMany({
+      where: { sn_ativo: true },
       orderBy: { ds_codigo: "asc" }
     });
 
-    return rows.map((row) => ({
-      id: row.cd_unidade_medida,
-      code: row.ds_codigo,
-      name: row.nm_unidade,
-      measureType: UNIT_TYPE_LABELS[row.tp_unidade],
-      active: row.sn_ativo
-    }));
+    return rows
+      .filter((row) => !isInternalUnitCode(row.ds_codigo))
+      .map((row) => ({
+        id: row.cd_unidade_medida,
+        code: row.ds_codigo,
+        name: row.nm_unidade,
+        measureType: UNIT_TYPE_LABELS[row.tp_unidade],
+        active: row.sn_ativo
+      }));
   } catch {
     return null;
   }

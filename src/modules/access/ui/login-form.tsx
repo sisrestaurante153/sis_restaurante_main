@@ -53,12 +53,13 @@ export function LoginForm() {
 
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Email</label>
+          <label htmlFor="login-email" className="text-sm font-medium text-foreground">Email</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
               <Mail className="h-4 w-4" />
             </div>
             <Input
+              id="login-email"
               name="email"
               type="email"
               value={email}
@@ -71,9 +72,10 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Senha</label>
+          <label htmlFor="login-password" className="text-sm font-medium text-foreground">Senha</label>
           <div className="relative">
             <Input
+              id="login-password"
               name="password"
               type={showPassword ? "text" : "password"}
               value={password}

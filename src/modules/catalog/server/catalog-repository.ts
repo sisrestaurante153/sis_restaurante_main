@@ -356,8 +356,7 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
         include: {
           unidadeEstoque: true,
           unidadeUsoPadrao: true,
-          aliases: true,
-          conversoes: true,
+          // aliases e conversoes nao sao usados em mapItemListRow; omitir para reduzir payload
           compras: {
             orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
             include: {
@@ -374,8 +373,8 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
                 in: ["ativa", "rascunho", "inativa"]
               }
             },
-            orderBy: [{ tp_status: "asc" }, { nr_versao: "desc" }],
-            take: 5
+            orderBy: [{ tp_status: "asc" }],
+            take: 1
           },
           custosSnapshot: {
             orderBy: { ts_calculo: "desc" },
@@ -394,7 +393,7 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
     ]);
 
     return {
-      items: (items as CatalogItemRecord[]).map(mapItemListRow),
+      items: (items as unknown as CatalogItemRecord[]).map(mapItemListRow),
       totalCount,
       totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
       page: Math.max(input.page, 1)
@@ -435,8 +434,7 @@ async function listItemOptionsWithPrisma(restaurantId: string) {
       include: {
         unidadeEstoque: true,
         unidadeUsoPadrao: true,
-        aliases: true,
-        conversoes: true,
+        // aliases e conversoes nao sao usados em mapItemOption; omitir para reduzir payload
         compras: {
           orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
           include: {
@@ -453,8 +451,8 @@ async function listItemOptionsWithPrisma(restaurantId: string) {
               in: ["ativa", "rascunho", "inativa"]
             }
           },
-          orderBy: [{ tp_status: "asc" }, { nr_versao: "desc" }],
-          take: 5
+          orderBy: [{ tp_status: "asc" }],
+          take: 1
         },
         custosSnapshot: {
           orderBy: { ts_calculo: "desc" },
@@ -471,7 +469,7 @@ async function listItemOptionsWithPrisma(restaurantId: string) {
       }
     });
 
-    return (items as CatalogItemRecord[]).map(mapItemOption);
+    return (items as unknown as CatalogItemRecord[]).map(mapItemOption);
   } catch {
     return null;
   }

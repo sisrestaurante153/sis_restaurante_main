@@ -1,6 +1,7 @@
 import { getSupabaseClient } from "@/lib/supabase";
 import { canAccessRoute, isPublicPath } from "@/modules/access/domain/access-control";
 import { readSignedSessionToken } from "@/modules/access/server/session";
+import { isSubscriptionBlocked } from "@/modules/billing/domain/subscription-guard";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -13,13 +14,6 @@ function isSubscriptionExempt(pathname: string) {
   return SUBSCRIPTION_EXEMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-function isSubscriptionBlocked(status: string, trialEndsAt: string | null): boolean {
-  if (status === "cancelled" || status === "suspended") return true;
-  if (status === "trial" && trialEndsAt) {
-    return new Date(trialEndsAt) < new Date();
-  }
-  return false;
-}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

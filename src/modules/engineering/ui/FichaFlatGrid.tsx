@@ -334,13 +334,6 @@ export function FichaFlatGrid({
             <Box key={`${row.itemId}-${index}`}>
             <Box
               role="row"
-              draggable={Boolean(onReorderRows)}
-              onDragStart={(event) => {
-                if (!onReorderRows) return;
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData("text/plain", String(index));
-                setDraggingIndex(index);
-              }}
               onDragOver={(event) => {
                 if (!onReorderRows) return;
                 event.preventDefault();
@@ -383,7 +376,15 @@ export function FichaFlatGrid({
                 "&:hover": { bgcolor: draggingIndex === index ? "rgba(24,95,165,0.05)" : "#FAFAF9" }
               }}
             >
-              <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Box
+                draggable={Boolean(onReorderRows)}
+                onDragStart={onReorderRows ? (event) => {
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", String(index));
+                  setDraggingIndex(index);
+                } : undefined}
+                sx={{ display: "flex", justifyContent: "center" }}
+              >
                 {onReorderRows ? <DragHandle /> : null}
               </Box>
 

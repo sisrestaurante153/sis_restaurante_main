@@ -3,9 +3,10 @@ import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import { getServerEnv } from "@/modules/platform/server/env";
 import { getDemoStore } from "@/modules/platform/server/demo-data";
 import { type AuthUserRecord } from "@/modules/access/server/auth-service";
+import type { SubscriptionStatus } from "@/modules/billing/domain/plans";
 
 export interface AuthUserWithSubscription extends AuthUserRecord {
-  subscriptionStatus: string;
+  subscriptionStatus: SubscriptionStatus;
   trialEndsAt: string | null;
 }
 

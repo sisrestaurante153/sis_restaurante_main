@@ -61,7 +61,7 @@ describe("ficha form schema", () => {
       expect(result.data.components).toHaveLength(1);
       expect(result.data.yieldMode).toBe("percentual_perda");
       expect(result.data.salePrice).toBe("87.9000");
-      expect(result.data.variableExpensePercent).toBe("0.1500");
+      expect(result.data.variableExpensePercent).toBe("0.15");
       expect(result.data.stages[0]?.stageTypeId).toBe("tipo-etapa-limpeza");
       expect(result.data.components[0]?.stageTypeCode).toBe("limpeza_pre_preparo");
       expect(result.data.stages[0]?.correctionFactor).toBe("1.000000");

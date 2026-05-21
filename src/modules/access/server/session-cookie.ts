@@ -7,6 +7,7 @@ import {
   readSignedSessionToken,
   type SessionPayload
 } from "@/modules/access/server/session";
+import type { SubscriptionStatus } from "@/modules/billing/domain/plans";
 
 export const SESSION_COOKIE_NAME = "sis_session";
 const SESSION_TTL_DAYS = 7;
@@ -29,7 +30,7 @@ export async function createUserSession(input: {
   email: string;
   name: string;
   roleCodes: string[];
-  subscriptionStatus?: string;
+  subscriptionStatus?: SubscriptionStatus;
   trialEndsAt?: string | null;
 }) {
   const issuedAt = new Date();

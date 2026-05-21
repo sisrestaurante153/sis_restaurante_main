@@ -308,24 +308,29 @@ export async function createMappedItemImportAction(formData: FormData) {
     });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const workbook = XLSX.read(buffer, { type: "buffer", cellText: true });
+    // raw: true retorna o valor numérico real da célula (float) sem aplicar o
+    // formato da planilha — evita que formatos PT-BR (ex: "0,00") façam o XLSX
+    // dividir o valor por 1000 ou retornar string com símbolo de moeda.
+    const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    // raw: false usa o texto original da célula (preserva "10,00" em vez de converter para 1000)
-    // defval: "" inclui células vazias no objeto
-    // normaliza as chaves removendo espaços/BOM para bater com o mapeamento do client
-    const rows = (XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" }) as Record<string, unknown>[])
+    const rows = (XLSX.utils.sheet_to_json(worksheet, { raw: true, defval: "" }) as Record<string, unknown>[])
       .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), v])));
 
-    // Normaliza número no formato brasileiro (1.234,56 → 1234.56) ou (10,00 → 10.00)
+    // Normaliza número para string com ponto decimal.
+    // Aceita: JS number (raw: true), string PT-BR "1.234,56", string "10,00", string pura "10.00".
     const parseBrNumber = (value: unknown): string => {
       if (value === undefined || value === null || value === "") return "0";
-      const str = String(value).trim();
-      // Se já é número puro (sem vírgula), retorna direto
+      // Célula numérica do Excel (raw: true) — valor já é float JS, usa direto.
+      if (typeof value === "number") return Number.isFinite(value) ? String(value) : "0";
+      // Célula de texto: remove símbolo de moeda e espaços antes de parsear.
+      const str = String(value).trim().replace(/R\$\s?/g, "").trim();
+      if (str === "") return "0";
+      // Número puro com ponto decimal → retorna direto.
       if (/^-?\d+(\.\d+)?$/.test(str)) return str;
-      // Formato BR: ponto como milhar, vírgula como decimal → 1.234,56
+      // Formato BR com milhar e decimal: 1.234,56
       if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) return str.replace(/\./g, "").replace(",", ".");
-      // Só vírgula decimal → 10,00
+      // Só vírgula decimal: 10,00
       if (/^\d+(,\d+)?$/.test(str)) return str.replace(",", ".");
       return str;
     };

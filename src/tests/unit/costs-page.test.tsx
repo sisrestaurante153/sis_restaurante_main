@@ -1,5 +1,22 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/modules/access/server/session-cookie", () => ({
+  SESSION_COOKIE_NAME: "sis_session",
+  requireSession: vi.fn(async () => ({
+    userId: "user-test",
+    restaurantId: "rest-test",
+    email: "test@test.com",
+    name: "Test User",
+    roleCodes: ["admin"],
+    subscriptionStatus: "active",
+    trialEndsAt: null
+  })),
+  getCurrentSession: vi.fn(async () => null),
+  createUserSession: vi.fn(async () => undefined),
+  clearUserSession: vi.fn(async () => undefined)
+}));
+
 import CostsPage from "@/app/(app)/custos/page";
 
 vi.mock("@/modules/engineering/server/engineering-repository", () => ({

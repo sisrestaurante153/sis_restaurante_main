@@ -5,6 +5,7 @@ import LibraryBooksRoundedIcon from "@mui/icons-material/LibraryBooksRounded";
 import SpaceDashboardRoundedIcon from "@mui/icons-material/SpaceDashboardRounded";
 import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 import CreditCardRoundedIcon from "@mui/icons-material/CreditCardRounded";
+import SellRoundedIcon from "@mui/icons-material/SellRounded";
 
 export interface NavigationItem {
   href: string;
@@ -38,7 +39,8 @@ export const navigationSections: NavigationSection[] = [
     label: "Administracao",
     adminOnly: true,
     items: [
-      { href: "/billing", label: "Assinaturas", icon: CreditCardRoundedIcon }
+      { href: "/billing", label: "Assinaturas", icon: CreditCardRoundedIcon },
+      { href: "/planos", label: "Planos", icon: SellRoundedIcon }
     ]
   }
 ];

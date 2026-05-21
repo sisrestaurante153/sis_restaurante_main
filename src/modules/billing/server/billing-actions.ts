@@ -16,7 +16,7 @@ import { PLANS } from "@/modules/billing/domain/plans";
 const registroSchema = z.object({
   nm_restaurante: z.string().min(2, "Informe o nome do restaurante."),
   nm_responsavel: z.string().min(2, "Informe o nome do responsável."),
-  email: z.string().email("Email inválido."),
+  email: z.string().min(1, "Informe o email."),
   password: z.string().min(8, "Senha com no mínimo 8 caracteres."),
   plano: z.string().min(1, "Selecione um plano.")
 });
