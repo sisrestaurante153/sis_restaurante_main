@@ -63,6 +63,10 @@ export async function saveItemAction(
     throw error;
   }
 
+  if (!item) {
+    return { status: "error", message: "Falha ao salvar o item. Tente novamente." };
+  }
+
   await createAuditService().record({
     actorId: actor.userId,
     actorName: actor.name,

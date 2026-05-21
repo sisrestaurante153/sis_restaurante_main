@@ -57,6 +57,8 @@ export interface SaveItemInput {
     usageQuantity?: string;
     usagePrice?: string;
   }>;
+  // Pula recalculateCascade individual — use recalculateItems() em lote após importação em massa.
+  skipCascadeRecalculate?: boolean;
 }
 
 export class CatalogRepositoryError extends Error {
@@ -648,8 +650,11 @@ async function saveItemWithPrisma(input: SaveItemInput & { restaurantId: string 
       return item;
     });
 
-    await recalculateCascade(prisma, [item.cd_item], "item.save.web");
-    return getItemDetailWithPrisma(item.cd_item);
+    if (!input.skipCascadeRecalculate) {
+      await recalculateCascade(prisma, [item.cd_item], "item.save.web");
+      return getItemDetailWithPrisma(item.cd_item);
+    }
+    return null;
   } catch (error) {
     if (error instanceof CatalogRepositoryError) {
       throw error;
@@ -763,6 +768,12 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
     },
 
     async saveItem(input: SaveItemInput) {
+      if (input.skipCascadeRecalculate) {
+        // Caminho bulk: salva via prisma sem cascade — caller chama recalculateItems() depois.
+        await saveItemWithPrisma({ ...input, restaurantId });
+        return null;
+      }
+
       const prismaResult = await saveItemWithPrisma({ ...input, restaurantId });
       if (prismaResult) {
         return prismaResult;
@@ -892,6 +903,14 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
       persistDemoStore(store);
 
       return { success: true };
+    },
+
+    async recalculateItems(itemIds: string[]) {
+      if (!itemIds.length) return;
+      const env = getServerEnv();
+      const prisma = getPrismaClient(env.DATABASE_URL);
+      if (!prisma) return;
+      await recalculateCascade(prisma, itemIds, "import.bulk");
     }
   };
 }

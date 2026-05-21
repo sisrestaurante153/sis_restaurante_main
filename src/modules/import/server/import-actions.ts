@@ -335,8 +335,33 @@ export async function createMappedItemImportAction(formData: FormData) {
       return str;
     };
 
+    // Pre-carrega todos os itens existentes em 1 query para evitar N listItems por linha.
+    const env = getServerEnv();
+    const prismaForBulk = getPrismaClient(env.DATABASE_URL);
+    type ExistingEntry = { id: string; code: string; category: string };
+    const existingItemMap = new Map<string, ExistingEntry>();
+    if (prismaForBulk) {
+      const allExisting = await prismaForBulk.item.findMany({
+        where: { cd_restaurante: actor.restaurantId },
+        select: {
+          cd_item: true,
+          nm_item: true,
+          ds_codigo_interno: true,
+          nm_categoria_operacional: true
+        }
+      });
+      for (const it of allExisting) {
+        existingItemMap.set(it.nm_item.trim().toLowerCase(), {
+          id: it.cd_item,
+          code: it.ds_codigo_interno ?? "",
+          category: it.nm_categoria_operacional ?? "Importado"
+        });
+      }
+    }
+
     let itemsProcessed = 0;
     let itemsSkipped = 0;
+    const processedItemNames = new Set<string>();
 
     for (const row of rows) {
       const getValue = (field: string) => {
@@ -358,17 +383,7 @@ export async function createMappedItemImportAction(formData: FormData) {
       if (!validTypes.includes(itemType)) itemType = "insumo";
 
       try {
-        const existingItems = await catalogRepository.listItems({
-          page: 1,
-          pageSize: 10,
-          query: String(itemName),
-          status: "all",
-          type: "all"
-        });
-
-        const existingItem = existingItems.items.find(
-          (item) => item.name.trim().toLowerCase() === String(itemName).trim().toLowerCase()
-        );
+        const existingItem = existingItemMap.get(String(itemName).trim().toLowerCase());
 
         const rawCode = getValue("internalCode");
         const rawCodeStr = rawCode !== undefined && rawCode !== null ? String(rawCode).trim() : "";
@@ -385,6 +400,7 @@ export async function createMappedItemImportAction(formData: FormData) {
           operationalCategory,
           description: `Importado via planilha em ${new Date().toLocaleString("pt-BR")}`,
           active: true,
+          skipCascadeRecalculate: true,
           purchases: [
             {
               supplierName: String(getValue("supplierName") || "Importacao"),
@@ -399,11 +415,24 @@ export async function createMappedItemImportAction(formData: FormData) {
           ]
         });
 
+        processedItemNames.add(String(itemName).trim());
         itemsProcessed++;
       } catch (itemError) {
         console.error(`Import: erro ao salvar item "${itemName}":`, itemError);
         itemsSkipped++;
       }
+    }
+
+    // Recalcula custos em lote — uma única passagem para todos os itens salvos.
+    if (processedItemNames.size > 0 && prismaForBulk) {
+      const savedItems = await prismaForBulk.item.findMany({
+        where: {
+          cd_restaurante: actor.restaurantId,
+          nm_item: { in: [...processedItemNames] }
+        },
+        select: { cd_item: true }
+      });
+      await catalogRepository.recalculateItems(savedItems.map(i => i.cd_item));
     }
 
     await repository.markImportExecutionCompleted(execution.id, {
