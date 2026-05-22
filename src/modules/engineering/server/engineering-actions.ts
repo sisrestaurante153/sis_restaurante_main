@@ -75,7 +75,11 @@ export async function saveFichaAction(
     after: ficha
   });
 
-  redirect(`/fichas/${ficha.id}?saved=1`);
+  if (before) {
+    redirect(`/fichas/${ficha.id}?saved=1`);
+  } else {
+    redirect("/fichas");
+  }
 }
 
 export async function duplicateFichaAction(formData: FormData) {
