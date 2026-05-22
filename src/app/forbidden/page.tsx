@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { logoutAction } from "@/modules/access/server/auth-actions";
 
 export default function ForbiddenPage() {
   return (
@@ -29,9 +30,12 @@ export default function ForbiddenPage() {
           <Button component={Link} href={"/dashboard" as never} variant="contained">
             Ir ao Dashboard
           </Button>
-          <Button component={Link} href={"/login" as never} variant="outlined">
-            Trocar de usuario
-          </Button>
+          {/* Logout via server action — clears sis_session and sb-access-token before redirecting */}
+          <form action={logoutAction}>
+            <Button type="submit" variant="outlined">
+              Sair e entrar com outro usuario
+            </Button>
+          </form>
         </Stack>
       </Stack>
     </Box>

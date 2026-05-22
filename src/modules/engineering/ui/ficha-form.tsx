@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
@@ -146,7 +146,14 @@ export function FichaForm({
   const [state, formAction] = useActionState(saveFichaAction, {
     status: "idle"
   } satisfies EngineeringFormState);
-  
+
+  const errorAlertRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (state.status === "error") {
+      errorAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [state.status, state.message]);
+
   const [code, setCode] = useState(() => {
     if (initialValues?.code) return initialValues.code;
     if (!initialValues?.id) {
@@ -268,7 +275,7 @@ export function FichaForm({
       <input type="hidden" name="yieldMode" value={initialValues?.yieldMode ?? "peso_final"} />
       <input type="hidden" name="percentLoss" value={initialValues?.percentLoss ?? ""} />
 
-      {state.message ? <Alert severity="error">{state.message}</Alert> : null}
+      {state.message ? <Alert ref={errorAlertRef} severity="error">{state.message}</Alert> : null}
 
       <input type="hidden" name="portions" value={initialValues?.portions ?? "1.0000"} />
       <input type="hidden" name="yieldUnitCode" value={yieldUnitCode} />

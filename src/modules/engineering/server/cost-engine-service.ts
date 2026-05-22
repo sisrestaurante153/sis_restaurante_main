@@ -82,40 +82,26 @@ async function loadItemNode(tx: TransactionClient, itemId: string) {
   });
 }
 
-async function loadCalculationGraph(tx: TransactionClient, rootItemIds: readonly string[]) {
-  const graph: CalculationGraph = {};
-  const queue = [...rootItemIds];
-  const visited = new Set<string>();
-
-  while (queue.length > 0) {
-    const itemId = queue.shift();
-    if (!itemId || visited.has(itemId)) {
-      continue;
-    }
-
-    visited.add(itemId);
-    const item = await loadItemNode(tx, itemId);
-
-    if (!item) {
-      throw new DomainInvariantError(`Item ${itemId} nao encontrado para calculo.`);
-    }
-
-    const activeFicha = item.fichasResultantes[0];
-    graph[item.cd_item] = {
+function buildNodeFromItem(item: NonNullable<Awaited<ReturnType<typeof loadItemNode>>>) {
+  const activeFicha = item.fichasResultantes[0];
+  return {
+    node: {
       id: item.cd_item,
       name: item.nm_item,
-      unitType: activeFicha
-        ? "massa"
-        : item.unidadeUsoPadrao?.tp_unidade === "contagem"
-          ? "contagem"
-          : "massa",
+      unitType: (
+        activeFicha
+          ? "massa"
+          : item.unidadeUsoPadrao?.tp_unidade === "contagem"
+            ? "contagem"
+            : "massa"
+      ) as "massa" | "contagem" | "volume",
       baseUnitCost: activeFicha
-        ? item.custosSnapshot[0]?.vl_custo_kg_uso?.toString() ??
-          item.compras[0]?.vl_custo_unitario_base.toString() ??
-          "0"
-        : item.compras[0]?.vl_custo_unitario_base.toString() ??
-          item.custosSnapshot[0]?.vl_custo_kg_uso?.toString() ??
-          "0",
+        ? (item.custosSnapshot[0]?.vl_custo_kg_uso?.toString() ??
+            item.compras[0]?.vl_custo_unitario_base.toString() ??
+            "0")
+        : (item.compras[0]?.vl_custo_unitario_base.toString() ??
+            item.custosSnapshot[0]?.vl_custo_kg_uso?.toString() ??
+            "0"),
       ficha: activeFicha
         ? {
             mode: activeFicha.tp_modo_rendimento,
@@ -136,21 +122,111 @@ async function loadCalculationGraph(tx: TransactionClient, rootItemIds: readonly
                     component.unidadeUso.ds_codigo
                   ).toString()
                 : null,
-              unitType:
+              unitType: (
                 component.unidadeUso.tp_unidade === "contagem"
                   ? "contagem"
                   : component.unidadeUso.tp_unidade === "volume"
                     ? "volume"
-                    : "massa",
+                    : "massa"
+              ) as "massa" | "contagem" | "volume",
               correctionFactor: component.vl_fator_correcao?.toString() ?? null,
               cookingIndex: component.vl_indice_coccao?.toString() ?? null
             }))
           }
         : undefined
-    };
+    },
+    componentItemIds: activeFicha?.componentes.map((c) => c.cd_item_componente) ?? []
+  };
+}
 
-    for (const component of activeFicha?.componentes ?? []) {
-      queue.push(component.cd_item_componente);
+async function loadCalculationGraph(tx: TransactionClient, rootItemIds: readonly string[]) {
+  const graph: CalculationGraph = {};
+  const queue = [...rootItemIds];
+  const visited = new Set<string>();
+
+  while (queue.length > 0) {
+    const itemId = queue.shift();
+    if (!itemId || visited.has(itemId)) {
+      continue;
+    }
+
+    visited.add(itemId);
+    const item = await loadItemNode(tx, itemId);
+
+    if (!item) {
+      // Item referenced as component was not found in the DB.
+      // Treat as zero-cost leaf so missing purchases don't abort the calculation.
+      graph[itemId] = {
+        id: itemId,
+        name: `[item ${itemId}]`,
+        unitType: "massa",
+        baseUnitCost: "0",
+        ficha: undefined
+      };
+      continue;
+    }
+
+    const { node, componentItemIds } = buildNodeFromItem(item);
+    graph[item.cd_item] = node;
+
+    for (const componentItemId of componentItemIds) {
+      if (!visited.has(componentItemId)) {
+        queue.push(componentItemId);
+      }
+    }
+  }
+
+  // Second pass: guarantee every itemId referenced inside any ficha.components is
+  // actually present in the graph. The BFS above is correct in theory, but this
+  // catch-all prevents assertGraphNode from throwing if any reference slipped through
+  // (e.g. due to a DB read inconsistency inside a long-running transaction).
+  let foundMissing = true;
+  while (foundMissing) {
+    foundMissing = false;
+    for (const node of Object.values(graph)) {
+      for (const component of node.ficha?.components ?? []) {
+        if (graph[component.itemId]) {
+          continue;
+        }
+
+        foundMissing = true;
+        const item = await loadItemNode(tx, component.itemId);
+
+        if (item) {
+          const { node: newNode, componentItemIds } = buildNodeFromItem(item);
+          graph[item.cd_item] = newNode;
+          // Queue any new transitive components discovered here
+          for (const cid of componentItemIds) {
+            if (!graph[cid]) {
+              queue.push(cid);
+            }
+          }
+          // Drain the queue (pick up newly discovered items)
+          while (queue.length > 0) {
+            const qid = queue.shift()!;
+            if (graph[qid]) continue;
+            const qitem = await loadItemNode(tx, qid);
+            if (qitem) {
+              const { node: qnode, componentItemIds: qcids } = buildNodeFromItem(qitem);
+              graph[qitem.cd_item] = qnode;
+              for (const c of qcids) {
+                if (!graph[c]) queue.push(c);
+              }
+            } else {
+              graph[qid] = { id: qid, name: `[item ${qid}]`, unitType: "massa", baseUnitCost: "0", ficha: undefined };
+            }
+          }
+        } else {
+          // Not in DB — add zero-cost placeholder so the calculation can proceed
+          graph[component.itemId] = {
+            id: component.itemId,
+            name: `[item ${component.itemId}]`,
+            unitType: "massa",
+            baseUnitCost: "0",
+            ficha: undefined
+          };
+        }
+      }
     }
   }
 
@@ -219,6 +295,102 @@ export async function rebuildDependencyClosure(tx: TransactionClient) {
   }
 
   return closure;
+}
+
+export async function rebuildDependencyClosureForItem(tx: TransactionClient, itemId: string) {
+  // Find all items that were previously dependent on this item (its ancestors)
+  const existingAncestors = await tx.dependenciaItem.findMany({
+    where: { cd_item_descendente: itemId },
+    select: { cd_item_ascendente: true }
+  });
+
+  // The affected ascendentes are: the item itself + all items that had it as descendant
+  const affectedIds = new Set<string>([itemId, ...existingAncestors.map((r) => r.cd_item_ascendente)]);
+
+  // Delete only rows where ascendente is one of the affected items
+  await tx.dependenciaItem.deleteMany({
+    where: { cd_item_ascendente: { in: [...affectedIds] } }
+  });
+
+  // Rebuild full closure and insert only the affected rows
+  const edges = await loadAllActiveEdges(tx);
+  const closure = buildDependencyClosure(edges);
+  const affectedRows = closure.filter((row) => affectedIds.has(row.itemAscendenteId));
+
+  if (affectedRows.length > 0) {
+    await tx.dependenciaItem.createMany({
+      data: affectedRows.map((row) => ({
+        cd_item_ascendente: row.itemAscendenteId,
+        cd_item_descendente: row.itemDescendenteId,
+        nr_profundidade: row.profundidade,
+        sn_relacao_direta: row.relacaoDireta
+      }))
+    });
+  }
+
+  return affectedRows;
+}
+
+export async function recalculateCascadeInTransaction(
+  tx: TransactionClient,
+  changedItemIds: readonly string[],
+  reason: string
+) {
+  const closureRows = await tx.dependenciaItem.findMany({
+    where: {
+      cd_item_descendente: { in: [...changedItemIds] }
+    },
+    include: {
+      itemAscendente: true
+    }
+  });
+
+  const impacted = new Map<string, number>();
+
+  for (const itemId of changedItemIds) {
+    impacted.set(itemId, 0);
+  }
+
+  for (const row of closureRows) {
+    if (row.nr_profundidade === 0) {
+      continue;
+    }
+
+    const current = impacted.get(row.cd_item_ascendente);
+    if (current === undefined || row.nr_profundidade < current) {
+      impacted.set(row.cd_item_ascendente, row.nr_profundidade);
+    }
+  }
+
+  const order = [...impacted.entries()]
+    .sort((left, right) => {
+      if (left[1] === right[1]) {
+        return left[0].localeCompare(right[0]);
+      }
+      return left[1] - right[1];
+    })
+    .map(([itemId]) => itemId);
+
+  const impactRows: ImpactRow[] = [];
+
+  for (const itemId of order) {
+    const before = await tx.custoSnapshotItem.findFirst({
+      where: { cd_item: itemId },
+      orderBy: { ts_calculo: "desc" }
+    });
+
+    const { result } = await recalculateItemInTransaction(tx, itemId, reason, changedItemIds[0] ?? null);
+    impactRows.push({
+      itemId,
+      itemName: result.itemName,
+      depth: impacted.get(itemId) ?? 0,
+      beforeCost: before?.vl_custo_total ?? new Prisma.Decimal(0),
+      afterCost: result.totalCost,
+      deltaCost: result.totalCost.sub(before?.vl_custo_total ?? new Prisma.Decimal(0))
+    });
+  }
+
+  return { order, impactRows };
 }
 
 async function persistCalculationTrail(

@@ -109,15 +109,25 @@ function mapPurchases(item: CatalogItemRecord) {
 function mapCosts(item: CatalogItemRecord) {
   const latestSnapshot = item.custosSnapshot[0];
   const latestExecution = asObject(item.execucoesCalculo[0]?.js_metadados ?? null);
+
+  // For items that have never been through a cost recalculation (no snapshot,
+  // no execution record), fall back to the purchase base unit cost so the ficha
+  // form shows the correct value when the user selects this item as a component.
+  const preferredPurchase = resolvePreferredPurchase(item);
+  const purchaseBaseCost = preferredPurchase?.vl_custo_unitario_base?.toFixed(4) ?? null;
+
   const total =
-    latestSnapshot?.vl_custo_total.toFixed(4) ?? readString(latestExecution, "totalCost") ?? "0.0000";
+    latestSnapshot?.vl_custo_total.toFixed(4) ??
+    readString(latestExecution, "totalCost") ??
+    purchaseBaseCost ??
+    "0.0000";
 
   return {
     direct: readString(latestExecution, "directCost") ?? total,
     inherited: readString(latestExecution, "inheritedCost") ?? "0.0000",
     packaging: latestSnapshot?.vl_custo_embalagem?.toFixed(4) ?? "0.0000",
     total,
-    perKg: readString(latestExecution, "costPerKg") ?? total,
+    perKg: readString(latestExecution, "costPerKg") ?? purchaseBaseCost ?? total,
     perPortion: readString(latestExecution, "costPerPortion"),
     finalOutput: readString(latestExecution, "finalUsefulOutputQuantity") ?? "1.0000"
   };

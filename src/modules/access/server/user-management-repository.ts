@@ -100,6 +100,15 @@ export function getUserManagementRepository() {
       await prisma.user.update({ where: { cd_usuario: userId }, data: { sn_ativo: false } });
     },
 
+    async findUserEmailById(userId: string): Promise<string | null> {
+      if (!prisma) return null;
+      const user = await prisma.user.findUnique({
+        where: { cd_usuario: userId },
+        select: { ds_email: true }
+      });
+      return user?.ds_email ?? null;
+    },
+
     async deleteUser(userId: string): Promise<void> {
       if (!prisma) throw new Error("Banco de dados não disponível.");
       await prisma.userRole.deleteMany({ where: { cd_usuario: userId } });

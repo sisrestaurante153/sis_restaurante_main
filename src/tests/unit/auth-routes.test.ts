@@ -9,7 +9,7 @@ vi.mock("@/modules/access/server/auth-service", () => ({
         session: { access_token: "tok", expires_in: 3600 }
       };
     }
-    return { ok: false as const, message: "Invalid login credentials" };
+    return { ok: false as const, message: "Credenciais de login inválidas" };
   })
 }));
 

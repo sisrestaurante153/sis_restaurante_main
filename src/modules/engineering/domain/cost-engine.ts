@@ -117,6 +117,26 @@ function assertGraphNode(graph: CalculationGraph, itemId: string) {
   return node;
 }
 
+// Safe lookup for component nodes — returns a zero-cost placeholder instead of
+// throwing when an item slips through loadCalculationGraph (e.g. no purchase,
+// no snapshot, referenced only transitively). Root items still use assertGraphNode
+// so genuine missing-root errors remain visible.
+function resolveComponentNode(graph: CalculationGraph, itemId: string): CalculationNodeInput {
+  const node = graph[itemId];
+  if (node) return node;
+
+  // Add to graph so recursive calculateNode calls work without re-creating it
+  const placeholder: CalculationNodeInput = {
+    id: itemId,
+    name: `[item ${itemId}]`,
+    unitType: "massa",
+    baseUnitCost: "0",
+    ficha: undefined
+  };
+  graph[itemId] = placeholder;
+  return placeholder;
+}
+
 function buildGraphEdges(graph: CalculationGraph): DirectCompositionEdge[] {
   const edges: DirectCompositionEdge[] = [];
 
@@ -230,7 +250,7 @@ function calculateNode(
   let inheritedCost = ZERO;
 
   for (const component of node.ficha.components) {
-    const componentNode = assertGraphNode(graph, component.itemId);
+    const componentNode = resolveComponentNode(graph, component.itemId);
     const childCost = calculateNode(graph, component.itemId, cache);
     const quantityGross = decimal(component.quantityGross);
     const quantityNet = inferQuantityNet(component);
@@ -282,7 +302,7 @@ function calculateNode(
         ? finalUsefulOutputQuantity.div(component.quantityNet)
         : null;
 
-    const componentNode = assertGraphNode(graph, component.componentItemId);
+    const componentNode = resolveComponentNode(graph, component.componentItemId);
     if (!componentNode.ficha) {
       expandedBreakdown.push({
         itemId: component.componentItemId,
@@ -346,7 +366,6 @@ function cloneGraphWithOverrides(graph: CalculationGraph, overrides: readonly Co
 }
 
 export function calculateItemCost(graph: CalculationGraph, itemId: string): CalculatedItemCost {
-  buildDependencyClosure(buildGraphEdges(graph));
   return calculateNode(graph, itemId, new Map());
 }
 

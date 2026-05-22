@@ -5,8 +5,7 @@ import { z } from "zod";
 import { signInWithPassword } from "@/modules/access/server/auth-service";
 import { getAuthRepository } from "@/modules/access/server/auth-repository";
 import { cookies } from "next/headers";
-import { getSupabaseClient } from "@/lib/supabase";
-import { createUserSession, SESSION_COOKIE_NAME } from "@/modules/access/server/session-cookie";
+import { createUserSession, getCurrentSession, SESSION_COOKIE_NAME } from "@/modules/access/server/session-cookie";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um email valido."),
@@ -73,17 +72,8 @@ export async function logoutAction() {
 }
 
 export async function redirectIfAuthenticated() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("sb-access-token")?.value;
-  
-  if (token) {
-    const supabase = getSupabaseClient();
-    if (!supabase) return; // Skip check if keys are missing
-    
-    const { data } = await supabase.auth.getUser(token);
-    const user = data?.user;
-    if (user) {
-      redirect("/dashboard");
-    }
+  const session = await getCurrentSession();
+  if (session) {
+    redirect("/dashboard");
   }
 }

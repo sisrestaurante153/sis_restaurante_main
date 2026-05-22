@@ -56,7 +56,12 @@ export async function saveFichaAction(
     if (error instanceof DomainInvariantError) {
       return { status: "error", message: error.message };
     }
-    throw error;
+    const message = error instanceof Error ? error.message : "Erro inesperado ao salvar a ficha.";
+    return { status: "error", message: `Erro ao salvar a ficha: ${message}` };
+  }
+
+  if (!ficha) {
+    return { status: "error", message: "Erro ao salvar a ficha: resultado não retornado." };
   }
 
   await createAuditService().record({

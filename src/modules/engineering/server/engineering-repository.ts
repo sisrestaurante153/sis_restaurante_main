@@ -5,8 +5,8 @@ import {
 import type { item_type } from "@/generated/prisma/client";
 import {
   assertNoCyclesBeforeSaving,
-  rebuildDependencyClosure,
-  recalculateCascade
+  rebuildDependencyClosureForItem,
+  recalculateCascadeInTransaction
 } from "@/modules/engineering/server/cost-engine-service";
 import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import {
@@ -1045,6 +1045,7 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
         ? await tx.fichaTecnica.update({
             where: { cd_ficha_tecnica: existing.cd_ficha_tecnica },
             data: {
+              cd_restaurante: restaurantId,
               cd_modalidade: modality.cd_modalidade,
               nm_exibicao: input.displayName.trim(),
               cd_unidade_rendimento: yieldUnit.cd_unidade_medida,
@@ -1061,6 +1062,7 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
           })
         : await tx.fichaTecnica.create({
             data: {
+              cd_restaurante: restaurantId,
               cd_item_resultante: item.cd_item,
               cd_modalidade: modality.cd_modalidade,
               nm_exibicao: input.displayName.trim(),
@@ -1126,13 +1128,14 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
         }
       }
 
-      await rebuildDependencyClosure(tx);
+      await rebuildDependencyClosureForItem(tx, item.cd_item);
+
+      if (input.status === "ativa") {
+        await recalculateCascadeInTransaction(tx, [item.cd_item], "ficha.save.web");
+      }
+
       return ficha;
     });
-
-    if (input.status === "ativa") {
-      await recalculateCascade(prisma, [ficha.cd_item_resultante], "ficha.save.web");
-    }
 
     return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica, restaurantId);
   } catch (error) {
@@ -1257,11 +1260,11 @@ async function inactivateFichaWithPrisma(fichaId: string, restaurantId: string) 
         }
       });
 
-      await rebuildDependencyClosure(tx);
+      await rebuildDependencyClosureForItem(tx, updated.cd_item_resultante);
+      await recalculateCascadeInTransaction(tx, [updated.cd_item_resultante], "ficha.inactivate.web");
       return updated;
     });
 
-    await recalculateCascade(prisma, [ficha.cd_item_resultante], "ficha.inactivate.web");
     return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica, restaurantId);
   } catch {
     return null;

@@ -1,4 +1,3 @@
-import { getSupabaseClient } from "@/lib/supabase";
 import { canAccessRoute, isPublicPath } from "@/modules/access/domain/access-control";
 import { readSignedSessionToken } from "@/modules/access/server/session";
 import { isSubscriptionBlocked } from "@/modules/billing/domain/subscription-guard";
@@ -7,13 +6,18 @@ import { NextResponse } from "next/server";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-// Rotas que tenants com assinatura bloqueada ainda podem acessar
 const SUBSCRIPTION_EXEMPT = ["/assinatura", "/login", "/registro", "/forbidden", "/api"];
 
 function isSubscriptionExempt(pathname: string) {
   return SUBSCRIPTION_EXEMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+function redirectToLogin(request: NextRequest) {
+  const response = NextResponse.redirect(new URL("/login", request.url));
+  response.cookies.delete("sis_session");
+  response.cookies.delete("sb-access-token");
+  return response;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -27,20 +31,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const supabase = getSupabaseClient();
-  if (!supabase) return NextResponse.next();
-  const token = request.cookies.get("sb-access-token")?.value ||
-                request.headers.get("Authorization")?.split(" ")[1];
-
-  const { data } = token
-    ? await supabase.auth.getUser(token)
-    : { data: { user: null } };
-
-  const user = data?.user;
+  const sessionToken = request.cookies.get("sis_session")?.value;
+  const secret = process.env.SESSION_SECRET ?? "";
+  const session = sessionToken && secret ? await readSignedSessionToken(sessionToken, secret) : null;
 
   if (pathname === "/login") {
-    if (user) {
+    if (session) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    // Invalid/expired sis_session on /login — clear it so user can log in fresh
+    if (sessionToken && !session) {
+      const response = NextResponse.next();
+      response.cookies.delete("sis_session");
+      response.cookies.delete("sb-access-token");
+      return response;
     }
     return NextResponse.next();
   }
@@ -49,28 +53,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!user) {
-    const response = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.delete("sis_session");
-    return response;
+  // Protected path — require valid session
+  if (!session) {
+    return redirectToLogin(request);
   }
 
-  // Verifica status da assinatura via sis_session
   if (!isSubscriptionExempt(pathname)) {
-    const sessionToken = request.cookies.get("sis_session")?.value;
-    const secret = process.env.SESSION_SECRET ?? "";
-
-    if (sessionToken && secret) {
-      const session = await readSignedSessionToken(sessionToken, secret);
-      if (session && isSubscriptionBlocked(session.subscriptionStatus, session.trialEndsAt)) {
-        return NextResponse.redirect(new URL("/assinatura?blocked=1", request.url));
-      }
+    if (isSubscriptionBlocked(session.subscriptionStatus, session.trialEndsAt)) {
+      return NextResponse.redirect(new URL("/assinatura?blocked=1", request.url));
     }
   }
 
-  const roleCodes = (user.app_metadata?.roles as string[]) || [];
-
-  if (!canAccessRoute(pathname, roleCodes)) {
+  if (!canAccessRoute(pathname, session.roleCodes)) {
     return NextResponse.redirect(new URL("/forbidden", request.url));
   }
 

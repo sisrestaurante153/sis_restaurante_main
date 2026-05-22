@@ -85,8 +85,29 @@ export async function deleteUserAction(userId: string) {
     return { ok: false as const, message: "Você não pode excluir sua própria conta." };
   }
 
+  const repo = getUserManagementRepository();
+
   try {
-    await getUserManagementRepository().deleteUser(userId);
+    // Fetch email before deletion so we can revoke the Supabase Auth session
+    const email = await repo.findUserEmailById(userId);
+
+    await repo.deleteUser(userId);
+
+    // Revoke Supabase Auth account so any active sb-access-token becomes invalid immediately
+    if (email) {
+      try {
+        const supabase = createServerSupabaseClient();
+        const { data } = await supabase.auth.admin.listUsers();
+        const supabaseUser = data.users.find((u) => u.email === email);
+        if (supabaseUser) {
+          await supabase.auth.admin.deleteUser(supabaseUser.id);
+        }
+      } catch (supabaseErr) {
+        // Non-fatal: local record is already deleted; log and continue
+        console.error("[deleteUserAction] Supabase Auth revocation failed:", supabaseErr);
+      }
+    }
+
     return { ok: true as const };
   } catch (err) {
     return { ok: false as const, message: err instanceof Error ? err.message : "Erro ao excluir usuário." };
