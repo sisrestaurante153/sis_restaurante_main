@@ -357,13 +357,15 @@ function CmvHealthBadge({
 }: {
   status: ComponentsEditorSummary["cmvHealthStatus"];
 }) {
-  const resolved = status === "Saudavel"
-    ? { bg: TOKENS.verdeL, fg: TOKENS.verde, border: TOKENS.verdeB, label: "CMV Saudavel" }
-    : status === "Atencao"
-      ? { bg: TOKENS.ambarL, fg: TOKENS.ambar, border: "#FAC775", label: "CMV Atencao" }
-      : status === "Critico"
-        ? { bg: TOKENS.vermL, fg: TOKENS.verm, border: "#F09595", label: "CMV Critico" }
-        : { bg: "#EEEEEE", fg: TOKENS.text3, border: TOKENS.border, label: "Saude do CMV Indefinido" };
+  const resolved = status === "Excelente"
+    ? { bg: "#D6F0E0", fg: "#0F5A22", border: "#8ECFA8", label: "Excelente" }
+    : status === "Saudavel"
+      ? { bg: TOKENS.verdeL, fg: TOKENS.verde, border: TOKENS.verdeB, label: "Saudável" }
+      : status === "Atencao"
+        ? { bg: TOKENS.ambarL, fg: TOKENS.ambar, border: "#FAC775", label: "Atenção" }
+        : status === "Critico"
+          ? { bg: TOKENS.vermL, fg: TOKENS.verm, border: "#F09595", label: "Crítico" }
+          : { bg: "#EEEEEE", fg: TOKENS.text3, border: TOKENS.border, label: "Indefinido" };
 
   return (
     <Box
@@ -841,51 +843,72 @@ export function TotaisIndicadores({
           <Typography
             component="span"
             sx={{
-              fontSize: 10,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: TOKENS.text2,
-              fontWeight: 600
+              fontSize: 11,
+              color: TOKENS.text,
+              fontWeight: 600,
+              display: "block",
+              mb: 0.5
             }}
           >
-            Referência de CMV
+            O que é um CMV saudável?
+          </Typography>
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 10,
+              color: TOKENS.text3,
+              display: "block"
+            }}
+          >
+            Depende do segmento, mas para restaurante popular e delivery de marmitas:
           </Typography>
         </Box>
+        {/* Header */}
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
+            gridTemplateColumns: "1fr 1fr",
             gap: "1px",
             background: TOKENS.border
           }}
         >
+          <Box sx={{ background: TOKENS.bg, padding: "6px 16px" }}>
+            <Typography component="span" sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: TOKENS.text3, fontWeight: 600 }}>
+              Faixa
+            </Typography>
+          </Box>
+          <Box sx={{ background: TOKENS.bg, padding: "6px 16px" }}>
+            <Typography component="span" sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: TOKENS.text3, fontWeight: 600 }}>
+              Classificação
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "1px", background: TOKENS.border }}>
           {[
-            { range: "0% – 30%", status: "Crítico", emoji: "🔴", bg: TOKENS.vermL, fg: TOKENS.verm },
-            { range: "30% – 60%", status: "Atenção", emoji: "🟡", bg: TOKENS.ambarL, fg: TOKENS.ambar },
-            { range: "60%+", status: "Saudável", emoji: "🟢", bg: TOKENS.verdeL, fg: TOKENS.verde }
+            { range: "Abaixo de 30%", label: "Excelente — margem alta", emoji: "🟢", bg: "#D6F0E0", fg: "#0F5A22" },
+            { range: "30% a 35%", label: "Saudável — operação eficiente", emoji: "🟢", bg: TOKENS.verdeL, fg: TOKENS.verde },
+            { range: "35% a 40%", label: "Atenção — revisar preços ou insumos", emoji: "🟡", bg: TOKENS.ambarL, fg: TOKENS.ambar },
+            { range: "Acima de 40%", label: "Crítico — produto provavelmente no prejuízo", emoji: "🔴", bg: TOKENS.vermL, fg: TOKENS.verm },
           ].map((item) => (
             <Box
               key={item.range}
               sx={{
-                background: item.bg,
-                padding: "10px 16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "3px"
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "1px",
+                background: TOKENS.border
               }}
             >
-              <Typography
-                component="span"
-                sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: TOKENS.text3, fontWeight: 500 }}
-              >
-                {item.range}
-              </Typography>
-              <Typography
-                component="span"
-                sx={{ fontSize: 13, fontWeight: 600, color: item.fg }}
-              >
-                {item.emoji} {item.status}
-              </Typography>
+              <Box sx={{ background: TOKENS.surface, padding: "9px 16px" }}>
+                <Typography component="span" sx={{ fontSize: 11, color: TOKENS.text2, fontWeight: 500 }}>
+                  {item.range}
+                </Typography>
+              </Box>
+              <Box sx={{ background: item.bg, padding: "9px 16px" }}>
+                <Typography component="span" sx={{ fontSize: 11, fontWeight: 600, color: item.fg }}>
+                  {item.emoji} {item.label}
+                </Typography>
+              </Box>
             </Box>
           ))}
         </Box>

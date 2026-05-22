@@ -48,17 +48,29 @@ const componentSchema = z.object({
   notes: z.string().trim().default("")
 });
 
-const stageSchema = z.object({
-  id: z.string().trim().min(1).optional(),
-  name: nonEmptyString,
-  stageTypeId: z.string().trim().optional().transform((value) => value || undefined),
-  stageTypeCode: z.string().trim().optional().transform((value) => value || undefined),
-  outputQuantity: z.string().trim().default(""),
-  correctionFactor: z.string().trim().optional().transform((value) => value || undefined),
-  cookingIndex: z.string().trim().optional().transform((value) => value || undefined),
-  notes: z.string().trim().default(""),
-  items: z.array(componentSchema).min(1, "Adicione ao menos um item por etapa.")
-});
+const stageSchema = z
+  .object({
+    id: z.string().trim().min(1).optional(),
+    name: nonEmptyString,
+    stageTypeId: z.string().trim().optional().transform((value) => value || undefined),
+    stageTypeCode: z.string().trim().optional().transform((value) => value || undefined),
+    outputQuantity: z.string().trim().default(""),
+    correctionFactor: z.string().trim().optional().transform((value) => value || undefined),
+    cookingIndex: z.string().trim().optional().transform((value) => value || undefined),
+    notes: z.string().trim().default(""),
+    items: z.array(componentSchema)
+  })
+  .superRefine((stage, ctx) => {
+    const isCoccaoFinal =
+      stage.name === "Coccao / Preparo Final" || stage.name === "Coccao Final";
+    if (!isCoccaoFinal && stage.items.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["items"],
+        message: "Adicione ao menos um item por etapa."
+      });
+    }
+  });
 
 const fichaFormSchema = z
   .object({

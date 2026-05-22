@@ -52,7 +52,7 @@ describe("catalog repository", () => {
       ]
     });
 
-    const detail = await repository.getItemDetail(created.id);
+    const detail = await repository.getItemDetail(created!.id);
 
     expect(detail?.purchase.unit).toBe("kg");
     expect(detail?.purchase.supplier).toBe("Fornecedor Centro");

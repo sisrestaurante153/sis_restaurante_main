@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -54,6 +56,16 @@ export function ListingPagination({
   const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, totalCount);
   const tokens = buildPageTokens(page, totalPages);
+
+  const [inputValue, setInputValue] = useState(String(page));
+  useEffect(() => { setInputValue(String(page)); }, [page]);
+
+  function handleGoToPage(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    const val = parseInt(inputValue, 10);
+    if (!Number.isFinite(val)) return;
+    onPageChange(Math.min(Math.max(val, 1), totalPages));
+  }
 
   const btnBaseSx = {
     padding: "4px 10px",
@@ -110,6 +122,25 @@ export function ListingPagination({
         >
           Anterior
         </Box>
+
+        <Box
+          component="input"
+          type="number"
+          value={inputValue}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)}
+          onKeyDown={handleGoToPage}
+          aria-label="Ir para página"
+          sx={{
+            ...btnBaseSx,
+            width: 52,
+            textAlign: "center",
+            cursor: "text",
+            "&:hover:not(:disabled)": { bgcolor: "#fff" },
+            "&:focus": { outline: "none", borderColor: "#185FA5" },
+            "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button": { WebkitAppearance: "none", margin: 0 },
+            "&[type=number]": { MozAppearance: "textfield" }
+          }}
+        />
 
         {tokens.map((token, idx) =>
           token === "..." ? (

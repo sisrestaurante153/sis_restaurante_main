@@ -38,6 +38,28 @@ export function flattenStagesToRows(
     if (isAssemblyStageLike(stage, stageTypeOptions)) continue;
 
     const isFinal = isCoccaoFinalStage(stage);
+
+    // Coccao Final salvo sem itens (salvo apenas com outputQuantity): reconstrói
+    // linha virtual para que FichaFlatGrid renderize o campo de rendimento.
+    if (isFinal && stage.items.length === 0) {
+      if (stage.outputQuantity) {
+        rows.push({
+          itemId: "",
+          componentType: "ingrediente",
+          quantityUsed: "1.0000",
+          usageUnit: "kg",
+          levelLabel: "N1",
+          notes: "",
+          stageTypeId: stage.stageTypeId,
+          stageTypeCode: stage.stageTypeCode,
+          stageTypeLabel: stage.stageTypeLabel,
+          outputWeight: stage.outputQuantity,
+          isCoccaoFinal: true
+        });
+      }
+      continue;
+    }
+
     const inputSum = stage.items.reduce((sum, item) => sum + Number(item.quantityUsed || "0"), 0);
     const stageOutput = Number(stage.outputQuantity || "0");
     const distributeOutput = inputSum > 0 && stageOutput > 0;
@@ -101,7 +123,7 @@ export function groupRowsToStages(
     );
     const isFinal = key === "__coccao_final__";
 
-    const outputSum = bucketRows.reduce((sum, row) => sum + Number(row.outputWeight || "0"), 0);
+    const outputSum = bucketRows.reduce((sum, row) => sum + (Number((row.outputWeight ?? "").replace(",", ".") || "0") || 0), 0);
     const outputQuantity = outputSum > 0 ? outputSum.toFixed(4) : "";
 
     stageCounter += 1;
@@ -118,7 +140,9 @@ export function groupRowsToStages(
       correctionFactor: "",
       cookingIndex: "",
       notes: "",
-      items: bucketRows.map(stripFlatMetadata)
+      // Coccao Final não tem ingredientes próprios — apenas carrega outputQuantity.
+      // Incluir o item vazio (itemId:"") quebraria a validação Zod no backend.
+      items: isFinal ? [] : bucketRows.map(stripFlatMetadata)
     });
   }
 

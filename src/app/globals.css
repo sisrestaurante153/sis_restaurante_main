@@ -206,12 +206,12 @@ textarea {
 
   /* ── Brand buttons ── */
   .btn-primary {
-    @apply inline-flex items-center gap-2 bg-[--color-brand-orange] text-white font-sans font-bold text-base px-7 py-3.5 rounded-lg border-none cursor-pointer transition-all hover:bg-[--color-brand-orange-hover] hover:-translate-y-[1px];
+    @apply inline-flex items-center gap-2 bg-[#FF6B00] text-white font-sans font-bold text-base px-7 py-3.5 rounded-lg border-none cursor-pointer transition-all hover:bg-[#E55F00] hover:-translate-y-[1px];
   }
   .btn-outline {
-    @apply inline-flex items-center gap-2 bg-transparent text-[--color-brand-primary] font-sans font-bold text-base px-7 py-3.5 rounded-lg border-2 border-[--color-brand-primary] cursor-pointer transition-all hover:bg-[--color-brand-primary] hover:text-white;
+    @apply inline-flex items-center gap-2 bg-transparent text-[#185FA5] font-sans font-bold text-base px-7 py-3.5 rounded-lg border-2 border-[#185FA5] cursor-pointer transition-all hover:bg-[#185FA5] hover:text-white;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-1.5 bg-transparent text-white/85 font-sans font-semibold text-[15px] px-6 py-3 rounded-lg border-[1.5px] border-white/30 cursor-pointer transition-all hover:bg-white/10 hover:border-white/50;
+    @apply inline-flex items-center gap-1.5 bg-transparent text-ink-800 font-sans font-semibold text-[15px] px-6 py-3 rounded-lg border-[1.5px] border-ink-800/60 cursor-pointer transition-all hover:bg-ink-100 hover:border-ink-800;
   }
 }

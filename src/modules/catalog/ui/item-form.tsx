@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import MenuItem from "@mui/material/MenuItem";
@@ -101,6 +102,20 @@ export function ItemForm({
         ]
   );
 
+  const alertRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (state.status !== "error") return;
+    const fieldOrder = ["name", "code", "type", "operationalCategory", "description"];
+    const firstField = fieldOrder.find((f) => state.errors?.[f]?.length);
+    if (firstField) {
+      const el = document.querySelector<HTMLElement>(`[name="${firstField}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+    } else {
+      alertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [state.status, state.message, state.errors]);
+
   const [code, setCode] = useState(() => {
     if (initialValues?.code) return initialValues.code;
     if (!initialValues?.id) {
@@ -125,7 +140,7 @@ export function ItemForm({
     <Stack component="form" id={formId} action={formAction} spacing={4} noValidate>
       <input type="hidden" name="id" value={initialValues?.id ?? ""} />
 
-      {state.message ? <Alert severity="error">{state.message}</Alert> : null}
+      {state.message ? <Alert ref={alertRef} severity="error">{state.message}</Alert> : null}
 
       {/* BLOCO 1: IDENTIFICACAO — 5 campos. update/tela-item-v1.html linhas 178-220 */}
       {/* Phase 09-02 D-13: FormSection sem description; card-label bate 1:1 com HTML linha 56. */}
@@ -282,6 +297,12 @@ export function ItemForm({
           helperText={getFieldError("description") ?? " "}
         />
       </FormSection>
+
+      <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 1 }}>
+        <Button type="submit" variant="contained" size="large" sx={{ minWidth: 160, bgcolor: "#185FA5", "&:hover": { bgcolor: "#0C447C" } }}>
+          Salvar item
+        </Button>
+      </Box>
 
       {children}
     </Stack>

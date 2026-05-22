@@ -38,13 +38,9 @@ export function RegistroForm({ plans }: { plans?: Plan[] }) {
     return (
       <div className="flex flex-col items-center gap-4 text-center py-4">
         <CheckCircleRoundedIcon sx={{ fontSize: 48, color: "success.main" }} />
-        <p className="text-sm text-ink-700 font-medium max-w-xs">{state.message}</p>
-        <Link
-          href="/login"
-          className="mt-2 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold transition-colors"
-        >
-          Ir para o login
-        </Link>
+        <p className="text-sm text-ink-700 font-medium max-w-xs">
+          Conta criada com sucesso! Redirecionando para o painel...
+        </p>
       </div>
     );
   }

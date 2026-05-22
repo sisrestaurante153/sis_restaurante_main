@@ -13,6 +13,7 @@ import TextField from "@mui/material/TextField";
 import Link from "next/link";
 import Typography from "@mui/material/Typography";
 import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
+import { withBasePath } from "@/modules/platform/lib/base-path";
 
 export function SignupForm() {
   const [message, setMessage] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export function SignupForm() {
       }
 
       setSuccess(true);
+      window.location.assign(withBasePath("/dashboard"));
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
@@ -53,10 +55,7 @@ export function SignupForm() {
   if (success) {
     return (
       <Stack spacing={2} textAlign="center">
-        <Alert severity="success">Conta criada com sucesso! Verifique seu email para confirmar.</Alert>
-        <Link href="/login" style={{ textDecoration: 'none' }}>
-           <Typography variant="body2" color="primary">Ir para o login</Typography>
-        </Link>
+        <Alert severity="success">Conta criada com sucesso! Redirecionando...</Alert>
       </Stack>
     );
   }

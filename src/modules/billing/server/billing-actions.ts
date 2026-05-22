@@ -3,11 +3,14 @@
 import { z } from "zod";
 import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import { getServerEnv } from "@/modules/platform/server/env";
-import { signUp } from "@/modules/access/server/auth-service";
+import { signUp, signInWithPassword } from "@/modules/access/server/auth-service";
 import { getBillingRepository } from "@/modules/billing/server/billing-repository";
 import { createAsaasCustomer, createAsaasSubscription, planToAsaasDescription } from "@/modules/billing/server/asaas-client";
 import type { PaymentMethod } from "@/modules/billing/domain/plans";
 import { PLANS } from "@/modules/billing/domain/plans";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { createUserSession } from "@/modules/access/server/session-cookie";
 
 // ---------------------------------------------------------------------------
 // Registro self-service
@@ -61,12 +64,19 @@ export async function registrarRestauranteAction(
     throw new Error("Não foi possível conectar ao banco de dados.");
   }
 
+  let restauranteId = "";
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+  let success = false;
+
   try {
     // 2. Cria restaurante + usuário local + assinatura em trial numa transação
     await prisma.$transaction(async (tx) => {
       const restaurante = await tx.restaurante.create({
         data: { nm_restaurante, sn_ativo: true }
       });
+      restauranteId = restaurante.cd_restaurante;
 
       await tx.user.create({
         data: {
@@ -85,9 +95,6 @@ export async function registrarRestauranteAction(
 
       const monthlyValue = planConfig ? planConfig.vl_mensal : (PLANS[plano] || PLANS.pro).monthlyValue;
 
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 14);
-
       await tx.assinatura.create({
         data: {
           cd_restaurante: restaurante.cd_restaurante,
@@ -98,6 +105,38 @@ export async function registrarRestauranteAction(
         }
       });
     });
+
+    // 3. Loga o usuário imediatamente
+    const loginResult = await signInWithPassword(email, password);
+    if (!loginResult.ok) {
+      return {
+        status: "error",
+        message: `Conta criada, mas não foi possível autenticar: ${loginResult.message}`
+      };
+    }
+
+    // Cria cookies de sessão para o usuário local
+    await createUserSession({
+      userId: loginResult.user.id,
+      restaurantId: restauranteId,
+      email: loginResult.user.email,
+      name: loginResult.user.nome,
+      roleCodes: loginResult.user.roleCodes,
+      subscriptionStatus: "trial",
+      trialEndsAt: trialEndsAt.toISOString()
+    });
+
+    // Define o cookie sb-access-token para o Supabase
+    const cookieStore = await cookies();
+    cookieStore.set("sb-access-token", loginResult.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: loginResult.session.expires_in,
+      path: "/",
+    });
+
+    success = true;
   } catch (err) {
     console.error("[registro] erro ao criar registros locais", err);
     return {
@@ -106,9 +145,13 @@ export async function registrarRestauranteAction(
     };
   }
 
+  if (success) {
+    redirect("/dashboard");
+  }
+
   return {
     status: "success",
-    message: "Conta criada com sucesso! Verifique seu email para confirmar o cadastro e, em seguida, faça o login."
+    message: "Conta criada com sucesso!"
   };
 }
 

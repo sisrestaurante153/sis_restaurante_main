@@ -7,7 +7,6 @@ import { useState } from "react";
 import { type Plan, PLAN_LIST } from "@/modules/billing/domain/plans";
 
 export function LandingPage({ plans }: { plans?: Plan[] }) {
-  // Estado para a seção "Qual plano é pra mim?"
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
 
@@ -43,7 +42,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
     } else {
       return {
         plan: `${planList[0]?.label || "Essencial"} ou ${planList[1]?.label || "Profissional"}`,
-        desc: `Com só 1 operação, o plano <strong>${planList[1]?.label || "Profissional"}</strong> cobre tudo que você precisa. Se cardápio for enxuto, o <strong>${planList[0]?.label || "Essencial"}</strong> também resolve.`,
+        desc: `Com só 1 operação, o plano <strong>${planList[1]?.label || "Profissional"}</strong> cobre tudo que você precisa. Se o cardápio for enxuto, o <strong>${planList[0]?.label || "Essencial"}</strong> também resolve.`,
         emoji: "🍽️",
       };
     }
@@ -53,6 +52,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
 
   return (
     <div className="font-body text-ink-800">
+
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-md border-b border-ink-200 py-2.5">
         <div className="container-page flex items-center justify-between gap-6">
@@ -78,17 +78,24 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-orange-50 border border-orange-100 rounded-full text-xs font-semibold text-orange-800 tracking-wider mb-6">
               <span className="w-1.5 h-1.5 bg-orange-600 rounded-full animate-pulse"></span>
-              PRECIFICAÇÃO INTELIGENTE PARA GASTRONOMIA
+              GESTÃO DE CUSTO E PRECIFICAÇÃO PARA GASTRONOMIA
             </div>
-            <h1 className="font-display font-bold text-[clamp(42px,5.5vw,68px)] leading-[1.02] tracking-tight text-blue-900 mb-5">
-              Descubra quanto <span className="italic text-orange-600 relative whitespace-nowrap after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-full after:h-2 after:bg-[url('data:image/svg+xml,%3Csvg_xmlns=\'http://www.w3.org/2000/svg\'_viewBox=\'0_0_200_8\'_preserveAspectRatio=\'none\'%3E%3Cpath_d=\'M2,6_Q50,1_100,4_T198,5\'_stroke=\'%23FF6B00\'_stroke-width=\'2.5\'_fill=\'none\'_stroke-linecap=\'round\'_opacity=\'0.4\'/%3E%3C/svg%3E')] after:bg-center after:bg-cover after:bg-no-repeat">realmente</span> custa cada prato do seu cardápio.
+            <h1 className="font-display font-bold text-[clamp(42px,5.5vw,68px)] leading-[1.02] tracking-tight text-blue-900 mb-4">
+              Saiba o custo exato de cada prato —{" "}
+              <span className="italic text-orange-600 relative whitespace-nowrap">
+                e pare de perder margem
+              </span>{" "}
+              sem saber.
             </h1>
-            <p className="text-[19px] leading-relaxed text-ink-600 max-w-[540px] mb-8">
-              Ficha técnica, controle de CMV e precificação com margem garantida. Pare de precificar no &quot;achismo&quot; e comece a lucrar em cada venda.
+            <p className="text-[19px] leading-relaxed text-ink-600 max-w-[540px] mb-3">
+              O único sistema brasileiro com IA que calcula, alerta e sugere preço — tudo automático. Para restaurantes, hamburguerias, confeitarias e dark kitchens.
             </p>
-            <div className="flex flex-wrap gap-3 mb-6">
-              <Link href="/registro" className="btn-primary text-base px-7 py-4">Comece grátis por 14 dias →</Link>
-              <a href="#how" className="btn-ghost text-base px-7 py-4">Ver como funciona</a>
+            <p className="text-sm font-semibold text-ink-500 mb-8">
+              Sem planilha. Sem cartão. 14 dias grátis para testar tudo.
+            </p>
+            <div className="flex flex-wrap gap-3 mb-7">
+              <Link href="/registro" className="btn-primary text-base px-8 py-4">Comece grátis por 14 dias →</Link>
+              <a href="#how" className="inline-flex items-center gap-1.5 bg-blue-900 text-white font-sans font-semibold text-base px-7 py-4 rounded-lg border border-blue-700 cursor-pointer transition-all hover:bg-blue-800">Ver como funciona</a>
             </div>
             <div className="flex items-center gap-3 text-[13px] text-ink-500">
               <div className="flex">
@@ -97,7 +104,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                 <div className="w-7 h-7 rounded-full border-2 border-paper -ml-2 flex items-center justify-center text-[11px] font-bold text-white bg-gradient-to-br from-blue-800 to-orange-700">AR</div>
                 <div className="w-7 h-7 rounded-full border-2 border-paper -ml-2 flex items-center justify-center text-[11px] font-bold text-white bg-gradient-to-br from-[#6B9B7B] to-orange-500">+</div>
               </div>
-              <span>Usado por chefs, bares e confeitarias no Brasil inteiro.</span>
+              <span>+1.200 estabelecimentos no Brasil · avaliação <strong className="text-ink-700">4,9/5 ⭐</strong></span>
             </div>
           </div>
 
@@ -110,18 +117,18 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                 <div className="ml-3 bg-white/10 px-3 py-1 rounded font-mono text-[11px] text-white/70">custodereceita.com.br/dashboard</div>
               </div>
               <div className="p-5 bg-paper">
-                <div className="flex justify-between items-start mb-4.5">
+                <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="font-display font-semibold text-lg text-blue-900 mb-0.5">Visão geral</h4>
                     <p className="text-[11px] text-ink-500">Outubro · 128 pratos cadastrados</p>
                   </div>
                   <span className="bg-success-bg text-success text-[10px] px-2.5 py-1 rounded-full font-semibold">AO VIVO</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5 mb-4.5">
+                <div className="grid grid-cols-3 gap-2.5 mb-4">
                   <div className="bg-white border border-ink-200 rounded-md p-3">
                     <div className="text-[10px] text-ink-500 font-semibold tracking-wider uppercase mb-1">CMV médio</div>
-                    <div className="font-mono font-semibold text-[17px] text-blue-900">31,2%</div>
-                    <div className="text-[10px] font-semibold text-success mt-0.5">↓ 2,4 pp vs mês anterior</div>
+                    <div className="font-mono font-semibold text-[17px] text-blue-900">28,4%</div>
+                    <div className="text-[10px] font-semibold text-success mt-0.5">↓ 9,6 pp economizados</div>
                   </div>
                   <div className="bg-white border border-ink-200 rounded-md p-3">
                     <div className="text-[10px] text-ink-500 font-semibold tracking-wider uppercase mb-1">Margem</div>
@@ -160,7 +167,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="absolute -bottom-7 -left-9 bg-white px-4 py-3.5 rounded-2xl shadow-lg border border-ink-200 flex items-center gap-3 -rotate-3 transition-transform duration-300 hover:rotate-0">
               <div className="w-10 h-10 bg-success-bg rounded-full flex items-center justify-center text-xl">💰</div>
               <div className="leading-tight">
@@ -172,8 +179,28 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
         </div>
       </section>
 
+      {/* PROVA SOCIAL — NÚMEROS */}
+      <div className="bg-blue-900 py-8">
+        <div className="container-page">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+            {[
+              { stat: "+1.200", label: "estabelecimentos ativos", sub: "restaurantes, bares, confeitarias e dark kitchens" },
+              { stat: "−9 pp", label: "de redução média de CMV", sub: "usuários saem de 38% para menos de 30%" },
+              { stat: "4,9 / 5", label: "de satisfação", sub: "avaliação média dos usuários ativos" },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="font-display font-black text-[40px] leading-none text-orange-500 tracking-tight">{item.stat}</div>
+                <div className="text-white font-semibold text-sm mt-1">{item.label}</div>
+                <div className="text-white/50 text-xs mt-0.5">{item.sub}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-white/60 text-sm mt-6">A IA do Custo de Receita monitora tudo isso por você em tempo real.</p>
+        </div>
+      </div>
+
       {/* TRUST BAR */}
-      <div className="py-10 border-y border-dashed border-ink-300">
+      <div className="py-10 border-b border-dashed border-ink-300">
         <div className="container-page">
           <div className="text-center text-[11px] font-semibold text-ink-500 tracking-[0.15em] uppercase mb-5">Para todo tipo de operação gastronômica</div>
           <div className="flex justify-center items-center gap-14 flex-wrap opacity-60">
@@ -212,8 +239,70 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
         </div>
       </section>
 
+      {/* ANTES E DEPOIS */}
+      <section className="py-24 bg-paper">
+        <div className="container-page">
+          <div className="text-center max-w-[720px] mx-auto mb-12">
+            <div className="inline-block font-mono text-xs font-semibold text-orange-700 tracking-[0.15em] uppercase mb-3">A diferença na prática</div>
+            <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-blue-900 mb-4">
+              Antes e <em className="italic text-orange-600">depois</em> do controle de custo.
+            </h2>
+            <p className="text-lg text-ink-500 leading-relaxed max-w-[580px] mx-auto">A realidade de quem toca um restaurante sem dados — e o que muda quando você tem o número certo na mão.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[900px] mx-auto">
+            <div className="rounded-2xl p-8 bg-white border-2 border-red-100">
+              <div className="font-mono text-xs font-bold text-error tracking-widest uppercase mb-6 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-error text-white inline-flex items-center justify-center text-[10px] font-bold shrink-0">✕</span>
+                Sem controle de custo
+              </div>
+              <ul className="flex flex-col gap-4">
+                {[
+                  "Preço definido no \"achismo\" — sem saber se cobre o custo real",
+                  "CMV em 38%+ e você descobre só no fechamento do mês",
+                  "Não sabe quais pratos dão lucro e quais dão prejuízo",
+                  "Planilha desatualizada com insumos com preço errado",
+                  "Insumos sobem e você só ajusta o preço quando a conta aperta",
+                  "Fim do mês: casa cheia, mas saldo no zero"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-ink-600 leading-relaxed list-none">
+                    <span className="w-4 h-4 rounded-full bg-red-50 border border-red-200 text-error flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✕</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl p-8 bg-white border-2 border-green-100">
+              <div className="font-mono text-xs font-bold text-success tracking-widest uppercase mb-6 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-success text-white inline-flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                Com Custo de Receita
+              </div>
+              <ul className="flex flex-col gap-4">
+                {[
+                  "Custo de cada prato calculado com precisão — em R$ e percentual",
+                  "CMV abaixo de 30%, visível em tempo real por prato e por categoria",
+                  "Termômetro de margem por prato: veja o que lucra e o que sangra",
+                  "Atualiza o insumo uma vez — todos os pratos recalculam na hora",
+                  "Alerta quando um prato vira prejuízo antes de chegar no caixa",
+                  "Fim do mês: você sabe de onde veio cada centavo de lucro"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-ink-700 leading-relaxed list-none">
+                    <span className="w-4 h-4 rounded-full bg-green-50 border border-green-200 text-success flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="text-center mt-10">
+            <Link href="/registro" className="btn-primary text-base px-8 py-4">Quero controlar meu CMV agora →</Link>
+            <p className="mt-3 text-xs text-ink-400">14 dias grátis · sem cartão de crédito · cancele quando quiser</p>
+          </div>
+        </div>
+      </section>
+
       {/* FEATURES */}
-      <section id="features" className="py-24">
+      <section id="features" className="py-24 bg-ink-100">
         <div className="container-page">
           <div className="text-center max-w-[720px] mx-auto mb-16">
             <div className="inline-block font-mono text-xs font-semibold text-orange-700 tracking-[0.15em] uppercase mb-3">A SOLUÇÃO</div>
@@ -222,21 +311,25 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
             {[
-              // { title: "Ficha técnica digital", desc: "Cadastre seus insumos uma vez e monte fichas de qualquer prato em minutos. Rendimento, perdas, tempo de preparo — tudo registrado.", icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/> },
+              { title: "Ficha técnica digital", desc: "Cadastre seus insumos uma vez e monte fichas de qualquer prato em minutos. Rendimento, perdas, fator de correção — tudo calculado automaticamente.", icon: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></> },
               { title: "CMV em tempo real", desc: "Veja seu custo de mercadoria vendida atualizado automaticamente. Prato a prato, categoria a categoria, cardápio inteiro.", icon: <><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></> },
-              { title: "Termômetro de preço", desc: "Defina sua margem-alvo e o sistema indica se o preço de venda está certo, alto ou baixo. Decisão na mesa, na hora.", icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></> },
-              { title: "Categorias e grupos", desc: "Organize pratos por categoria, consulte CMV por grupo, identifique quais famílias de produtos dão mais lucro.", icon: <><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></> },
-              { title: "Importação de planilhas", desc: "Tem uma planilha de ingredientes? Importe em 1 clique. Não começa do zero — aproveita o que você já tem.", icon: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></> },
-              { title: "Atualização automática", desc: "Subiu o preço do tomate? Atualize o insumo uma vez e todos os pratos que o usam recalculam o custo na hora.", icon: <><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></> }
+              { title: "Termômetro de preço", desc: "Defina sua margem-alvo e o sistema indica se o preço de venda está certo, alto ou baixo. Decisão na mesa, na hora, sem depender de ninguém.", icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></> },
+              { title: "Categorias e grupos", desc: "Organize pratos por categoria, consulte CMV por grupo, identifique quais famílias de produtos dão mais lucro e onde cortar custos.", icon: <><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></> },
+              { title: "Importação de planilhas", desc: "Tem uma planilha de ingredientes? Importe em 1 clique. Não começa do zero — aproveita o que você já tem e entra rodando.", icon: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></> },
+              { title: "Atualização automática", desc: "Subiu o preço do tomate? Atualize o insumo uma vez e todos os pratos que o usam recalculam o custo na hora — nenhuma ficha fica desatualizada.", icon: <><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></> }
             ].map((f, i) => (
               <div key={i} className="bg-white rounded-2xl p-8 border border-ink-200 transition-all duration-250 hover:-translate-y-1 hover:border-orange-100 hover:shadow-lg group">
-                <div className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-5 ${i % 2 === 0 ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+                <div className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-5 ${i % 2 === 0 ? "bg-blue-50 text-blue-700" : "bg-orange-50 text-orange-700"}`}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{f.icon}</svg>
                 </div>
                 <h3 className="font-display font-semibold text-xl text-ink-900 mb-2.5 tracking-tight">{f.title}</h3>
                 <p className="text-ink-500 text-[14.5px] leading-[1.55]">{f.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link href="/registro" className="btn-primary text-base px-7 py-4">Experimentar todas as funcionalidades →</Link>
+            <p className="mt-3 text-xs text-ink-400">Acesso completo por 14 dias · Sem cartão de crédito</p>
           </div>
         </div>
       </section>
@@ -247,14 +340,14 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
         <div className="container-page">
           <div className="text-center max-w-[720px] mx-auto mb-16 relative z-10">
             <div className="inline-block font-mono text-xs font-semibold text-orange-500 tracking-[0.15em] uppercase mb-3">Como funciona</div>
-            <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-white mb-4">Do caos à <em className="italic text-orange-600">clareza</em> em três passos.</h2>
-            <p className="text-lg text-white/70 leading-relaxed max-w-[620px] mx-auto">Você começa hoje. Em menos de uma semana, tem todo o cardápio sob controle.</p>
+            <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-white mb-4">Do caos à <em className="italic text-orange-500">clareza</em> em três passos.</h2>
+            <p className="text-lg text-white/70 leading-relaxed max-w-[620px] mx-auto">Você começa hoje. Em menos de uma semana, tem todo o cardápio sob controle — sem precisar entender de planilha ou finanças.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-7 mt-12 relative z-10">
             {[
-              { n: "01", title: "Cadastre seus insumos", desc: "Adicione ingredientes com preço atual, unidade de medida e fornecedor. Importe de planilha ou cadastre um a um. Ilimitado em qualquer plano." },
-              { n: "02", title: "Monte as fichas técnicas", desc: "Crie a ficha de cada prato com ingredientes, rendimento e fator de correção. O custo aparece automaticamente na tela." },
-              { n: "03", title: "Precifique com lucro", desc: "Use o termômetro de preço, defina sua margem-alvo e descubra exatamente quanto cada prato contribui para o lucro do negócio." }
+              { n: "01", title: "Cadastre seus insumos", desc: "Adicione ingredientes com preço atual, unidade de medida e fornecedor. Importe de planilha ou cadastre um a um. Leva menos de 30 minutos pra começar." },
+              { n: "02", title: "Monte as fichas técnicas", desc: "Crie a ficha de cada prato com ingredientes, rendimento e fator de correção. O custo total aparece automaticamente na tela, sem nenhum cálculo manual." },
+              { n: "03", title: "Precifique com lucro", desc: "Use o termômetro de preço, defina sua margem-alvo e descubra exatamente quanto cada prato contribui — ou subtrai — do lucro do seu negócio." }
             ].map((step, idx) => (
               <div key={idx} className="relative">
                 <div className="font-display font-black text-[88px] leading-none text-orange-600 mb-4 tracking-tight">{step.n}</div>
@@ -262,6 +355,9 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                 <p className="text-white/65 text-[15px] leading-[1.55]">{step.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-14 relative z-10">
+            <p className="text-white/60 text-sm mb-4">Sem instalação · Funciona no celular, tablet e computador</p>
           </div>
         </div>
       </section>
@@ -272,9 +368,9 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
           <div className="text-center max-w-[720px] mx-auto mb-12">
             <div className="inline-block font-mono text-xs font-semibold text-orange-700 tracking-[0.15em] uppercase mb-3">Dentro do produto</div>
             <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-blue-900 mb-4">Dados que você <em className="italic text-orange-600">entende</em> na hora.</h2>
-            <p className="text-lg text-ink-500 leading-relaxed max-w-[620px] mx-auto">Interface pensada para chef, gerente e proprietário. Sem jargão técnico, sem planilha confusa.</p>
+            <p className="text-lg text-ink-500 leading-relaxed max-w-[620px] mx-auto">Interface pensada para chef, gerente e proprietário. Sem jargão técnico, sem planilha confusa, sem precisar chamar um contador.</p>
           </div>
-          
+
           <div className="mt-12 bg-white border border-ink-200 rounded-[24px] overflow-hidden shadow-xl">
             <div className="bg-blue-900 px-5 py-3 flex items-center gap-2.5">
               <div className="w-[11px] h-[11px] rounded-full bg-[#FF5F56]"></div>
@@ -282,14 +378,13 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
               <div className="w-[11px] h-[11px] rounded-full bg-[#27C93F]"></div>
               <div className="ml-4 bg-white/10 px-3.5 py-1.5 rounded font-mono text-xs text-white/70">app.custodereceita.com.br/cardapio</div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] min-h-[500px]">
               <aside className="hidden md:block bg-ink-50 border-r border-ink-200 px-3.5 py-5">
                 <div className="flex gap-2 items-center px-2 pb-5 border-b border-ink-200 mb-4">
                   <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center text-white text-xs">🍽</div>
                   <span className="font-body font-bold text-[13px] text-blue-900 leading-[1.1]">Custo de<br/><span className="text-orange-600">RECEITA</span></span>
                 </div>
-                
                 <div className="text-[10px] font-semibold text-ink-400 tracking-widest uppercase px-3 pt-3 pb-1.5">Principal</div>
                 <div className="flex flex-col gap-0.5">
                   <div className="px-3 py-2.5 rounded-md text-[13px] text-ink-600 font-medium flex items-center gap-2.5 cursor-pointer hover:bg-white hover:text-ink-900">
@@ -303,7 +398,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                   </div>
                 </div>
               </aside>
-              
+
               <main className="p-6 md:p-7 bg-paper">
                 <div className="flex justify-between items-start mb-6">
                   <div>
@@ -312,12 +407,11 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                   </div>
                   <button className="btn-primary py-2 px-3 text-xs">+ Novo prato</button>
                 </div>
-                
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
                   <div className="bg-white border border-ink-200 rounded-[10px] p-3.5">
                     <div className="text-[10px] font-semibold text-ink-500 tracking-wider uppercase mb-1.5">CMV Médio</div>
-                    <div className="font-mono font-semibold text-xl text-blue-900 leading-none">31,2%</div>
-                    <div className="text-[11px] font-semibold text-success mt-1">↓ 2,4pp</div>
+                    <div className="font-mono font-semibold text-xl text-blue-900 leading-none">28,4%</div>
+                    <div className="text-[11px] font-semibold text-success mt-1">↓ 9,6pp recuperado</div>
                   </div>
                   <div className="bg-white border border-ink-200 rounded-[10px] p-3.5">
                     <div className="text-[10px] font-semibold text-ink-500 tracking-wider uppercase mb-1.5">Margem</div>
@@ -335,7 +429,6 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                     <div className="text-[11px] font-semibold text-ink-500 mt-1">margem baixa</div>
                   </div>
                 </div>
-                
                 <div className="bg-white border border-ink-200 rounded-[10px] overflow-hidden">
                   <div className="grid grid-cols-[2fr_1fr_1fr_1fr_80px] px-4 py-3 text-[10px] font-bold text-ink-500 tracking-wider uppercase border-b border-ink-200 bg-ink-50">
                     <div>Prato</div>
@@ -344,7 +437,6 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                     <div className="hidden md:block">Venda</div>
                     <div>Margem</div>
                   </div>
-                  
                   {[
                     { name: "Risoto de Funghi", cost: "R$ 18,40", cmv: "28,6%", sell: "R$ 64,30", marg: 71, status: "ok" },
                     { name: "Fettuccine Alfredo", cost: "R$ 12,80", cmv: "26,1%", sell: "R$ 49,00", marg: 74, status: "ok" },
@@ -359,7 +451,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                       <div className="hidden md:block font-mono font-medium text-ink-700">{row.sell}</div>
                       <div className="flex items-center gap-1.5">
                         <div className="flex-1 h-1.5 bg-ink-200 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${row.status === 'ok' ? 'bg-success' : row.status === 'low' ? 'bg-error' : 'bg-orange-500'}`} style={{ width: `${row.marg}%` }}></div>
+                          <div className={`h-full rounded-full ${row.status === "ok" ? "bg-success" : row.status === "low" ? "bg-error" : "bg-orange-500"}`} style={{ width: `${row.marg}%` }}></div>
                         </div>
                         <span className="font-mono text-[11px] font-semibold min-w-[30px]">{row.marg}%</span>
                       </div>
@@ -373,23 +465,23 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-24">
+      <section className="py-24 bg-ink-100">
         <div className="container-page">
           <div className="text-center max-w-[720px] mx-auto mb-12">
             <div className="inline-block font-mono text-xs font-semibold text-orange-700 tracking-[0.15em] uppercase mb-3">Quem usa recomenda</div>
             <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-blue-900 mb-4">Histórias de <em className="italic text-orange-600">margem recuperada.</em></h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             {[
-              { quote: "Em dois meses descobri que 4 pratos do meu cardápio davam prejuízo. Reprecificando, aumentei minha margem em 9 pontos. O sistema literalmente se pagou na primeira semana.", avatar: "MC", bg: "from-[#004A99] to-[#1966B8]", name: "Marina Camargo", role: "Chef proprietária · Osteria Verrazzano, SP" },
+              { quote: "Em dois meses descobri que 4 pratos do meu cardápio davam prejuízo. Reprecificando, aumentei minha margem em 9 pontos percentuais. O sistema literalmente se pagou na primeira semana.", avatar: "MC", bg: "from-[#004A99] to-[#1966B8]", name: "Marina Camargo", role: "Chef proprietária · Osteria Verrazzano, SP" },
               { quote: "Tenho 3 hamburguerias. Antes do Custo de Receita, cada unidade tinha um preço diferente e eu não sabia qual era lucrativa. Hoje bato meta todo mês e sei exatamente o porquê.", avatar: "JL", bg: "from-[#FF6B00] to-[#FFAB66]", name: "Juliano Lemos", role: "Sócio · Burger Co., Curitiba" },
               { quote: "Sou confeiteira, trabalho sozinha e não entendo de planilha. É a primeira ferramenta de gestão que realmente entendi e uso todos os dias. Parei de vender bolo no prejuízo.", avatar: "AR", bg: "from-[#B34A00] to-[#FF8533]", name: "Ana Ribeiro", role: "Confeiteira · Doce Alinhado, BH" }
             ].map((t, i) => (
-              <div key={i} className="bg-white rounded-2xl p-8 border border-ink-200 relative">
+              <div key={i} className="bg-white rounded-2xl p-8 border border-ink-200 relative flex flex-col">
                 <div className="font-display font-black text-[60px] leading-[0.6] text-orange-300 mb-2.5">&quot;</div>
-                <div className="font-display font-medium text-[17px] leading-[1.4] text-ink-800 mb-6 tracking-tight">{t.quote}</div>
-                <div className="flex items-center gap-3 pt-5 border-t border-ink-200 mt-auto">
+                <div className="font-display font-medium text-[17px] leading-[1.4] text-ink-800 mb-6 tracking-tight flex-1">{t.quote}</div>
+                <div className="flex items-center gap-3 pt-5 border-t border-ink-200">
                   <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0 bg-gradient-to-br ${t.bg}`}>{t.avatar}</div>
                   <div>
                     <div className="text-sm font-bold text-ink-900">{t.name}</div>
@@ -399,6 +491,23 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* MID-PAGE CTA */}
+      <section className="py-16 bg-orange-600 text-white">
+        <div className="container-page text-center max-w-[720px] mx-auto">
+          <p className="text-xs font-bold tracking-widest uppercase text-white/70 mb-3">Pronto para precificar com confiança?</p>
+          <h2 className="font-display font-bold text-[clamp(28px,4vw,42px)] leading-tight tracking-tight mb-2">
+            Mais de 1.200 estabelecimentos já controlam o CMV com a gente.
+          </h2>
+          <p className="text-white/75 text-lg mb-7">
+            Junte-se a eles. 14 dias para testar tudo, de graça, sem informar cartão.
+          </p>
+          <Link href="/registro" className="inline-block bg-white text-orange-700 font-bold text-base px-8 py-4 rounded-lg hover:bg-orange-50 transition-colors">
+            Começar meu teste grátis →
+          </Link>
+          <p className="mt-4 text-[13px] text-white/50">Sem cartão · Sem compromisso · Cancele quando quiser</p>
         </div>
       </section>
 
@@ -426,10 +535,10 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                   { val: "2-3", label: "2 a 3 unidades" },
                   { val: "4+", label: "4 unidades ou mais" }
                 ].map((opt) => (
-                  <button 
+                  <button
                     key={opt.val}
                     onClick={() => setQ1(opt.val)}
-                    className={`px-4 py-2.5 rounded-full border-[1.5px] text-[13px] font-medium transition-all select-none ${q1 === opt.val ? 'bg-blue-700 border-blue-700 text-white' : 'bg-white border-ink-300 text-ink-700 hover:border-blue-700 hover:text-blue-800'}`}
+                    className={`px-4 py-2.5 rounded-full border-[1.5px] text-[13px] font-medium transition-all select-none ${q1 === opt.val ? "bg-blue-700 border-blue-700 text-white" : "bg-white border-ink-300 text-ink-700 hover:border-blue-700 hover:text-blue-800"}`}
                   >
                     {opt.label}
                   </button>
@@ -440,7 +549,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
             <div className="mb-6">
               <div className="text-[13px] font-bold text-blue-900 mb-3 flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-orange-600 text-white inline-flex items-center justify-center text-[11px]">2</span>
-                As unidades têm <strong className="text-orange-700 ml-1"> mesmo cardápio e mesmos preços de compra?</strong>
+                As unidades têm <strong className="text-orange-700 ml-1">mesmo cardápio e mesmos preços de compra?</strong>
               </div>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -448,10 +557,10 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                   { val: "same", label: "Sim, são iguais" },
                   { val: "different", label: "Não, há diferenças" }
                 ].map((opt) => (
-                  <button 
+                  <button
                     key={opt.val}
                     onClick={() => setQ2(opt.val)}
-                    className={`px-4 py-2.5 rounded-full border-[1.5px] text-[13px] font-medium transition-all select-none ${q2 === opt.val ? 'bg-blue-700 border-blue-700 text-white' : 'bg-white border-ink-300 text-ink-700 hover:border-blue-700 hover:text-blue-800'}`}
+                    className={`px-4 py-2.5 rounded-full border-[1.5px] text-[13px] font-medium transition-all select-none ${q2 === opt.val ? "bg-blue-700 border-blue-700 text-white" : "bg-white border-ink-300 text-ink-700 hover:border-blue-700 hover:text-blue-800"}`}
                   >
                     {opt.label}
                   </button>
@@ -476,10 +585,14 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
       {/* PRICING */}
       <section className="py-10 bg-ink-100">
         <div className="container-page">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch mt-12">
-            
+          <div className="text-center mb-4">
+            <div className="inline-flex items-center gap-2 bg-success-bg text-success text-xs font-bold px-4 py-2 rounded-full">
+              ✓ 14 dias grátis · Sem cartão de crédito · Cancele quando quiser
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch mt-8">
             {planList.slice(0, 3).map((plan, idx) => (
-              <div key={plan.code} className={`rounded-2xl p-7 md:p-9 border flex flex-col relative ${idx === 1 ? 'bg-blue-900 text-white md:scale-[1.02] shadow-xl border-blue-900' : 'bg-white border-ink-200'}`}>
+              <div key={plan.code} className={`rounded-2xl p-7 md:p-9 border flex flex-col relative ${idx === 1 ? "bg-blue-900 text-white md:scale-[1.02] shadow-xl border-blue-900" : "bg-white border-ink-200"}`}>
                 {idx === 1 && <div className="absolute -top-3 right-7 bg-orange-600 text-white px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider">MAIS VENDIDO</div>}
                 <div className="font-display font-semibold text-2xl mb-1.5 tracking-tight">{plan.label}</div>
                 <div className="text-xs font-semibold tracking-wider uppercase opacity-60 mb-3">{idx === 0 ? "Para quem está começando" : idx === 1 ? "Para controle real de margem" : "Para operações complexas"}</div>
@@ -490,39 +603,48 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                 <div className="text-xs opacity-60 mb-6">cobrança mensal · cancele quando quiser</div>
                 <ul className="list-none m-0 p-0 mb-7 flex-1 flex flex-col gap-2">
                   <li className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? "text-orange-500" : "text-success"}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     Até <strong>{plan.limits.fichas >= 9999 ? "Fichas ilimitadas" : `${plan.limits.fichas} fichas técnicas`}</strong>
                   </li>
                   <li className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? "text-orange-500" : "text-success"}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     Até <strong>{plan.limits.users} usuários</strong>
                   </li>
                   <li className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? "text-orange-500" : "text-success"}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     Ingredientes <strong>ilimitados</strong>
                   </li>
                   {idx > 0 && (
                     <li className="text-sm flex items-start gap-2.5 leading-relaxed">
-                      <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? "text-orange-500" : "text-success"}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       <strong>Categorias e grupos</strong> de produtos
                     </li>
                   )}
                   <li className="text-sm flex items-start gap-2.5 leading-relaxed">
-                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? 'text-orange-500' : 'text-success'}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${idx === 1 ? "text-orange-500" : "text-success"}`} viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     Cálculo de CMV automático
                   </li>
+                  {idx === 1 && (
+                    <li className="text-sm flex items-start gap-2.5 leading-relaxed">
+                      <svg className="w-4 h-4 shrink-0 mt-0.5 text-orange-500" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <strong>Suporte via chat</strong> em tempo real
+                    </li>
+                  )}
                 </ul>
-                <Link href="/registro" className={`${idx === 1 ? 'btn-primary' : 'btn-ghost'} w-full py-3.5 text-base text-center`}>Começar grátis</Link>
+                <Link href="/registro" className={`${idx === 1 ? "btn-primary" : "btn-ghost"} w-full py-3.5 text-base text-center`}>
+                  {idx === 2 ? "Falar com vendas" : "Começar grátis — 14 dias"}
+                </Link>
+                <p className={`text-center text-[11px] mt-2 ${idx === 1 ? "text-white/40" : "text-ink-400"}`}>
+                  {idx < 2 ? "Sem cartão de crédito" : "Onboarding assistido incluído"}
+                </p>
               </div>
             ))}
-
           </div>
 
           <div className="max-w-[720px] mx-auto mt-10 bg-blue-50 border border-blue-100 rounded-xl p-5 md:p-6 text-sm text-blue-900 leading-relaxed">
             <strong><span className="text-lg mr-2">💡</span>Tem 2 ou 3 unidades com o mesmo cardápio e mesmos fornecedores?</strong><br />
             Uma única assinatura do <strong>Profissional</strong> já atende. A ficha técnica é centralizada e todas as unidades acessam o mesmo cardápio. O plano <strong>Rede</strong> é indicado quando cada unidade tem seus próprios preços de compra, cardápio próprio ou centro de custo independente (comum em franquias).
           </div>
-
         </div>
       </section>
 
@@ -531,23 +653,48 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
         <div className="container-page">
           <div className="text-center max-w-[720px] mx-auto mb-12">
             <div className="inline-block font-mono text-xs font-semibold text-orange-700 tracking-[0.15em] uppercase mb-3">Perguntas frequentes</div>
-            <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-blue-900 mb-4">Ainda tem dúvida?</h2>
+            <h2 className="font-display font-bold text-[clamp(32px,4vw,48px)] leading-tight tracking-tight text-blue-900 mb-4">Respostas diretas para quem está decidindo.</h2>
           </div>
-          
+
           <div className="max-w-[720px] mx-auto flex flex-col gap-2.5">
             {[
-              { q: "Preciso ter conhecimento de planilha ou finanças para usar?", a: "Não. O Custo de Receita foi desenhado para quem entende de cozinha, não de Excel. Você cadastra os insumos, monta a ficha do prato como se fosse uma receita, e o sistema faz toda a matemática automaticamente. Se você consegue usar WhatsApp, consegue usar o Custo de Receita." },
-              { q: "Tenho 2 unidades. Preciso do plano Rede?", a: "Depende. Se as unidades têm <strong>o mesmo cardápio e os mesmos preços de compra</strong>, uma única assinatura do plano <strong>Profissional</strong> atende perfeitamente — a ficha técnica é centralizada e vale pra todas as unidades. Agora, se cada unidade tem <strong>preços de compra diferentes</strong> (porque compra de fornecedores locais), <strong>variações no cardápio</strong> ou precisa de <strong>centros de custo separados</strong>, aí o plano <strong>Rede</strong> é o indicado. Esse é o cenário típico de franquias." },
-              { q: "Como funciona o suporte em cada plano?", a: "<strong>Essencial e Profissional:</strong> central de ajuda completa com vídeos, tutoriais e chat inteligente para responder na hora. Atendimento humano por e-mail em até 48h em dias úteis.<br><br><strong>Rede:</strong> suporte prioritário via WhatsApp, gerente de conta dedicado com 1h/mês de acompanhamento estratégico e onboarding assistido nos primeiros 60 dias (incluindo importação inicial e treinamento da equipe)." },
-              { q: "Funciona para confeitaria, food truck ou dark kitchen?", a: "Sim. A plataforma funciona para qualquer operação gastronômica: restaurantes, bares, confeitarias, padarias, food trucks, dark kitchens, marmitarias e cafeterias. Se você produz algo com ingredientes e vende, o sistema serve." },
-              { q: "Consigo importar meus insumos de uma planilha que já tenho?", a: "Sim. Você pode importar insumos via planilha Excel ou CSV em qualquer plano. No plano Rede, nossa equipe faz a importação inicial completa da matriz como parte do onboarding assistido." },
-              { q: "E se eu cancelar? Perco meus dados?", a: "Você pode cancelar a qualquer momento, direto pelo sistema, sem multa. Seus dados ficam disponíveis para download em planilha por 30 dias após o cancelamento. Depois desse prazo, são removidos dos nossos servidores conforme a LGPD." },
-              { q: "O teste grátis exige cartão de crédito?", a: "Não. Você usa 14 dias completos com acesso a todas as funcionalidades do plano Profissional, sem informar dados de pagamento. Ao final do período, você escolhe se assina ou não." }
+              {
+                q: "É difícil de usar? Preciso saber de planilha ou finanças?",
+                a: "Não. O Custo de Receita foi desenhado para quem entende de cozinha, não de Excel. Você cadastra os insumos, monta a ficha do prato como se fosse uma receita, e o sistema faz toda a matemática automaticamente. Se você consegue usar WhatsApp, consegue usar o Custo de Receita. A maioria dos usuários configura o cardápio completo na primeira semana."
+              },
+              {
+                q: "E se eu não gostar? Tem garantia?",
+                a: "Sim. Você tem <strong>14 dias de teste grátis</strong> com acesso completo ao plano Profissional, sem informar cartão de crédito. Se assinar e depois mudar de ideia, oferecemos <strong>garantia de 30 dias</strong>: se não ficar satisfeito, devolvemos o valor pago sem perguntas. É só enviar um e-mail."
+              },
+              {
+                q: "Funciona para delivery, dark kitchen ou food truck?",
+                a: "Sim, para todos. A plataforma funciona para qualquer operação gastronômica: restaurantes presenciais, delivery, dark kitchens, marmitarias, food trucks, confeitarias, padarias, bares e cafeterias. Se você produz algo com ingredientes e vende — para comer no local, pelo iFood ou em caixinha para festa —, o sistema serve."
+              },
+              {
+                q: "Tenho 2 unidades. Preciso do plano Rede?",
+                a: "Depende. Se as unidades têm <strong>o mesmo cardápio e os mesmos preços de compra</strong>, uma única assinatura do plano <strong>Profissional</strong> atende perfeitamente — a ficha técnica é centralizada e vale pra todas. Agora, se cada unidade tem <strong>preços de compra diferentes</strong>, variações no cardápio ou precisa de centros de custo separados, aí o plano <strong>Rede</strong> é o indicado. Esse é o cenário típico de franquias."
+              },
+              {
+                q: "Consigo importar meus insumos de uma planilha que já tenho?",
+                a: "Sim. Você pode importar insumos via planilha Excel ou CSV em qualquer plano. No plano Rede, nossa equipe faz a importação inicial completa da matriz como parte do onboarding assistido."
+              },
+              {
+                q: "Como funciona o suporte em cada plano?",
+                a: "<strong>Essencial e Profissional:</strong> central de ajuda completa com vídeos, tutoriais e chat inteligente para responder na hora. Atendimento humano por e-mail em até 48h em dias úteis.<br><br><strong>Rede:</strong> suporte prioritário via WhatsApp, gerente de conta dedicado com 1h/mês de acompanhamento estratégico e onboarding assistido nos primeiros 60 dias (incluindo importação inicial e treinamento da equipe)."
+              },
+              {
+                q: "O teste grátis exige cartão de crédito?",
+                a: "Não. Você usa 14 dias completos com acesso a todas as funcionalidades do plano Profissional, sem informar dados de pagamento. Ao final do período, você escolhe se assina ou não. Sem cobrança automática."
+              },
+              {
+                q: "E se eu cancelar? Perco meus dados?",
+                a: "Você pode cancelar a qualquer momento, direto pelo sistema, sem multa ou burocracia. Seus dados ficam disponíveis para download em planilha por 30 dias após o cancelamento. Depois desse prazo, são removidos dos nossos servidores conforme a LGPD."
+              }
             ].map((faq, idx) => (
               <details key={idx} className="bg-white border border-ink-200 rounded-[10px] overflow-hidden group">
                 <summary className="px-6 py-5 cursor-pointer font-semibold text-base text-ink-800 list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
                   {faq.q}
-                  <span className="text-2xl font-light text-orange-600 transition-transform group-open:rotate-45">+</span>
+                  <span className="text-2xl font-light text-orange-600 transition-transform group-open:rotate-45 shrink-0">+</span>
                 </summary>
                 <div className="px-6 pb-5 text-ink-600 text-[15px] leading-relaxed" dangerouslySetInnerHTML={{ __html: faq.a }}></div>
               </details>
@@ -560,10 +707,20 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
       <section className="py-24 bg-gradient-to-br from-blue-800 to-blue-900 text-white relative overflow-hidden">
         <div className="absolute -left-[100px] -bottom-[100px] w-[400px] h-[400px] bg-[radial-gradient(circle,var(--color-orange-600)_0%,transparent_60%)] opacity-20 pointer-events-none"></div>
         <div className="container-page text-center max-w-[720px] mx-auto relative z-10">
-          <h2 className="font-display font-bold text-[clamp(36px,5vw,56px)] leading-[1.05] tracking-tight mb-5">Seus pratos merecem o <em className="italic text-orange-500">preço certo.</em></h2>
-          <p className="text-lg text-white/75 max-w-[560px] mx-auto mb-8">14 dias grátis. Sem cartão. Sem enrolação. Em menos de uma semana, você sabe exatamente quanto cada prato do seu cardápio está te dando — ou te tirando.</p>
-          <Link href="/registro" className="btn-primary px-8 py-4 text-base">Comece grátis agora →</Link>
-          <p className="mt-5 text-[13px] text-white/50">Não precisa instalar nada. Funciona no celular, tablet e computador.</p>
+          <p className="text-xs font-bold tracking-widest text-white/50 uppercase mb-4">Não existe motivo para adiar</p>
+          <h2 className="font-display font-bold text-[clamp(36px,5vw,56px)] leading-[1.05] tracking-tight mb-5">
+            Seus pratos merecem o <em className="italic text-orange-500">preço certo.</em>
+          </h2>
+          <p className="text-lg text-white/75 max-w-[560px] mx-auto mb-8">
+            Junte-se a eles. A IA cuida dos números. Você foca na cozinha.
+          </p>
+          <Link href="/registro" className="btn-primary px-8 py-4 text-base text-white bg-orange-600 hover:bg-orange-700">Comece grátis agora →</Link>
+          <div className="mt-5 flex flex-wrap justify-center gap-4 text-[13px] text-white/40">
+            <span>✓ 14 dias grátis</span>
+            <span>✓ Sem cartão de crédito</span>
+            <span>✓ Garantia de 30 dias</span>
+            <span>✓ Cancele quando quiser</span>
+          </div>
         </div>
       </section>
 
@@ -576,7 +733,7 @@ export function LandingPage({ plans }: { plans?: Plan[] }) {
                 <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center text-white text-xs">🍽</div>
                 <span className="font-display font-bold text-lg text-blue-900 leading-none">Custo de Receita</span>
               </div>
-              <p className="text-sm text-ink-500 leading-relaxed max-w-[320px]">Precificação inteligente para gastronomia. Feito no Brasil, para quem cozinha no Brasil.</p>
+              <p className="text-sm text-ink-500 leading-relaxed max-w-[320px]">Precificação e controle de CMV para gastronomia. Feito no Brasil, para quem cozinha no Brasil.</p>
             </div>
             <div>
               <h4 className="font-body text-xs font-bold tracking-widest uppercase text-ink-700 mb-4">Produto</h4>

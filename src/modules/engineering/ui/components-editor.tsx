@@ -146,8 +146,9 @@ function normalizePercentInput(value: number | null) {
 function resolveCmvHealthStatus(cmvRatio: number | null) {
   if (cmvRatio === null || !Number.isFinite(cmvRatio)) return "Indefinido" as const;
   const percent = cmvRatio * 100;
-  if (percent <= 30) return "Saudavel" as const;
-  if (percent <= 40) return "Atencao" as const;
+  if (percent < 30) return "Excelente" as const;
+  if (percent < 35) return "Saudavel" as const;
+  if (percent < 40) return "Atencao" as const;
   return "Critico" as const;
 }
 
@@ -164,15 +165,19 @@ function resolveAutomaticDiagnosis(input: {
     return "Diagnostico automatico indisponivel: faltam dados validos para simular a ficha.";
   }
 
-  if (input.contributionMarginValue <= 0 || input.cmvRatio > 0.4) {
+  if (input.contributionMarginValue <= 0 || input.cmvRatio >= 0.4) {
     return "Diagnostico automatico: Critico. O custo final e as despesas consomem a venda projetada.";
   }
 
-  if (input.cmvRatio > 0.3) {
-    return "Diagnostico automatico: Atencao. A margem existe, mas esta apertada para a operacao.";
+  if (input.cmvRatio >= 0.35) {
+    return "Diagnostico automatico: Atencao. Revisar precos ou insumos para recuperar margem.";
   }
 
-  return "Diagnostico automatico: Saudavel. A ficha sustenta margem positiva dentro da faixa alvo.";
+  if (input.cmvRatio >= 0.3) {
+    return "Diagnostico automatico: Saudavel. Operacao eficiente dentro da faixa aceitavel.";
+  }
+
+  return "Diagnostico automatico: Excelente. Margem alta — ficha bem precificada.";
 }
 
 function computeStageMetrics(stage: FichaStageEditor, itemOptions: ComponentOption[]) {
@@ -381,13 +386,15 @@ export function ComponentsEditor({
   const dynamicCostWithPackagingPerKg = hasUsablePostCookingWeight
     ? (dynamicCostReal / postCookingWeightNumber).toFixed(4)
     : "Calcular peso";
+  const finalAppliedCmv = assemblyEnabled ? dynamicCostWithPackagingPerKg : dynamicCostWithoutPackagingPerKg;
+  const costForMarginCalc = hasUsablePostCookingWeight ? Number(finalAppliedCmv) : dynamicCostReal;
   const variableExpenseValue =
     salePriceNumber !== null && variableExpensePercentNumber !== null
       ? salePriceNumber * variableExpensePercentNumber
       : null;
   const contributionMarginValue =
     salePriceNumber !== null && variableExpenseValue !== null
-      ? salePriceNumber - dynamicCostReal - variableExpenseValue
+      ? salePriceNumber - costForMarginCalc - variableExpenseValue
       : null;
   const contributionMarginPercent =
     hasUsableSalePrice && contributionMarginValue !== null
@@ -399,19 +406,22 @@ export function ComponentsEditor({
     ? (dynamicCostReal / salePriceNumber).toFixed(4)
     : "Informe o valor";
   const packagingShareOnCmv = dynamicCostReal > 0 ? (assemblyCost / dynamicCostReal).toFixed(4) : "0.0000";
-  const finalAppliedCmv = assemblyEnabled ? dynamicCostWithPackagingPerKg : dynamicCostWithoutPackagingPerKg;
+  // Quando há peso pós-cocção, o preço de venda é por kg e o custo relevante
+  // é o custo/kg (mesma base usada pela margem). Sem peso, usa custo total.
+  const cmvRatioForHealth =
+    hasUsableSalePrice
+      ? hasUsablePostCookingWeight
+        ? costForMarginCalc / salePriceNumber
+        : (assemblyEnabled ? dynamicCostReal : ingredientsCost) / salePriceNumber
+      : null;
   const cmvPercentOfSale = hasUsableSalePrice
-    ? ((assemblyEnabled ? dynamicCostReal : ingredientsCost) / salePriceNumber).toFixed(4)
+    ? (cmvRatioForHealth ?? 0).toFixed(4)
     : "Informe o valor";
-  const cmvHealthStatus = resolveCmvHealthStatus(
-    hasUsableSalePrice ? (assemblyEnabled ? dynamicCostReal : ingredientsCost) / salePriceNumber : null
-  );
+  const cmvHealthStatus = resolveCmvHealthStatus(cmvRatioForHealth);
   const automaticDiagnosis = resolveAutomaticDiagnosis({
     hasSalePrice: hasUsableSalePrice,
     contributionMarginValue,
-    cmvRatio: hasUsableSalePrice
-      ? (assemblyEnabled ? dynamicCostReal : ingredientsCost) / salePriceNumber
-      : null
+    cmvRatio: cmvRatioForHealth
   });
 
   const resolvedSummary: ComponentsEditorSummary = {

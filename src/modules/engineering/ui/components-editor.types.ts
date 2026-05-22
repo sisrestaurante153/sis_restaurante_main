@@ -57,7 +57,7 @@ export interface ComponentsEditorSummary {
   packagingCost: string;
   finalAppliedCmv?: string | null;
   finalAppliedCmvLabel?: string;
-  cmvHealthStatus?: "Saudavel" | "Atencao" | "Critico" | "Indefinido";
+  cmvHealthStatus?: "Excelente" | "Saudavel" | "Atencao" | "Critico" | "Indefinido";
   cmvHealthPercent?: string | null;
   cmvPercentOfSale?: string | null;
   salePrice?: string;

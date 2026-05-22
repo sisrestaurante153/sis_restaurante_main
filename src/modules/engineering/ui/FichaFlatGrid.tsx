@@ -533,7 +533,7 @@ export function FichaFlatGrid({
                       label={pesoLabel}
                       placeholder="Qtde Final"
                       value={row.outputWeight ?? ""}
-                      onChange={(event) => onUpdateRow(index, { outputWeight: event.target.value })}
+                      onChange={(event) => onUpdateRow(index, { outputWeight: event.target.value.replace(",", ".") })}
                       slotProps={{ htmlInput: { inputMode: "decimal", style: { textAlign: "right" } } }}
                     />
                     {/* Quick 20260424 fase2 #5 rev3: hint embaixo do Peso volta pra
@@ -671,7 +671,7 @@ export function FichaFlatGrid({
                 placeholder="Qtde Final"
                 value={coccaoFinalEntry.row.outputWeight ?? ""}
                 onChange={(event) =>
-                  onUpdateRow(coccaoFinalEntry.index, { outputWeight: event.target.value })
+                  onUpdateRow(coccaoFinalEntry.index, { outputWeight: event.target.value.replace(",", ".") })
                 }
                 slotProps={{ htmlInput: { inputMode: "decimal", style: { textAlign: "right" } } }}
               />
