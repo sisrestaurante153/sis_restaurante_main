@@ -1135,7 +1135,7 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
       }
 
       return ficha;
-    });
+    }, { timeout: 30000 });
 
     return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica, restaurantId);
   } catch (error) {
@@ -1232,7 +1232,7 @@ async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
       }
 
       return created.cd_ficha_tecnica;
-    });
+    }, { timeout: 30000 });
 
     return getFichaDetailWithPrisma(duplicated, restaurantId);
   } catch {
@@ -1263,7 +1263,7 @@ async function inactivateFichaWithPrisma(fichaId: string, restaurantId: string) 
       await rebuildDependencyClosureForItem(tx, updated.cd_item_resultante);
       await recalculateCascadeInTransaction(tx, [updated.cd_item_resultante], "ficha.inactivate.web");
       return updated;
-    });
+    }, { timeout: 30000 });
 
     return getFichaDetailWithPrisma(ficha.cd_ficha_tecnica, restaurantId);
   } catch {
