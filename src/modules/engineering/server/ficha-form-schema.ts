@@ -63,7 +63,11 @@ const stageSchema = z
   .superRefine((stage, ctx) => {
     const isCoccaoFinal =
       stage.name === "Coccao / Preparo Final" || stage.name === "Coccao Final";
-    if (!isCoccaoFinal && stage.items.length === 0) {
+    // Ajuste 4: montagem vazia é ignorada no client (não chega aqui),
+    // mas por segurança o servidor também a aceita sem itens.
+    const isMontagem =
+      stage.stageTypeCode === "montagem" || stage.name === "Montagem e Descartaveis";
+    if (!isCoccaoFinal && !isMontagem && stage.items.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["items"],

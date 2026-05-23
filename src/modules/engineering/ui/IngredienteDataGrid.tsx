@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { DecimalTextField } from "@/components/ui/DecimalTextField";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
@@ -337,14 +338,13 @@ export function IngredienteDataGrid({
                 {inferDisplayType(option, row.componentType)}
               </Typography>
 
-              <TextField
+              {/* Ajuste 3: vírgula como separador, 3 casas decimais */}
+              <DecimalTextField
                 fullWidth
                 size="small"
-                type="number"
                 label="Qtde"
                 value={row.quantityUsed}
-                slotProps={{ htmlInput: { step: "0.0001", style: { textAlign: "right" } } }}
-                onChange={(event) => onUpdateRow(index, { quantityUsed: event.target.value })}
+                onChange={(value) => onUpdateRow(index, { quantityUsed: value })}
               />
 
               <TextField

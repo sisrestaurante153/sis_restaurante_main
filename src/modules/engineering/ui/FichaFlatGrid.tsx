@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { DecimalTextField } from "@/components/ui/DecimalTextField";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -219,6 +220,102 @@ function StageTypeChip({
   );
 }
 
+// Ajuste 1: autocomplete de item com suporte a Tab (seleciona o item destacado
+// e move o foco) e Enter (MUI já trata quando o dropdown está aberto).
+function ItemAutocomplete({
+  row,
+  index,
+  itemOptions,
+  duplicateItemIds,
+  onUpdateRow
+}: {
+  row: ComponentEditorRow;
+  index: number;
+  itemOptions: ComponentOption[];
+  duplicateItemIds?: ReadonlySet<string>;
+  onUpdateRow: (index: number, patch: Partial<ComponentEditorRow>) => void;
+}) {
+  const highlightedRef = useRef<ComponentOption | null>(null);
+
+  const handleSelect = (item: ComponentOption) => {
+    onUpdateRow(index, {
+      itemId: item.id,
+      usageUnit: item.usageUnit ?? row.usageUnit,
+      componentType:
+        item.type === "embalagem" ? "embalagem"
+        : item.type === "apoio" ? "apoio"
+        : "ingrediente"
+    });
+  };
+
+  const option = itemOptions.find((item) => item.id === row.itemId) ?? null;
+
+  return (
+    <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+      <Autocomplete
+        fullWidth
+        size="small"
+        options={itemOptions}
+        getOptionLabel={(opt) => opt.name}
+        isOptionEqualToValue={(opt, val) => opt.id === val.id}
+        value={option}
+        onChange={(_event, nextItem) => {
+          if (!nextItem) return;
+          handleSelect(nextItem);
+        }}
+        onHighlightChange={(_event, highlighted) => {
+          highlightedRef.current = highlighted;
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Item"
+            onKeyDown={(event) => {
+              // Tab com item destacado: seleciona sem preventDefault
+              // (o Tab ainda move o foco para o próximo campo)
+              if (event.key === "Tab" && highlightedRef.current) {
+                handleSelect(highlightedRef.current);
+              }
+            }}
+          />
+        )}
+        noOptionsText="Nenhum item encontrado"
+      />
+      <Stack direction="row" spacing={0.75} alignItems="center">
+        {row.levelLabel ? (
+          <Box
+            component="span"
+            sx={{
+              fontSize: 10,
+              bgcolor: "#E6F1FB",
+              color: "#185FA5",
+              border: "0.5px solid #B5D4F4",
+              borderRadius: "4px",
+              px: "5px",
+              py: "1px",
+              fontWeight: 600,
+              lineHeight: 1.4
+            }}
+          >
+            {row.levelLabel}
+          </Box>
+        ) : null}
+        {row.itemId && duplicateItemIds?.has(row.itemId) ? (
+          <Tooltip title="Este item ja aparece nesta ficha. Revise antes de duplicar o componente." arrow>
+            <WarningAmberIcon
+              aria-label="Item duplicado nesta ficha"
+              sx={{ fontSize: 14, color: "#B45309", cursor: "help" }}
+            />
+          </Tooltip>
+        ) : null}
+        <Typography variant="caption" color="text.secondary">
+          {option?.operationalCategory ?? "Sem grupo"}
+        </Typography>
+      </Stack>
+    </Stack>
+  );
+}
+
 interface FichaFlatGridProps {
   rows: ComponentEditorRow[];
   itemOptions: ComponentOption[];
@@ -341,7 +438,7 @@ export function FichaFlatGrid({
               : stageCode === "coccao_preparo"
                 ? "IC"
                 : "";
-          const fmtNum = (n: number) => Number(n.toFixed(4)).toString();
+          const fmtNum = (n: number) => Number(n.toFixed(3)).toString().replace(".", ",");
 
           return (
             <Box key={`${row.itemId}-${index}`}>
@@ -423,84 +520,45 @@ export function FichaFlatGrid({
                 }}
               />
 
-              <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                <Autocomplete
-                  fullWidth
-                  size="small"
-                  options={itemOptions}
-                  getOptionLabel={(opt) => opt.name}
-                  isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                  value={itemOptions.find((item) => item.id === row.itemId) ?? null}
-                  onChange={(_event, nextItem) => {
-                    if (!nextItem) return;
-                    onUpdateRow(index, {
-                      itemId: nextItem.id,
-                      usageUnit: nextItem.usageUnit ?? row.usageUnit,
-                      componentType:
-                        nextItem.type === "embalagem"
-                          ? "embalagem"
-                          : nextItem.type === "apoio"
-                            ? "apoio"
-                            : "ingrediente"
-                    });
-                  }}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Item" />
-                  )}
-                  noOptionsText="Nenhum item encontrado"
-                />
-                <Stack direction="row" spacing={0.75} alignItems="center">
-                  {row.levelLabel ? (
-                    <Box
-                      component="span"
-                      sx={{
-                        fontSize: 10,
-                        bgcolor: "#E6F1FB",
-                        color: "#185FA5",
-                        border: "0.5px solid #B5D4F4",
-                        borderRadius: "4px",
-                        px: "5px",
-                        py: "1px",
-                        fontWeight: 600,
-                        lineHeight: 1.4
-                      }}
-                    >
-                      {row.levelLabel}
-                    </Box>
-                  ) : null}
-                  {/* Quick 20260424 fase2 #2: aviso de duplicidade vira tooltip discreto. */}
-                  {row.itemId && duplicateItemIds?.has(row.itemId) ? (
-                    <Tooltip title="Este item ja aparece nesta ficha. Revise antes de duplicar o componente." arrow>
-                      <WarningAmberIcon
-                        aria-label="Item duplicado nesta ficha"
-                        sx={{ fontSize: 14, color: "#B45309", cursor: "help" }}
-                      />
-                    </Tooltip>
-                  ) : null}
-                  <Typography variant="caption" color="text.secondary">
-                    {option?.operationalCategory ?? "Sem grupo"}
-                  </Typography>
-                </Stack>
-              </Stack>
-
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Qtde"
-                value={row.quantityUsed}
-                slotProps={{ htmlInput: { step: "0.0001", style: { textAlign: "right", paddingRight: 8 } } }}
-                onChange={(event) => onUpdateRow(index, { quantityUsed: event.target.value })}
+              {/* Ajuste 1: ItemAutocomplete com suporte a Tab/Enter */}
+              <ItemAutocomplete
+                row={row}
+                index={index}
+                itemOptions={itemOptions}
+                duplicateItemIds={duplicateItemIds}
+                onUpdateRow={onUpdateRow}
               />
 
-              {/* Quick 20260424 item 3: Unidade vira select populada por listUnits(). */}
+              {/* Ajuste 3: DecimalTextField para quantidade (vírgula, 3 casas) */}
+              <DecimalTextField
+                fullWidth
+                size="small"
+                label="Qtde"
+                value={row.quantityUsed}
+                inputStyle={{ paddingRight: 8 }}
+                onChange={(value) => onUpdateRow(index, { quantityUsed: value })}
+              />
+
+              {/* Quick 20260424 item 3: Unidade vira select; Ajuste 2: conversão kg↔g */}
               <TextField
                 fullWidth
                 select
                 size="small"
                 label="Unidade"
                 value={row.usageUnit || ""}
-                onChange={(event) => onUpdateRow(index, { usageUnit: event.target.value })}
+                onChange={(event) => {
+                  const newUnit = event.target.value;
+                  const oldUnit = row.usageUnit;
+                  if ((oldUnit === "kg" && newUnit === "g") || (oldUnit === "g" && newUnit === "kg")) {
+                    const num = parseFloat(row.quantityUsed.replace(",", "."));
+                    if (!isNaN(num)) {
+                      const converted = oldUnit === "kg" ? num * 1000 : num / 1000;
+                      onUpdateRow(index, { usageUnit: newUnit, quantityUsed: converted.toFixed(4) });
+                      return;
+                    }
+                  }
+                  onUpdateRow(index, { usageUnit: newUnit });
+                }}
               >
                 {/* Garante exibicao do valor atual mesmo se nao estiver na lista. */}
                 {row.usageUnit && !resolvedUnitOptions.includes(row.usageUnit) ? (
@@ -544,14 +602,14 @@ export function FichaFlatGrid({
                     />
                   </Stack>
                   <Stack spacing={0.25}>
-                    <TextField
+                    {/* Ajuste 3: DecimalTextField para peso de saída */}
+                    <DecimalTextField
                       fullWidth
                       size="small"
                       label={pesoLabel}
                       placeholder="Qtde Final"
                       value={row.outputWeight ?? ""}
-                      onChange={(event) => onUpdateRow(index, { outputWeight: event.target.value.replace(",", ".") })}
-                      slotProps={{ htmlInput: { inputMode: "decimal", style: { textAlign: "right" } } }}
+                      onChange={(value) => onUpdateRow(index, { outputWeight: value })}
                     />
                     {/* Quick 20260424 fase2 #5 rev3: hint embaixo do Peso volta pra
                         spacer invisivel — o calculo agora vive na coluna FC/IC dedicada. */}
@@ -680,17 +738,15 @@ export function FichaFlatGrid({
                 value="Coccao / Preparo"
                 slotProps={{ input: { readOnly: true }, htmlInput: { style: { fontSize: 12 } } }}
               />
-              <TextField
+              {/* Ajuste 3: DecimalTextField para rendimento da coccão final */}
+              <DecimalTextField
                 fullWidth
                 required
                 size="small"
                 label="Rendimento da Porcao"
                 placeholder="Qtde Final"
                 value={coccaoFinalEntry.row.outputWeight ?? ""}
-                onChange={(event) =>
-                  onUpdateRow(coccaoFinalEntry.index, { outputWeight: event.target.value.replace(",", ".") })
-                }
-                slotProps={{ htmlInput: { inputMode: "decimal", style: { textAlign: "right" } } }}
+                onChange={(value) => onUpdateRow(coccaoFinalEntry.index, { outputWeight: value })}
               />
             </Box>
             {/* Slot 7: FC/IC dedicada — IC do Coccao Final cai aqui.

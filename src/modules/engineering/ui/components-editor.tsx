@@ -276,7 +276,10 @@ export function ComponentsEditor({
   const serializedStagesValue = useMemo(() => {
     const payload: FichaStageEditor[] = [...serializedRegularStages];
 
-    if (assemblyEnabled) {
+    // Ajuste 4: só inclui a etapa de montagem se tiver pelo menos um item.
+    // Montagem vazia = toggle ligado sem adicionar itens → salva normalmente
+    // como se o toggle estivesse desligado.
+    if (assemblyEnabled && assemblyRows.length > 0) {
       const montagem = stageTypeOptions.find((option) => option.code === MONTAGEM_CODE);
       payload.push({
         id: "assembly-stage",
@@ -386,7 +389,9 @@ export function ComponentsEditor({
   const dynamicCostWithPackagingPerKg = hasUsablePostCookingWeight
     ? (dynamicCostReal / postCookingWeightNumber).toFixed(4)
     : "Calcular peso";
-  const finalAppliedCmv = assemblyEnabled ? dynamicCostWithPackagingPerKg : dynamicCostWithoutPackagingPerKg;
+  // Ajuste 4: montagem vazia (toggle on, sem itens) → trata como desligada
+  const effectiveAssemblyEnabled = assemblyEnabled && assemblyRows.length > 0;
+  const finalAppliedCmv = effectiveAssemblyEnabled ? dynamicCostWithPackagingPerKg : dynamicCostWithoutPackagingPerKg;
   const costForMarginCalc = hasUsablePostCookingWeight ? Number(finalAppliedCmv) : dynamicCostReal;
   const variableExpenseValue =
     salePriceNumber !== null && variableExpensePercentNumber !== null

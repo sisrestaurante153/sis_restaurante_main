@@ -351,21 +351,25 @@ function MontagemToggle({
   );
 }
 
-// Badge CMV Saudavel/Atencao/Critico.
+function resolveCmvStyle(status: ComponentsEditorSummary["cmvHealthStatus"]) {
+  if (status === "Excelente") return { bg: "#D6F0E0", fg: "#0F5A22", border: "#8ECFA8", label: "Excelente" };
+  if (status === "Saudavel")  return { bg: TOKENS.verdeL, fg: TOKENS.verde, border: TOKENS.verdeB, label: "Saudável" };
+  if (status === "Atencao")   return { bg: TOKENS.ambarL, fg: TOKENS.ambar, border: "#FAC775", label: "Atenção" };
+  if (status === "Critico")   return { bg: TOKENS.vermL, fg: TOKENS.verm, border: "#F09595", label: "Crítico" };
+  return { bg: "#EEEEEE", fg: TOKENS.text3, border: TOKENS.border, label: "Indefinido" };
+}
+
+// Badge CMV com status + %.
 function CmvHealthBadge({
-  status
+  status,
+  cmvHealthPercent
 }: {
   status: ComponentsEditorSummary["cmvHealthStatus"];
+  cmvHealthPercent?: string | null;
 }) {
-  const resolved = status === "Excelente"
-    ? { bg: "#D6F0E0", fg: "#0F5A22", border: "#8ECFA8", label: "Excelente" }
-    : status === "Saudavel"
-      ? { bg: TOKENS.verdeL, fg: TOKENS.verde, border: TOKENS.verdeB, label: "Saudável" }
-      : status === "Atencao"
-        ? { bg: TOKENS.ambarL, fg: TOKENS.ambar, border: "#FAC775", label: "Atenção" }
-        : status === "Critico"
-          ? { bg: TOKENS.vermL, fg: TOKENS.verm, border: "#F09595", label: "Crítico" }
-          : { bg: "#EEEEEE", fg: TOKENS.text3, border: TOKENS.border, label: "Indefinido" };
+  const resolved = resolveCmvStyle(status);
+  const ratio = cmvHealthPercent ? parseFloat(cmvHealthPercent) : null;
+  const pctLabel = ratio !== null && Number.isFinite(ratio) ? ` · ${(ratio * 100).toFixed(1)}%` : "";
 
   return (
     <Box
@@ -381,7 +385,115 @@ function CmvHealthBadge({
         border: `0.5px solid ${resolved.border}`
       }}
     >
-      {status ?? "Indefinido"}
+      {resolved.label}{pctLabel}
+    </Box>
+  );
+}
+
+// Barra horizontal de saude do CMV com 4 faixas e marcador na posicao real.
+function CmvHealthBar({
+  status,
+  cmvHealthPercent
+}: {
+  status: ComponentsEditorSummary["cmvHealthStatus"];
+  cmvHealthPercent?: string | null;
+}) {
+  const SCALE_MAX = 60;
+  const ZONES = [
+    { label: "Excelente", from: 0,  to: 30, color: "#D6F0E0", border: "#8ECFA8", fg: "#0F5A22" },
+    { label: "Saudável",  from: 30, to: 35, color: TOKENS.verdeL, border: TOKENS.verdeB, fg: TOKENS.verde },
+    { label: "Atenção",   from: 35, to: 40, color: TOKENS.ambarL, border: "#FAC775", fg: TOKENS.ambar },
+    { label: "Crítico",   from: 40, to: SCALE_MAX, color: TOKENS.vermL, border: "#F09595", fg: TOKENS.verm },
+  ] as const;
+
+  const ratio = cmvHealthPercent ? parseFloat(cmvHealthPercent) : null;
+  const cmvPct = ratio !== null && Number.isFinite(ratio) ? ratio * 100 : null;
+  const needlePct = cmvPct !== null ? Math.min(cmvPct, SCALE_MAX) / SCALE_MAX * 100 : null;
+  const activeStyle = resolveCmvStyle(status);
+
+  return (
+    <Box sx={{ padding: "10px 18px 14px" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8px" }}>
+        <Typography component="span" sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: TOKENS.text3, fontWeight: 500 }}>
+          Posição do CMV
+        </Typography>
+        {cmvPct !== null ? (
+          <Box
+            component="span"
+            sx={{
+              fontSize: 10, fontWeight: 600, padding: "2px 8px",
+              borderRadius: "20px", letterSpacing: "0.04em",
+              background: activeStyle.bg, color: activeStyle.fg, border: `0.5px solid ${activeStyle.border}`
+            }}
+          >
+            {activeStyle.label} · {cmvPct.toFixed(1)}%
+          </Box>
+        ) : (
+          <Typography component="span" sx={{ fontSize: 10, color: TOKENS.text3 }}>Informe o preco de venda</Typography>
+        )}
+      </Box>
+
+      {/* Bar com zonas coloridas */}
+      <Box sx={{ position: "relative", height: 12, display: "flex", gap: "2px", borderRadius: "6px", overflow: "visible" }}>
+        {ZONES.map((zone) => (
+          <Box
+            key={zone.label}
+            sx={{
+              flex: zone.to - zone.from,
+              height: "100%",
+              background: zone.color,
+              border: `0.5px solid ${zone.border}`,
+              borderRadius: "4px",
+            }}
+          />
+        ))}
+        {/* Marcador (needle) */}
+        {needlePct !== null && (
+          <Box
+            sx={{
+              position: "absolute",
+              left: `${needlePct}%`,
+              top: "-4px",
+              transform: "translateX(-50%)",
+              width: "2px",
+              height: "20px",
+              background: TOKENS.text,
+              borderRadius: "1px",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                bottom: "-5px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "7px",
+                height: "7px",
+                borderRadius: "50%",
+                background: TOKENS.text,
+              }
+            }}
+          />
+        )}
+      </Box>
+
+      {/* Labels das zonas */}
+      <Box sx={{ display: "flex", gap: "2px", mt: "5px" }}>
+        {ZONES.map((zone) => (
+          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "center" }}>
+            <Typography component="span" sx={{ fontSize: 9, color: zone.fg, fontWeight: 600 }}>
+              {zone.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Limites das faixas */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: "2px" }}>
+        <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>0%</Typography>
+        <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>30%</Typography>
+        <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>35%</Typography>
+        <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>40%</Typography>
+        <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>60%+</Typography>
+      </Box>
     </Box>
   );
 }
@@ -510,9 +622,10 @@ export function TotaisIndicadores({
   const cmvWithPackagingLabel = weightMissing
     ? "Calcular peso"
     : formatMetricValue(summary.costWithPackagingPerKg, (parsed) => currencyFormatter.format(parsed));
+  const yieldUnitSuffix = `/${summary.yieldUnit ?? "kg"}`;
   const cmvFinalAppliedLabel = weightMissing
     ? "Calcular peso"
-    : formatMetricValue(summary.finalAppliedCmv, (parsed) => `${currencyFormatter.format(parsed)} /kg`);
+    : formatMetricValue(summary.finalAppliedCmv, (parsed) => `${currencyFormatter.format(parsed)} ${yieldUnitSuffix}`);
 
   const contributionMarginLabel = salePriceValid
     ? formatCurrency(summary.contributionMarginValue)
@@ -616,7 +729,7 @@ export function TotaisIndicadores({
             iconBg="rgba(62,207,142,.1)"
             iconColor={TOKENS.verde}
             value={cmvWithoutPackagingLabel}
-            valueSmallSuffix={weightMissing ? undefined : "/kg"}
+            valueSmallSuffix={weightMissing ? undefined : yieldUnitSuffix}
           />
           <QSep />
           <QfRow
@@ -631,7 +744,7 @@ export function TotaisIndicadores({
           <QfRow
             label="CMV com Embalagem"
             value={cmvWithPackagingLabel}
-            valueSmallSuffix={weightMissing ? undefined : "/kg"}
+            valueSmallSuffix={weightMissing ? undefined : yieldUnitSuffix}
             highlight
             highlightColor="ambar"
             muted={!assemblyEnabled}
@@ -648,7 +761,7 @@ export function TotaisIndicadores({
         {/* Venda e Margem */}
         <QfCard
           title="Venda e Margem"
-          action={<CmvHealthBadge status={summary.cmvHealthStatus} />}
+          action={<CmvHealthBadge status={summary.cmvHealthStatus} cmvHealthPercent={summary.cmvHealthPercent} />}
         >
           {/* Preco de venda input */}
           <Box
@@ -822,6 +935,19 @@ export function TotaisIndicadores({
             Simulador em tempo real — altere o preco ou % de despesa acima
           </Box>
         </QfCard>
+      </Box>
+
+      {/* BARRA DE SAÚDE DO CMV */}
+      <Box
+        sx={{
+          background: TOKENS.surface,
+          border: `0.5px solid ${TOKENS.border}`,
+          borderRadius: TOKENS.radius,
+          overflow: "hidden",
+          mb: 2
+        }}
+      >
+        <CmvHealthBar status={summary.cmvHealthStatus} cmvHealthPercent={summary.cmvHealthPercent} />
       </Box>
 
       {/* TABELA DE REFERÊNCIA DE CMV */}

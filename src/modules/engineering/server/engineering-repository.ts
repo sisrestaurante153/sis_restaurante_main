@@ -114,11 +114,15 @@ function resolveCmvHealthStatus(cmvRatio: number | null) {
   }
 
   const percent = cmvRatio * 100;
-  if (percent <= 30) {
+  if (percent < 30) {
+    return "Excelente" as const;
+  }
+
+  if (percent < 35) {
     return "Saudavel" as const;
   }
 
-  if (percent <= 40) {
+  if (percent < 40) {
     return "Atencao" as const;
   }
 
@@ -827,7 +831,7 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
     itemType: record.itemResultante.tp_item,
     groupOperational: record.itemResultante.nm_categoria_operacional ?? "Sem grupo",
     modality: {
-      id: record.modalidade?.cd_modalidade ?? "",
+      id: record.modalidade?.ds_codigo ?? "",
       label: record.modalidade?.nm_modalidade ?? "Sem modalidade"
     },
     version: record.nr_versao,
@@ -1647,7 +1651,7 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
 
           if (rows.length > 0) {
             return rows.map((row) => ({
-              id: row.cd_modalidade,
+              id: row.ds_codigo,
               label: row.nm_modalidade
             }));
           }
