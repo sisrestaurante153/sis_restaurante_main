@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -8,12 +8,14 @@ import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { FormSection } from "@/components/ui/FormSection";
 import { ImportFichaModal, normalizeName } from "./ImportFichaModal";
 import type { ImportedFichaData } from "./ImportFichaModal";
 import {
   saveFichaAction,
+  autoSaveFichaAction,
   type EngineeringFormState
 } from "@/modules/engineering/server/engineering-actions";
 import {
@@ -178,6 +180,43 @@ export function FichaForm({
 
   const errorAlertRef = useRef<HTMLDivElement>(null);
   const stagesSectionRef = useRef<HTMLDivElement>(null);
+
+  // Autosave: timer + indicador de último rascunho salvo.
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [lastAutosaveAt, setLastAutosaveAt] = useState<Date | null>(null);
+  const [isAutosaving, setIsAutosaving] = useState(false);
+
+  // Cancela o timer ao desmontar o componente.
+  useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, []);
+
+  function scheduleAutosave() {
+    // Autosave só faz sentido para fichas existentes (com ID).
+    // Fichas novas não têm ID ainda e criariam um segundo registro.
+    if (!initialValues?.id) return;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      const formEl = document.getElementById(formId) as HTMLFormElement | null;
+      if (!formEl) return;
+      const formData = new FormData(formEl);
+      formData.set("status", "rascunho");
+      setIsAutosaving(true);
+      startTransition(async () => {
+        try {
+          const result = await autoSaveFichaAction(formData);
+          if (result.ok) {
+            setLastAutosaveAt(new Date());
+            setIsDirty(false);
+          }
+        } finally {
+          setIsAutosaving(false);
+        }
+      });
+    }, 60_000);
+  }
 
   useEffect(() => {
     if (state.status !== "error") return;
@@ -426,7 +465,17 @@ export function FichaForm({
       action={formAction}
       spacing={4}
       noValidate
-      onChange={() => setIsDirty(true)}
+      onChange={() => {
+        setIsDirty(true);
+        scheduleAutosave();
+      }}
+      onSubmit={() => {
+        // Cancela autosave pendente ao salvar manualmente.
+        if (autosaveTimerRef.current) {
+          clearTimeout(autosaveTimerRef.current);
+          autosaveTimerRef.current = null;
+        }
+      }}
     >
       <input type="hidden" name="id" value={initialValues?.id ?? ""} />
       <input type="hidden" name="itemId" value={initialValues?.itemId ?? ""} />
@@ -683,7 +732,16 @@ export function FichaForm({
         onAssemblyEnabledChange={setAssemblyEnabled}
       />
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 1 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 2, pt: 1 }}>
+        {isAutosaving ? (
+          <Typography sx={{ fontSize: 11, color: "#888780" }}>
+            Salvando rascunho...
+          </Typography>
+        ) : lastAutosaveAt ? (
+          <Typography sx={{ fontSize: 11, color: "#888780" }}>
+            Rascunho salvo às {lastAutosaveAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          </Typography>
+        ) : null}
         <SubmitButton isDirty={isDirty} />
       </Box>
 

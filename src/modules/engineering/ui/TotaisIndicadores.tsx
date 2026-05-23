@@ -494,6 +494,11 @@ function CmvHealthBar({
         <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>40%</Typography>
         <Typography component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>60%+</Typography>
       </Box>
+
+      {/* Legenda */}
+      <Typography component="span" sx={{ fontSize: 9, color: TOKENS.text3, display: "block", mt: "6px", textAlign: "center", letterSpacing: "0.04em" }}>
+        CMV do kg (%PV) — ficha atual
+      </Typography>
     </Box>
   );
 }
@@ -950,96 +955,6 @@ export function TotaisIndicadores({
         }}
       >
         <CmvHealthBar status={summary.cmvHealthStatus} cmvHealthPercent={summary.cmvHealthPercent} />
-      </Box>
-
-      {/* TABELA DE REFERÊNCIA DE CMV */}
-      <Box
-        sx={{
-          background: TOKENS.surface,
-          border: `0.5px solid ${TOKENS.border}`,
-          borderRadius: TOKENS.radius,
-          overflow: "hidden",
-          mb: 2
-        }}
-      >
-        <Box
-          sx={{
-            padding: "10px 18px 8px",
-            borderBottom: `0.5px solid ${TOKENS.border}`
-          }}
-        >
-          <Typography
-            component="span"
-            sx={{
-              fontSize: 11,
-              color: TOKENS.text,
-              fontWeight: 600,
-              display: "block",
-              mb: 0.5
-            }}
-          >
-            O que é um CMV saudável?
-          </Typography>
-          <Typography
-            component="span"
-            sx={{
-              fontSize: 10,
-              color: TOKENS.text3,
-              display: "block"
-            }}
-          >
-            Depende do segmento, mas para restaurante popular e delivery de marmitas:
-          </Typography>
-        </Box>
-        {/* Header */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "1px",
-            background: TOKENS.border
-          }}
-        >
-          <Box sx={{ background: TOKENS.bg, padding: "6px 16px" }}>
-            <Typography component="span" sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: TOKENS.text3, fontWeight: 600 }}>
-              Faixa
-            </Typography>
-          </Box>
-          <Box sx={{ background: TOKENS.bg, padding: "6px 16px" }}>
-            <Typography component="span" sx={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: TOKENS.text3, fontWeight: 600 }}>
-              Classificação
-            </Typography>
-          </Box>
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "1px", background: TOKENS.border }}>
-          {[
-            { range: "Abaixo de 30%", label: "Excelente — margem alta", emoji: "🟢", bg: "#D6F0E0", fg: "#0F5A22" },
-            { range: "30% a 35%", label: "Saudável — operação eficiente", emoji: "🟢", bg: TOKENS.verdeL, fg: TOKENS.verde },
-            { range: "35% a 40%", label: "Atenção — revisar preços ou insumos", emoji: "🟡", bg: TOKENS.ambarL, fg: TOKENS.ambar },
-            { range: "Acima de 40%", label: "Crítico — produto provavelmente no prejuízo", emoji: "🔴", bg: TOKENS.vermL, fg: TOKENS.verm },
-          ].map((item) => (
-            <Box
-              key={item.range}
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1px",
-                background: TOKENS.border
-              }}
-            >
-              <Box sx={{ background: TOKENS.surface, padding: "9px 16px" }}>
-                <Typography component="span" sx={{ fontSize: 11, color: TOKENS.text2, fontWeight: 500 }}>
-                  {item.range}
-                </Typography>
-              </Box>
-              <Box sx={{ background: item.bg, padding: "9px 16px" }}>
-                <Typography component="span" sx={{ fontSize: 11, fontWeight: 600, color: item.fg }}>
-                  {item.emoji} {item.label}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
       </Box>
 
       {/* LEITURA OPERACIONAL */}

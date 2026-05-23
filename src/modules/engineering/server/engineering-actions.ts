@@ -86,6 +86,35 @@ export async function saveFichaAction(
   }
 }
 
+export interface AutoSaveResult {
+  ok: boolean;
+  message?: string;
+}
+
+// Salva a ficha como rascunho sem redirecionar — usado pelo autosave do editor.
+// Retorna { ok: true } em caso de sucesso ou { ok: false, message } em falha.
+export async function autoSaveFichaAction(formData: FormData): Promise<AutoSaveResult> {
+  const actor = await resolveEngineeringActor();
+  formData.set("status", "rascunho");
+  const parsed = parseFichaFormData(formData);
+
+  if (!parsed.success) {
+    return { ok: false, message: "Dados inválidos para o autosave." };
+  }
+
+  const repository = getEngineeringRepository(actor.restaurantId);
+  try {
+    await repository.saveFicha(parsed.data);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof DomainInvariantError) {
+      return { ok: false, message: error.message };
+    }
+    const message = error instanceof Error ? error.message : "Erro inesperado.";
+    return { ok: false, message };
+  }
+}
+
 export async function duplicateFichaAction(formData: FormData) {
   const actor = await resolveEngineeringActor();
   const fichaId = formData.get("id")?.toString();
