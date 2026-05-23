@@ -276,7 +276,8 @@ export function FichaFlatGrid({
   const icFinalLabel = icFinal !== null ? `${Math.round(icFinal * 100)}%` : "--";
 
   return (
-    <Box sx={{ width: "100%", overflowX: "auto" }}>
+    <>
+      <Box sx={{ width: "100%", overflowX: "auto" }}>
       <Box role="table" aria-label="Estrutura da ficha tecnica" sx={{ minWidth: 1210, display: "flex", flexDirection: "column" }}>
         <Box
           role="row"
@@ -800,5 +801,6 @@ export function FichaFlatGrid({
         </Button>
       </DialogActions>
     </Dialog>
+    </>
   );
 }
