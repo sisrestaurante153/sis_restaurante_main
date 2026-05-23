@@ -227,13 +227,15 @@ function ItemAutocomplete({
   index,
   itemOptions,
   duplicateItemIds,
-  onUpdateRow
+  onUpdateRow,
+  showRowErrors
 }: {
   row: ComponentEditorRow;
   index: number;
   itemOptions: ComponentOption[];
   duplicateItemIds?: ReadonlySet<string>;
   onUpdateRow: (index: number, patch: Partial<ComponentEditorRow>) => void;
+  showRowErrors?: boolean;
 }) {
   const highlightedRef = useRef<ComponentOption | null>(null);
 
@@ -270,6 +272,8 @@ function ItemAutocomplete({
           <TextField
             {...params}
             label="Item"
+            error={showRowErrors && !row.itemId}
+            helperText={showRowErrors && !row.itemId ? "Selecione um item" : undefined}
             onKeyDown={(event) => {
               // Tab com item destacado: seleciona sem preventDefault
               // (o Tab ainda move o foco para o próximo campo)
@@ -324,6 +328,9 @@ interface FichaFlatGridProps {
   // Quick 20260424 fase2 #2: ids de itens duplicados na ficha; cada linha
   // afetada exibe um icone de alerta com Tooltip (sem poluir a tela com Alert).
   duplicateItemIds?: Set<string>;
+  // Ajuste 1/2: quando true, linhas sem item selecionado ficam vermelhas e a
+  // grade rola até a primeira linha inválida.
+  showRowErrors?: boolean;
   onUpdateRow: (index: number, patch: Partial<ComponentEditorRow>) => void;
   onRemoveRow: (index: number) => void;
   onReorderRows?: (from: number, to: number) => void;
@@ -338,6 +345,7 @@ export function FichaFlatGrid({
   stageTypeOptions,
   unitOptions,
   duplicateItemIds,
+  showRowErrors,
   onUpdateRow,
   onRemoveRow,
   onReorderRows,
@@ -348,6 +356,15 @@ export function FichaFlatGrid({
   const router = useRouter();
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showRowErrors) return;
+    const firstError = containerRef.current?.querySelector<HTMLElement>('[data-row-has-error="true"]');
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [showRowErrors]);
   // Bug 3: guarda o código digitado que não foi encontrado para exibir o modal
   const [notFoundQuery, setNotFoundQuery] = useState<string | null>(null);
   const [refreshedAfterCreate, setRefreshedAfterCreate] = useState(false);
@@ -375,7 +392,7 @@ export function FichaFlatGrid({
   return (
     <>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
-      <Box role="table" aria-label="Estrutura da ficha tecnica" sx={{ minWidth: 1210, display: "flex", flexDirection: "column" }}>
+      <Box ref={containerRef} role="table" aria-label="Estrutura da ficha tecnica" sx={{ minWidth: 1210, display: "flex", flexDirection: "column" }}>
         <Box
           role="row"
           sx={{
@@ -441,7 +458,7 @@ export function FichaFlatGrid({
           const fmtNum = (n: number) => Number(n.toFixed(3)).toString().replace(".", ",");
 
           return (
-            <Box key={`${row.itemId}-${index}`}>
+            <Box key={`${row.itemId}-${index}`} data-row-has-error={showRowErrors && !row.itemId ? "true" : undefined}>
             <Box
               role="row"
               onDragOver={(event) => {
@@ -527,6 +544,7 @@ export function FichaFlatGrid({
                 itemOptions={itemOptions}
                 duplicateItemIds={duplicateItemIds}
                 onUpdateRow={onUpdateRow}
+                showRowErrors={showRowErrors}
               />
 
               {/* Ajuste 3: DecimalTextField para quantidade (vírgula, 3 casas) */}

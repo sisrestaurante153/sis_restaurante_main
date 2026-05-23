@@ -50,6 +50,9 @@ interface ComponentsEditorProps {
   initialStages?: FichaStageEditor[];
   summary?: ComponentsEditorSummary;
   errors?: Record<string, string[] | undefined>;
+  // Ajuste 1/2: quando true, linhas sem item selecionado ficam vermelhas e a
+  // grade rola até a primeira inválida.
+  showRowErrors?: boolean;
   // Phase 09.2 B3: quando presente, esconde TotaisIndicadores interno e publica
   // props via callback para renderizacao controlada no ficha-form.
   hideQuadroFinal?: boolean;
@@ -208,6 +211,7 @@ export function ComponentsEditor({
   initialStages = [],
   summary,
   errors,
+  showRowErrors,
   hideQuadroFinal = false,
   onQuadroFinalChange,
   salePriceInput: controlledSalePriceInput,
@@ -262,7 +266,13 @@ export function ComponentsEditor({
   const hasCoccaoFinal = flatRows.some((row) => row.isCoccaoFinal);
 
   const serializedRegularStages = useMemo(() => {
-    const { stages } = groupRowsToStages(deferredFlatRows, stageTypeOptions);
+    // Ajuste 2: remover silenciosamente linhas sem item E com qtde zerada/vazia
+    // antes de serializar. Linhas sem item mas com qtde > 0 permanecem e geram
+    // erro no servidor (visualmente destacadas pelo showRowErrors).
+    const rowsForSerialization = deferredFlatRows.filter(
+      (row) => row.isCoccaoFinal || row.itemId || Number(row.quantityUsed || "0") > 0
+    );
+    const { stages } = groupRowsToStages(rowsForSerialization, stageTypeOptions);
     return stages.map((stage) => {
       const metrics = computeStageMetrics(stage, itemOptions);
       return {
@@ -597,6 +607,7 @@ export function ComponentsEditor({
                     stageTypeOptions={stageTypeOptions}
                     unitOptions={unitOptions}
                     duplicateItemIds={duplicateItemIds}
+                    showRowErrors={showRowErrors}
                     onUpdateRow={updateFlatRow}
                     onRemoveRow={removeFlatRow}
                     onReorderRows={reorderFlatRows}

@@ -486,6 +486,7 @@ export function FichaForm({
         initialStages={editorStages}
         summary={formSummary}
         errors={state.errors}
+        showRowErrors={state.status === "error"}
         hideQuadroFinal
         onQuadroFinalChange={handleQuadroFinalChange}
         salePriceInput={salePriceInput}
