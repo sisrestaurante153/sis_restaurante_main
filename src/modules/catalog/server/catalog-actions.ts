@@ -67,16 +67,20 @@ export async function saveItemAction(
     return { status: "error", message: "Falha ao salvar o item. Tente novamente." };
   }
 
-  await createAuditService().record({
-    actorId: actor.userId,
-    actorName: actor.name,
-    entity: "item",
-    entityId: item.id,
-    entityLabel: item.name,
-    action: before ? "item.updated" : "item.created",
-    before,
-    after: item
-  });
+  try {
+    await createAuditService().record({
+      actorId: actor.userId,
+      actorName: actor.name,
+      entity: "item",
+      entityId: item.id,
+      entityLabel: item.name,
+      action: before ? "item.updated" : "item.created",
+      before,
+      after: item
+    });
+  } catch {
+    // Falha no audit não deve bloquear o redirect
+  }
 
   redirect(`/itens/${item.id}?saved=1`);
 }
@@ -102,15 +106,19 @@ export async function deleteItemAction(formData: FormData) {
     redirect(`/itens/${itemId}?error=${encodeURIComponent(result.reason ?? "delete_failed")}`);
   }
 
-  await createAuditService().record({
-    actorId: actor.userId,
-    actorName: actor.name,
-    entity: "item",
-    entityId: before.id,
-    entityLabel: before.name,
-    action: "item.deleted",
-    before
-  });
+  try {
+    await createAuditService().record({
+      actorId: actor.userId,
+      actorName: actor.name,
+      entity: "item",
+      entityId: before.id,
+      entityLabel: before.name,
+      action: "item.deleted",
+      before
+    });
+  } catch {
+    // Falha no audit não deve bloquear o redirect
+  }
 
   redirect("/itens?deleted=1");
 }

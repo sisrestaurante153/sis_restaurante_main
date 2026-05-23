@@ -100,9 +100,8 @@ export async function saveMasterDataAction(formData: FormData) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
       throw error;
     }
-    const message = error instanceof Error ? encodeURIComponent(error.message) : "save_failed";
     const redirectPath = paths[kind] || "/cadastros";
-    redirect(`${redirectPath}?error=${message}`);
+    redirect(`${redirectPath}?error=save_failed`);
   }
 
   const redirectPath = paths[kind] || "/cadastros";

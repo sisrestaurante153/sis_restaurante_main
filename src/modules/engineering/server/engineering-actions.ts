@@ -96,16 +96,22 @@ export async function duplicateFichaAction(formData: FormData) {
 
   const source = await getEngineeringRepository(actor.restaurantId).getFichaDetail(fichaId);
   const ficha = await getEngineeringRepository(actor.restaurantId).duplicateFicha(fichaId);
-  await createAuditService().record({
-    actorId: actor.userId,
-    actorName: actor.name,
-    entity: "ficha_tecnica",
-    entityId: ficha.id,
-    entityLabel: `${ficha.itemName} v${ficha.version}`,
-    action: "ficha.duplicated",
-    before: source,
-    after: ficha
-  });
+
+  try {
+    await createAuditService().record({
+      actorId: actor.userId,
+      actorName: actor.name,
+      entity: "ficha_tecnica",
+      entityId: ficha.id,
+      entityLabel: `${ficha.itemName} v${ficha.version}`,
+      action: "ficha.duplicated",
+      before: source,
+      after: ficha
+    });
+  } catch {
+    // Falha no audit não deve bloquear o redirect
+  }
+
   redirect(`/fichas/${ficha.id}?duplicated=1`);
 }
 
@@ -119,15 +125,21 @@ export async function inactivateFichaAction(formData: FormData) {
 
   const before = await getEngineeringRepository(actor.restaurantId).getFichaDetail(fichaId);
   const ficha = await getEngineeringRepository(actor.restaurantId).inactivateFicha(fichaId);
-  await createAuditService().record({
-    actorId: actor.userId,
-    actorName: actor.name,
-    entity: "ficha_tecnica",
-    entityId: ficha.id,
-    entityLabel: `${ficha.itemName} v${ficha.version}`,
-    action: "ficha.inactivated",
-    before,
-    after: ficha
-  });
+
+  try {
+    await createAuditService().record({
+      actorId: actor.userId,
+      actorName: actor.name,
+      entity: "ficha_tecnica",
+      entityId: ficha.id,
+      entityLabel: `${ficha.itemName} v${ficha.version}`,
+      action: "ficha.inactivated",
+      before,
+      after: ficha
+    });
+  } catch {
+    // Falha no audit não deve bloquear o redirect
+  }
+
   redirect(`/fichas/${fichaId}?inactivated=1`);
 }

@@ -498,22 +498,25 @@ export function getMasterDataRepository() {
       const prisma = resolvePrisma();
 
       if (prisma) {
+        let prismaReachable = false;
         try {
-          const linked = await prisma.itemCompra.count({
-            where: { cd_fornecedor: id }
+          const result = await prisma.$transaction(async (tx) => {
+            prismaReachable = true;
+            const linked = await tx.itemCompra.count({ where: { cd_fornecedor: id } });
+            if (linked > 0) return { blocked: true };
+            await tx.fornecedor.delete({ where: { cd_fornecedor: id } });
+            return { blocked: false };
           });
 
-          if (linked > 0) {
-            return {
-              success: false as const,
-              reason: "Nao foi possivel excluir: existe vinculo com compras de itens."
-            };
+          if (result.blocked) {
+            return { success: false as const, reason: "Nao foi possivel excluir: existe vinculo com compras de itens." };
           }
-
-          await prisma.fornecedor.delete({ where: { cd_fornecedor: id } });
           return { success: true as const };
         } catch {
-          // fall back to demo storage
+          if (prismaReachable) {
+            return { success: false as const, reason: "Erro ao excluir fornecedor. Tente novamente." };
+          }
+          // Banco inacessível — fall to demo storage
         }
       }
 
@@ -540,27 +543,26 @@ export function getMasterDataRepository() {
       const prisma = resolvePrisma();
 
       if (prisma) {
+        let prismaReachable = false;
         try {
-          const category = await prisma.categoriaOperacional.findUnique({ where: { cd_categoria: id } });
-          if (!category) {
-            return { success: false as const, reason: "Categoria nao encontrada." };
-          }
-
-          const linked = await prisma.item.count({
-            where: { nm_categoria_operacional: category.nm_categoria }
+          const result = await prisma.$transaction(async (tx) => {
+            prismaReachable = true;
+            const category = await tx.categoriaOperacional.findUnique({ where: { cd_categoria: id } });
+            if (!category) return { notFound: true, blocked: false };
+            const linked = await tx.item.count({ where: { nm_categoria_operacional: category.nm_categoria } });
+            if (linked > 0) return { notFound: false, blocked: true };
+            await tx.categoriaOperacional.delete({ where: { cd_categoria: id } });
+            return { notFound: false, blocked: false };
           });
 
-          if (linked > 0) {
-            return {
-              success: false as const,
-              reason: "Nao foi possivel excluir: existe vinculo com itens."
-            };
-          }
-
-          await prisma.categoriaOperacional.delete({ where: { cd_categoria: id } });
+          if (result.notFound) return { success: false as const, reason: "Categoria nao encontrada." };
+          if (result.blocked) return { success: false as const, reason: "Nao foi possivel excluir: existe vinculo com itens." };
           return { success: true as const };
         } catch {
-          // fall back to demo storage
+          if (prismaReachable) {
+            return { success: false as const, reason: "Erro ao excluir categoria. Tente novamente." };
+          }
+          // Banco inacessível — fall to demo storage
         }
       }
 
@@ -974,22 +976,25 @@ export function getMasterDataRepository() {
       const prisma = resolvePrisma();
 
       if (prisma) {
+        let prismaReachable = false;
         try {
-          const linked = await prisma.fichaTecnica.count({
-            where: { cd_modalidade: id }
+          const result = await prisma.$transaction(async (tx) => {
+            prismaReachable = true;
+            const linked = await tx.fichaTecnica.count({ where: { cd_modalidade: id } });
+            if (linked > 0) return { blocked: true };
+            await tx.modalidade.delete({ where: { cd_modalidade: id } });
+            return { blocked: false };
           });
 
-          if (linked > 0) {
-            return {
-              success: false as const,
-              reason: "Nao foi possivel excluir: existe vinculo com fichas."
-            };
+          if (result.blocked) {
+            return { success: false as const, reason: "Nao foi possivel excluir: existe vinculo com fichas." };
           }
-
-          await prisma.modalidade.delete({ where: { cd_modalidade: id } });
           return { success: true as const };
         } catch {
-          // fall back to demo storage
+          if (prismaReachable) {
+            return { success: false as const, reason: "Erro ao excluir modalidade. Tente novamente." };
+          }
+          // Banco inacessível — fall to demo storage
         }
       }
 
@@ -1011,27 +1016,26 @@ export function getMasterDataRepository() {
       const prisma = resolvePrisma();
 
       if (prisma) {
+        let prismaReachable = false;
         try {
-          const itemType = await prisma.tipoItemCadastro.findUnique({ where: { cd_tipo_item: id } });
-          if (!itemType) {
-            return { success: false as const, reason: "Tipo nao encontrado." };
-          }
-
-          const linked = await prisma.item.count({
-            where: { tp_item: itemType.tp_codigo }
+          const result = await prisma.$transaction(async (tx) => {
+            prismaReachable = true;
+            const itemType = await tx.tipoItemCadastro.findUnique({ where: { cd_tipo_item: id } });
+            if (!itemType) return { notFound: true, blocked: false };
+            const linked = await tx.item.count({ where: { tp_item: itemType.tp_codigo } });
+            if (linked > 0) return { notFound: false, blocked: true };
+            await tx.tipoItemCadastro.delete({ where: { cd_tipo_item: id } });
+            return { notFound: false, blocked: false };
           });
 
-          if (linked > 0) {
-            return {
-              success: false as const,
-              reason: "Nao foi possivel excluir: existe vinculo com itens."
-            };
-          }
-
-          await prisma.tipoItemCadastro.delete({ where: { cd_tipo_item: id } });
+          if (result.notFound) return { success: false as const, reason: "Tipo nao encontrado." };
+          if (result.blocked) return { success: false as const, reason: "Nao foi possivel excluir: existe vinculo com itens." };
           return { success: true as const };
         } catch {
-          // fall back to demo storage
+          if (prismaReachable) {
+            return { success: false as const, reason: "Erro ao excluir tipo de item. Tente novamente." };
+          }
+          // Banco inacessível — fall to demo storage
         }
       }
 

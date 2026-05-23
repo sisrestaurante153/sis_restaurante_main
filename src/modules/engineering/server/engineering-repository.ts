@@ -393,19 +393,11 @@ async function ensureUnit(tx: Prisma.TransactionClient, code: string) {
 }
 
 async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) {
-  const existing = await tx.modalidade.findUnique({
-    where: { cd_modalidade: modalityId }
-  });
-
-  if (existing) {
-    return existing;
-  }
-
-  return tx.modalidade.create({
-    data: {
-      ds_codigo: modalityId,
-      nm_modalidade: modalityId.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())
-    }
+  const label = modalityId.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  return tx.modalidade.upsert({
+    where: { ds_codigo: modalityId },
+    update: { nm_modalidade: label },
+    create: { ds_codigo: modalityId, nm_modalidade: label }
   });
 }
 
@@ -452,8 +444,15 @@ async function resolveCanonicalFichaItem(
 
   const yieldUnit = await ensureUnit(tx, input.yieldUnitCode);
 
-  return tx.item.create({
-    data: {
+  return tx.item.upsert({
+    where: {
+      nm_normalizado_cd_restaurante: {
+        nm_normalizado: normalizedName,
+        cd_restaurante: restaurantId
+      }
+    },
+    update: {},
+    create: {
       nm_item: input.displayName.trim(),
       ds_codigo_interno: input.code?.trim() || null,
       nm_normalizado: normalizedName,
