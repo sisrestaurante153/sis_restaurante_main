@@ -111,6 +111,7 @@ model Item {
   @@unique([nm_normalizado, cd_restaurante], map: "item_nome_normalizado_restaurante_key")
   @@unique([ds_codigo_interno, cd_restaurante], map: "item_codigo_interno_restaurante_key")
   @@index([cd_restaurante], map: "idx_item_restaurante")
+  @@index([cd_restaurante, ts_atualizacao(sort: Desc)], map: "idx_item_restaurante_updated")
   @@index([tp_item], map: "idx_item_tipo")
   @@index([cd_unidade_estoque], map: "idx_item_unidade_estoque")
   @@index([cd_unidade_uso_padrao], map: "idx_item_unidade_uso")
@@ -288,6 +289,7 @@ model FichaTecnica {
 
   @@unique([cd_item_resultante, nr_versao], map: "ficha_tecnica_item_resultante_id_versao_key")
   @@index([cd_item_resultante, tp_status], map: "idx_ficha_tecnica_item_status")
+  @@index([cd_restaurante, ts_atualizacao(sort: Desc)], map: "idx_ficha_tecnica_restaurante_updated")
   @@index([cd_modalidade], map: "idx_ficha_tecnica_modalidade")
   @@index([cd_unidade_rendimento], map: "idx_ficha_tecnica_rendimento")
   @@map("ficha_tecnica")

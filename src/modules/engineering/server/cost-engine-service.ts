@@ -425,9 +425,9 @@ async function persistCalculationTrail(
     }
   });
 
-  for (const component of result.components) {
-    await tx.calculoComponenteSnapshot.create({
-      data: {
+  if (result.components.length > 0) {
+    await tx.calculoComponenteSnapshot.createMany({
+      data: result.components.map((component) => ({
         cd_calculo_execucao: execution.cd_calculo,
         cd_ficha_componente: component.componentId,
         cd_item_componente: component.componentItemId,
@@ -444,7 +444,7 @@ async function persistCalculationTrail(
         vl_pct_impacto: result.totalCost.equals(0)
           ? null
           : component.totalCost.div(result.totalCost).toString()
-      }
+      }))
     });
   }
 
