@@ -835,8 +835,12 @@ export function getMasterDataRepository() {
       const prisma = resolvePrisma();
 
       if (prisma) {
+        // Rastreia se o banco respondeu ao menos uma chamada — se sim, não
+        // cai no demo storage, pois o Prisma é a fonte de verdade.
+        let prismaReachable = false;
         try {
           const linkedCounts = await prisma.$transaction(async (tx) => {
+            prismaReachable = true;
             const unit = await tx.unidadeMedida.findUnique({ where: { cd_unidade_medida: id } });
             if (!unit) {
               return null;
@@ -866,7 +870,13 @@ export function getMasterDataRepository() {
           await prisma.unidadeMedida.delete({ where: { cd_unidade_medida: id } });
           return { success: true as const };
         } catch {
-          // fall back to demo storage
+          if (prismaReachable) {
+            // O banco respondeu mas a operação falhou — retorna erro direto
+            // sem cair no demo storage (que retornaria "nao encontrada" mesmo
+            // após uma exclusão bem-sucedida, causando falso negativo).
+            return { success: false as const, reason: "Erro ao excluir unidade. Tente novamente." };
+          }
+          // Banco inacessível — cai no demo storage
         }
       }
 

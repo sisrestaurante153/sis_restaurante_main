@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -20,6 +21,28 @@ import {
 } from "@/modules/engineering/ui/components-editor";
 import type { FichaStageEditor, StageTypeOption } from "@/modules/engineering/ui/components-editor.types";
 import { TotaisIndicadores } from "@/modules/engineering/ui/TotaisIndicadores";
+
+// Bug 1: useFormStatus desativa o botão enquanto a action está pendente (evita duplo clique).
+// Bug 2: isDirty desativa o botão enquanto não há alterações no formulário.
+function SubmitButton({ isDirty }: { isDirty: boolean }) {
+  const { pending } = useFormStatus();
+  const disabled = pending || !isDirty;
+  return (
+    <Button
+      type="submit"
+      variant="contained"
+      size="large"
+      disabled={disabled}
+      sx={{
+        minWidth: 160,
+        bgcolor: disabled ? undefined : "#185FA5",
+        "&:hover": { bgcolor: disabled ? undefined : "#0C447C" }
+      }}
+    >
+      {pending ? "Salvando..." : "Salvar ficha"}
+    </Button>
+  );
+}
 
 function ReadonlyTextField({
   label,
@@ -148,7 +171,12 @@ export function FichaForm({
     status: "idle"
   } satisfies EngineeringFormState);
 
+  // Bug 2: começa sujo em fichas novas (sem id), limpo em fichas existentes.
+  const [isDirty, setIsDirty] = useState(!initialValues?.id);
+
   const errorAlertRef = useRef<HTMLDivElement>(null);
+  const stagesSectionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (state.status !== "error") return;
     const fieldOrder = ["displayName", "modalityId", "groupOperational", "code", "status", "preparationMode", "notes"];
@@ -157,6 +185,9 @@ export function FichaForm({
       const el = document.querySelector<HTMLElement>(`[name="${firstField}"]`);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
       el?.focus();
+    } else if (state.errors?.["stages"]?.length || state.errors?.["stagesJson"]?.length) {
+      // Bug 5: erros em stages precisam rolar até a seção de componentes
+      stagesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       errorAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -205,11 +236,17 @@ export function FichaForm({
   };
   const availableComponentOptions = componentOptions ?? itemOptions;
   const linkedItem = itemOptions.find((item) => item.id === initialValues?.itemId) ?? null;
-  const displayName = initialValues?.displayName ?? initialValues?.itemName ?? linkedItem?.name ?? "";
   const itemType = initialValues?.itemType ?? linkedItem?.type ?? "pre_preparo";
-  const groupOperational =
-    initialValues?.groupOperational ?? linkedItem?.operationalCategory ?? "Sem grupo";
   const yieldUnitCode = initialValues?.yieldUnitCode ?? initialValues?.usageUnit ?? linkedItem?.usageUnit ?? "kg";
+
+  // Bug 5: controlled state evita reset dos campos quando useActionState retorna erro.
+  const [displayName, setDisplayName] = useState(
+    initialValues?.displayName ?? initialValues?.itemName ?? linkedItem?.name ?? ""
+  );
+  const [groupOperational, setGroupOperational] = useState(
+    initialValues?.groupOperational ?? linkedItem?.operationalCategory ?? "Sem grupo"
+  );
+  const [statusValue, setStatusValue] = useState(initialValues?.status ?? "rascunho");
 
   const formSummary: ComponentsEditorSummary = useMemo(
     () =>
@@ -276,7 +313,14 @@ export function FichaForm({
     : new Date().toLocaleString("pt-BR");
 
   return (
-    <Stack component="form" id={formId} action={formAction} spacing={4} noValidate>
+    <Stack
+      component="form"
+      id={formId}
+      action={formAction}
+      spacing={4}
+      noValidate
+      onChange={() => setIsDirty(true)}
+    >
       <input type="hidden" name="id" value={initialValues?.id ?? ""} />
       <input type="hidden" name="itemId" value={initialValues?.itemId ?? ""} />
       <input type="hidden" name="itemType" value={itemType} />
@@ -334,7 +378,8 @@ export function FichaForm({
             size="small"
             label="Produto"
             name="displayName"
-            defaultValue={displayName}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
             error={Boolean(getFieldError("displayName"))}
             helperText={getFieldError("displayName") ?? " "}
           />
@@ -378,7 +423,8 @@ export function FichaForm({
             size="small"
             label="Grupo operacional"
             name="groupOperational"
-            defaultValue={groupOperational}
+            value={groupOperational}
+            onChange={(e) => setGroupOperational(e.target.value)}
             error={Boolean(getFieldError("groupOperational"))}
             helperText={getFieldError("groupOperational") ?? " "}
           />
@@ -390,7 +436,8 @@ export function FichaForm({
             select
             label="Status"
             name="status"
-            defaultValue={initialValues?.status ?? "rascunho"}
+            value={statusValue}
+            onChange={(e) => setStatusValue(e.target.value)}
             error={Boolean(getFieldError("status"))}
             helperText={getFieldError("status") ?? " "}
           >
@@ -427,6 +474,8 @@ export function FichaForm({
         </Box>
       </FormSection>
 
+      {/* Bug 5: ref usado para rolar até aqui quando há erros de stages */}
+      <div ref={stagesSectionRef} />
       {/* Phase 09.2 B3: ComponentsEditor SEM Quadro Final (hideQuadroFinal).
           Estado do Quadro Final fica lifted para que a ordem na UI seja:
           Identificacao -> ComponentsEditor -> Finalizacao -> Quadro Final. */}
@@ -503,9 +552,7 @@ export function FichaForm({
       />
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 1 }}>
-        <Button type="submit" variant="contained" size="large" sx={{ minWidth: 160, bgcolor: "#185FA5", "&:hover": { bgcolor: "#0C447C" } }}>
-          Salvar ficha
-        </Button>
+        <SubmitButton isDirty={isDirty} />
       </Box>
 
       {children}

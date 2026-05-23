@@ -64,16 +64,20 @@ export async function saveFichaAction(
     return { status: "error", message: "Erro ao salvar a ficha: resultado não retornado." };
   }
 
-  await createAuditService().record({
-    actorId: actor.userId,
-    actorName: actor.name,
-    entity: "ficha_tecnica",
-    entityId: ficha.id,
-    entityLabel: `${ficha.itemName} v${ficha.version}`,
-    action: before ? "ficha.updated" : "ficha.created",
-    before,
-    after: ficha
-  });
+  try {
+    await createAuditService().record({
+      actorId: actor.userId,
+      actorName: actor.name,
+      entity: "ficha_tecnica",
+      entityId: ficha.id,
+      entityLabel: `${ficha.itemName} v${ficha.version}`,
+      action: before ? "ficha.updated" : "ficha.created",
+      before,
+      after: ficha
+    });
+  } catch {
+    // Falha no audit não deve bloquear o salvamento da ficha
+  }
 
   if (before) {
     redirect(`/fichas/${ficha.id}?saved=1`);

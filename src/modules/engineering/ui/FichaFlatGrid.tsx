@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -8,6 +9,10 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -82,11 +87,13 @@ function DragHandle({ disabled = false }: { disabled?: boolean }) {
 function CodeInput({
   itemOptions,
   currentCode,
-  onMatch
+  onMatch,
+  onNotFound
 }: {
   itemOptions: ComponentOption[];
   currentCode: string;
   onMatch: (option: ComponentOption) => void;
+  onNotFound: (query: string) => void;
 }) {
   const [value, setValue] = useState(currentCode);
   useEffect(() => {
@@ -105,7 +112,8 @@ function CodeInput({
     if (match) {
       onMatch(match);
     } else {
-      // Sem match: reverte texto para o code do item atual.
+      // Bug 3: em vez de reverter silenciosamente, oferece cadastro
+      onNotFound(trimmed);
       setValue(currentCode);
     }
   };
@@ -240,8 +248,12 @@ export function FichaFlatGrid({
   onAddCoccaoFinal,
   hasCoccaoFinal
 }: FichaFlatGridProps) {
+  const router = useRouter();
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  // Bug 3: guarda o código digitado que não foi encontrado para exibir o modal
+  const [notFoundQuery, setNotFoundQuery] = useState<string | null>(null);
+  const [refreshedAfterCreate, setRefreshedAfterCreate] = useState(false);
 
   const regularStageTypes = stageTypeOptions.filter((option) => option.code !== MONTAGEM_CODE);
   const regularRowIndices = rows
@@ -404,6 +416,10 @@ export function FichaFlatGrid({
                           : "ingrediente"
                   })
                 }
+                onNotFound={(query) => {
+                  setNotFoundQuery(query);
+                  setRefreshedAfterCreate(false);
+                }}
               />
 
               <Stack spacing={0.5} sx={{ minWidth: 0 }}>
@@ -735,5 +751,54 @@ export function FichaFlatGrid({
         </Stack>
       </Box>
     </Box>
+
+    {/* Bug 3: Modal exibido quando o código digitado não corresponde a nenhum item */}
+    <Dialog open={notFoundQuery !== null} onClose={() => setNotFoundQuery(null)} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ fontSize: 16, fontWeight: 700 }}>Item não encontrado</DialogTitle>
+      <DialogContent>
+        <Typography sx={{ fontSize: 14, color: "#4A4741" }}>
+          Nenhum item com o código{" "}
+          <Box component="strong" sx={{ fontFamily: "monospace" }}>
+            {notFoundQuery}
+          </Box>{" "}
+          foi encontrado. Deseja cadastrá-lo?
+        </Typography>
+        {refreshedAfterCreate && (
+          <Typography sx={{ fontSize: 13, color: "#0E8A4F", mt: 1.5, fontWeight: 600 }}>
+            ✓ Lista atualizada. Agora você pode buscar o item pelo código ou nome.
+          </Typography>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+        <Button
+          size="small"
+          onClick={() => setNotFoundQuery(null)}
+          sx={{ color: "#888780" }}
+        >
+          Fechar
+        </Button>
+        {!refreshedAfterCreate && (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => {
+              router.refresh();
+              setRefreshedAfterCreate(true);
+            }}
+            sx={{ borderColor: "#185FA5", color: "#185FA5" }}
+          >
+            Já cadastrei — atualizar lista
+          </Button>
+        )}
+        <Button
+          size="small"
+          variant="contained"
+          onClick={() => window.open("/itens/novo", "_blank")}
+          sx={{ bgcolor: "#185FA5", "&:hover": { bgcolor: "#0C447C" } }}
+        >
+          Cadastrar item
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
