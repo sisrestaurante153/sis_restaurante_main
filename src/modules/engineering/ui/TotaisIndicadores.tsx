@@ -816,6 +816,7 @@ export function TotaisIndicadores({
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                   onSalePriceChange(event.target.value.replace(",", "."))
                 }
+                onFocus={(event: React.FocusEvent<HTMLInputElement>) => event.target.select()}
                 sx={{
                   background: "transparent",
                   border: "none",
@@ -873,6 +874,7 @@ export function TotaisIndicadores({
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                   onVariableExpensePercentChange(event.target.value.replace(",", "."))
                 }
+                onFocus={(event: React.FocusEvent<HTMLInputElement>) => event.target.select()}
                 sx={{
                   background: "transparent",
                   border: "none",

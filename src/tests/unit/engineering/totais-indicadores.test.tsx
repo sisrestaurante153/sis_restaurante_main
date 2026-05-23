@@ -53,7 +53,7 @@ function buildSummary(overrides: Partial<ComponentsEditorSummary> = {}): Compone
 }
 
 describe("TotaisIndicadores — tabela de referência de CMV", () => {
-  it("exibe o cabeçalho 'Referência de CMV'", () => {
+  it("exibe o cabeçalho 'O que é um CMV saudável?'", () => {
     render(
       <TotaisIndicadores
         summary={buildSummary()}
@@ -63,7 +63,7 @@ describe("TotaisIndicadores — tabela de referência de CMV", () => {
         onVariableExpensePercentChange={vi.fn()}
       />
     );
-    expect(screen.getByText(/referência de cmv/i)).toBeInTheDocument();
+    expect(screen.getByText(/O que é um CMV saudável\?/i)).toBeInTheDocument();
   });
 
   it("exibe as três faixas de CMV: Crítico, Atenção e Saudável", () => {
@@ -76,9 +76,9 @@ describe("TotaisIndicadores — tabela de referência de CMV", () => {
         onVariableExpensePercentChange={vi.fn()}
       />
     );
-    expect(screen.getByText(/crítico/i)).toBeInTheDocument();
-    expect(screen.getByText(/atenção/i)).toBeInTheDocument();
-    expect(screen.getByText(/saudável/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/crítico/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/atenção/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/saudável/i)[0]).toBeInTheDocument();
   });
 
   it("exibe os intervalos percentuais corretos na tabela", () => {
@@ -91,9 +91,9 @@ describe("TotaisIndicadores — tabela de referência de CMV", () => {
         onVariableExpensePercentChange={vi.fn()}
       />
     );
-    expect(screen.getByText(/0%\s*[–-]\s*30%/i)).toBeInTheDocument();
-    expect(screen.getByText(/30%\s*[–-]\s*60%/i)).toBeInTheDocument();
-    expect(screen.getByText(/60%\+/i)).toBeInTheDocument();
+    expect(screen.getByText(/abaixo de 30%/i)).toBeInTheDocument();
+    expect(screen.getByText(/30% a 35%/i)).toBeInTheDocument();
+    expect(screen.getByText(/acima de 40%/i)).toBeInTheDocument();
   });
 });
 

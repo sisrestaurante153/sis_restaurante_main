@@ -69,6 +69,7 @@ export function DecimalTextField({
         if (num !== null) {
           setLocalValue(String(num).replace(".", ","));
         }
+        event.target.select();
         rest.onFocus?.(event);
       }}
       onBlur={(event) => {

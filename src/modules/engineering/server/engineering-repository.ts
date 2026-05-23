@@ -263,9 +263,17 @@ function buildCommercialSummary(input: {
     salePriceNumber !== null && variableExpensePercentNumber !== null
       ? salePriceNumber * variableExpensePercentNumber
       : null;
+
+  const cmvWithPackagingPerKgNumber = hasUsableWeight ? costRealNumber / postCookingWeightNumber : null;
+  const finalAppliedCmvNumber = assemblyEnabled
+    ? cmvWithPackagingPerKgNumber
+    : costWithoutPackagingPerKgNumber;
+  
+  const costForMarginCalc = hasUsableWeight && finalAppliedCmvNumber !== null ? finalAppliedCmvNumber : costRealNumber;
+
   const contributionMarginValue =
     salePriceNumber !== null && variableExpenseValue !== null
-      ? salePriceNumber - costRealNumber - variableExpenseValue
+      ? salePriceNumber - costForMarginCalc - variableExpenseValue
       : null;
   const contributionMarginPercent =
     hasUsableSalePrice && contributionMarginValue !== null
@@ -757,15 +765,24 @@ function mapFichaListRow(record: NonNullable<FichaRecord>) {
   });
 
   const salePriceNumber = record.vl_preco_venda ? Number(record.vl_preco_venda) : 0;
-  const totalInputCostNumber = Number(costs.total) || 0;
+  const totalCostNumber = Number(costs.total) || 0;
   const packagingCostNumber = Number(costs.packaging) || 0;
-  const costRealNumber = totalInputCostNumber + packagingCostNumber;
+  const costWithoutPackagingNumber = Math.max(totalCostNumber - packagingCostNumber, 0);
   const variableExpensePercentNumber = normalizePercentInput(
     record.vl_pct_despesa_variavel ? Number(record.vl_pct_despesa_variavel) : null
   );
+
+  const finalOutputNumber = Number(costs.finalOutput) || 0;
+  const hasUsableWeight = finalOutputNumber > 0;
+  const costWithoutPackagingPerKg = hasUsableWeight ? (costWithoutPackagingNumber / finalOutputNumber) : 0;
+  const cmvWithPackagingPerKg = hasUsableWeight ? (totalCostNumber / finalOutputNumber) : 0;
+  const assemblyEnabled = packagingCostNumber > 0;
+  const finalAppliedCmv = assemblyEnabled ? cmvWithPackagingPerKg : costWithoutPackagingPerKg;
+  const costForMarginCalc = hasUsableWeight ? finalAppliedCmv : totalCostNumber;
+
   const contributionMarginPercent =
     salePriceNumber > 0 && variableExpensePercentNumber !== null
-      ? (salePriceNumber - costRealNumber - salePriceNumber * variableExpensePercentNumber) / salePriceNumber
+      ? (salePriceNumber - costForMarginCalc - salePriceNumber * variableExpensePercentNumber) / salePriceNumber
       : null;
 
   return {
@@ -874,7 +891,7 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
       postCookingWeight: costs.finalOutput,
       cookingFactorGross: indicators.correctionFactor,
       cookingFactorNet: indicators.cookingIndex,
-      totalInputCost: costs.total,
+      totalInputCost: costWithoutPackaging.toFixed(4),
       costWithoutPackagingPerKg:
         finalOutput > 0 ? (costWithoutPackaging / finalOutput).toFixed(4) : null,
       cmvPerKg: costs.perKg,
@@ -1501,15 +1518,24 @@ function toFichaListRow(ficha: DemoFichaRecord) {
   });
 
   const salePriceNumber = ficha.salePrice ? Number(ficha.salePrice) : 0;
-  const totalInputCostNumber = Number(ficha.costs.total) || 0;
+  const totalCostNumber = Number(ficha.costs.total) || 0;
   const packagingCostNumber = Number(ficha.costs.packaging) || 0;
-  const costRealNumber = totalInputCostNumber + packagingCostNumber;
+  const costWithoutPackagingNumber = Math.max(totalCostNumber - packagingCostNumber, 0);
   const variableExpensePercentNumber = normalizePercentInput(
     ficha.variableExpensePercent ? Number(ficha.variableExpensePercent) : null
   );
+
+  const finalOutputNumber = Number(ficha.costs.finalOutput) || 0;
+  const hasUsableWeight = finalOutputNumber > 0;
+  const costWithoutPackagingPerKg = hasUsableWeight ? (costWithoutPackagingNumber / finalOutputNumber) : 0;
+  const cmvWithPackagingPerKg = hasUsableWeight ? (totalCostNumber / finalOutputNumber) : 0;
+  const assemblyEnabled = packagingCostNumber > 0;
+  const finalAppliedCmv = assemblyEnabled ? cmvWithPackagingPerKg : costWithoutPackagingPerKg;
+  const costForMarginCalc = hasUsableWeight ? finalAppliedCmv : totalCostNumber;
+
   const contributionMarginPercent =
     salePriceNumber > 0 && variableExpensePercentNumber !== null
-      ? (salePriceNumber - costRealNumber - salePriceNumber * variableExpensePercentNumber) / salePriceNumber
+      ? (salePriceNumber - costForMarginCalc - salePriceNumber * variableExpensePercentNumber) / salePriceNumber
       : null;
 
   return {
@@ -1625,7 +1651,7 @@ function toFichaDetail(ficha: DemoFichaRecord) {
       postCookingWeight: ficha.costs.finalOutput,
       cookingFactorGross: indicators.correctionFactor,
       cookingFactorNet: indicators.cookingIndex,
-      totalInputCost: ficha.costs.total,
+      totalInputCost: costWithoutPackaging.toFixed(4),
       costWithoutPackagingPerKg:
         finalOutput > 0 ? (costWithoutPackaging / finalOutput).toFixed(4) : null,
       cmvPerKg: ficha.costs.perKg,
