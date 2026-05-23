@@ -14,7 +14,8 @@ function stripFlatMetadata(row: ComponentEditorRow): ComponentEditorRow {
     quantityUsed: row.quantityUsed,
     usageUnit: row.usageUnit,
     levelLabel: row.levelLabel,
-    notes: row.notes
+    notes: row.notes,
+    outputWeight: row.outputWeight
   };
 }
 

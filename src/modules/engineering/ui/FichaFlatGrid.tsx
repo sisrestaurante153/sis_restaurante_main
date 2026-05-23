@@ -638,6 +638,7 @@ export function FichaFlatGrid({
                 </Box>
               ) : (
                 <Button
+                  type="button"
                   size="small"
                   variant="outlined"
                   onClick={() => {
@@ -704,7 +705,7 @@ export function FichaFlatGrid({
                 {formatCurrency(subtotal)}
               </Box>
 
-              <IconButton aria-label={`Remover item ${index + 1}`} size="small" onClick={() => onRemoveRow(index)}>
+              <IconButton type="button" aria-label={`Remover item ${index + 1}`} size="small" onClick={() => onRemoveRow(index)}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -800,6 +801,7 @@ export function FichaFlatGrid({
             <Box />
             <Box />
             <IconButton
+              type="button"
               aria-label="Remover Coccao Final"
               size="small"
               onClick={() => onRemoveRow(coccaoFinalEntry.index)}
@@ -812,6 +814,7 @@ export function FichaFlatGrid({
         <Stack direction="row" justifyContent="flex-end" spacing={1.25} sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
           {!hasCoccaoFinal ? (
             <Button
+              type="button"
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={onAddCoccaoFinal}
@@ -820,7 +823,7 @@ export function FichaFlatGrid({
               Adicionar Coccao Final
             </Button>
           ) : null}
-          <Button variant="contained" startIcon={<AddIcon />} onClick={onAddRow}>
+          <Button type="button" variant="contained" startIcon={<AddIcon />} onClick={onAddRow}>
             Adicionar Itens
           </Button>
         </Stack>

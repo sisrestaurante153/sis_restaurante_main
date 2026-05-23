@@ -368,6 +368,7 @@ export function IngredienteDataGrid({
               </Typography>
 
               <IconButton
+                type="button"
                 aria-label={`Remover item ${index + 1}`}
                 size="small"
                 onClick={() => onRemoveRow(index)}

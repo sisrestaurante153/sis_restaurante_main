@@ -71,6 +71,9 @@ export interface SaveFichaInput {
       usageUnit: string;
       levelLabel?: string;
       notes?: string;
+      outputWeight?: string;
+      correctionFactor?: string;
+      cookingIndex?: string;
     }>;
   }>;
   components: Array<{
@@ -279,10 +282,6 @@ function buildCommercialSummary(input: {
     hasUsableSalePrice && contributionMarginValue !== null
       ? contributionMarginValue / salePriceNumber
       : null;
-  const cmvWithPackagingPerKgNumber = hasUsableWeight ? costRealNumber / postCookingWeightNumber : null;
-  const finalAppliedCmvNumber = assemblyEnabled
-    ? cmvWithPackagingPerKgNumber
-    : costWithoutPackagingPerKgNumber;
   const finalAppliedCost = assemblyEnabled ? costRealNumber : totalInputCostNumber;
   const cmvPercentOfSale = hasUsableSalePrice ? finalAppliedCost / salePriceNumber : null;
   const mealCmv =
@@ -572,23 +571,27 @@ function buildFallbackStagesFromComponents<
       correctionFactor: components[0]?.vl_fator_correcao?.toFixed(6) ?? "",
       cookingIndex: components[0]?.vl_indice_coccao?.toFixed(6) ?? "",
       notes: "",
-      items: components.map((component) => ({
-        itemId: component.cd_item_componente,
-        itemName: component.itemComponente.nm_item,
-        componentType: component.itemComponente.tp_item === "embalagem"
-          ? "embalagem"
-          : component.itemComponente.tp_item === "apoio"
-            ? "apoio"
-            : "ingrediente",
-        quantityUsed: component.vl_qtd_bruta.toFixed(4),
-        quantityGross: component.vl_qtd_bruta.toFixed(4),
-        quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
-        usageUnit: component.unidadeUso.ds_codigo,
-        levelLabel: "N1",
-        correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
-        cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
-        notes: component.ds_observacao ?? ""
-      }))
+      items: components.map((component) => {
+        const hasCustomWeight = component.vl_fator_correcao !== null || component.vl_indice_coccao !== null;
+        return {
+          itemId: component.cd_item_componente,
+          itemName: component.itemComponente.nm_item,
+          componentType: component.itemComponente.tp_item === "embalagem"
+            ? "embalagem"
+            : component.itemComponente.tp_item === "apoio"
+              ? "apoio"
+              : "ingrediente",
+          quantityUsed: component.vl_qtd_bruta.toFixed(4),
+          quantityGross: component.vl_qtd_bruta.toFixed(4),
+          quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
+          usageUnit: component.unidadeUso.ds_codigo,
+          levelLabel: "N1",
+          correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
+          cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
+          outputWeight: hasCustomWeight && component.vl_qtd_limpa ? component.vl_qtd_limpa.toFixed(4) : "",
+          notes: component.ds_observacao ?? ""
+        };
+      })
     }
   ];
 }
@@ -729,19 +732,23 @@ function mapStageRows(record: NonNullable<FichaRecord>) {
     correctionFactor: stage.vl_fator_correcao?.toFixed(6) ?? "",
     cookingIndex: stage.vl_indice_coccao?.toFixed(6) ?? "",
     notes: stage.ds_observacao ?? "",
-    items: stage.componentes.map((component, index) => ({
-      itemId: component.cd_item_componente,
-      itemName: component.itemComponente.nm_item,
-      componentType: component.tp_componente,
-      quantityUsed: component.vl_qtd_bruta.toFixed(4),
-      quantityGross: component.vl_qtd_bruta.toFixed(4),
-      quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
-      usageUnit: component.unidadeUso.ds_codigo,
-      levelLabel: `N${index + 1}`,
-      correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
-      cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
-      notes: component.ds_observacao ?? ""
-    }))
+    items: stage.componentes.map((component, index) => {
+      const hasCustomWeight = component.vl_fator_correcao !== null || component.vl_indice_coccao !== null;
+      return {
+        itemId: component.cd_item_componente,
+        itemName: component.itemComponente.nm_item,
+        componentType: component.tp_componente,
+        quantityUsed: component.vl_qtd_bruta.toFixed(4),
+        quantityGross: component.vl_qtd_bruta.toFixed(4),
+        quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
+        usageUnit: component.unidadeUso.ds_codigo,
+        levelLabel: `N${index + 1}`,
+        correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
+        cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
+        outputWeight: hasCustomWeight && component.vl_qtd_limpa ? component.vl_qtd_limpa.toFixed(4) : "",
+        notes: component.ds_observacao ?? ""
+      };
+    })
   }));
 
   return explicitStages.length > 0 ? explicitStages : buildFallbackStagesFromComponents(record.componentes);
@@ -1130,6 +1137,24 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
         for (const itemRow of stage.items) {
           const usageUnit = await ensureUnit(tx, itemRow.usageUnit);
           componentOrder += 1;
+
+          let itemCorrectionFactor = null;
+          let itemCookingIndex = null;
+          const qtyGross = Number(itemRow.quantityUsed) || 0;
+          const qtyNet = itemRow.outputWeight ? (Number(itemRow.outputWeight) || qtyGross) : qtyGross;
+
+          if (itemRow.outputWeight) {
+            const outVal = Number(itemRow.outputWeight) || 0;
+            if (qtyGross > 0 && outVal > 0) {
+              const ratio = outVal / qtyGross;
+              if (stage.stageTypeCode === "coccao_preparo") {
+                itemCookingIndex = ratio.toString();
+              } else {
+                itemCorrectionFactor = ratio.toString();
+              }
+            }
+          }
+
           await tx.fichaComponente.create({
             data: {
               cd_ficha_tecnica: ficha.cd_ficha_tecnica,
@@ -1138,10 +1163,10 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
               tp_componente: itemRow.componentType,
               nr_ordem: componentOrder,
               vl_qtd_bruta: itemRow.quantityUsed,
-              vl_qtd_limpa: itemRow.quantityUsed,
+              vl_qtd_limpa: qtyNet.toString(),
               cd_unidade_uso: usageUnit.cd_unidade_medida,
-              vl_fator_correcao: stage.correctionFactor || null,
-              vl_indice_coccao: stage.cookingIndex || null,
+              vl_fator_correcao: itemCorrectionFactor ?? stage.correctionFactor ?? null,
+              vl_indice_coccao: itemCookingIndex ?? stage.cookingIndex ?? null,
               ds_observacao: itemRow.notes || null
             }
           });
@@ -1600,9 +1625,9 @@ function toFichaDetail(ficha: DemoFichaRecord) {
     variableExpensePercent: ficha.variableExpensePercent,
     preparationMode: ficha.preparationMode,
     notes: ficha.notes,
-    createdAt: ficha.updatedAt,
+    createdAt: ficha.createdAt,
     updatedAt: ficha.updatedAt,
-    createdAtLabel: formatDateTimeLabel(ficha.updatedAt),
+    createdAtLabel: formatDateTimeLabel(ficha.createdAt),
     updatedAtLabel: formatDateTimeLabel(ficha.updatedAt),
     usageUnit: getDemoStore().items.find((item) => item.id === ficha.itemId)?.usageUnit ?? "kg",
     yieldUnitCode: ficha.yieldUnitCode,
@@ -1613,14 +1638,18 @@ function toFichaDetail(ficha: DemoFichaRecord) {
       notes: stage.notes ?? "",
       items: ficha.components
         .filter((component) => component.stageId === stage.id)
-        .map((component, index) => ({
-          ...component,
-          quantityUsed: component.quantityUsed || component.quantityGross,
-          levelLabel: `N${index + 1}`,
-          correctionFactor: component.correctionFactor ?? "",
-          cookingIndex: component.cookingIndex ?? "",
-          notes: component.notes ?? ""
-        }))
+        .map((component, index) => {
+          const hasCustomWeight = component.correctionFactor || component.cookingIndex;
+          return {
+            ...component,
+            quantityUsed: component.quantityUsed || component.quantityGross,
+            levelLabel: `N${index + 1}`,
+            correctionFactor: component.correctionFactor ?? "",
+            cookingIndex: component.cookingIndex ?? "",
+            outputWeight: hasCustomWeight && component.quantityNet ? component.quantityNet : "",
+            notes: component.notes ?? ""
+          };
+        })
     })),
     components: ficha.components.map((component) => ({
       ...component,
@@ -1768,25 +1797,45 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
       }));
       const components: DemoComponentRecord[] = input.stages.flatMap((stage, index) => {
         const stageId = stages[index]?.id ?? stage.id ?? createDemoId("stage");
-        return stage.items.map((component) => ({
-          id: createDemoId("cmp"),
-          stageId,
-          itemId: component.itemId,
-          itemName:
-            store.items.find((item) => item.id === component.itemId)?.name ?? component.itemId,
-          componentType: component.componentType,
-          quantityUsed: component.quantityUsed,
-          quantityGross: component.quantityUsed,
-          quantityNet: component.quantityUsed,
-          usageUnit: component.usageUnit,
-          correctionFactor: stage.correctionFactor ?? "",
-          cookingIndex: stage.cookingIndex ?? "",
-          notes: component.notes ?? "",
-          directCost: "0.0000",
-          inheritedCost: "0.0000",
-          totalCost: "0.0000",
-          impactPercent: "0.0000"
-        }));
+        return stage.items.map((component) => {
+          const qtyGross = Number(component.quantityUsed) || 0;
+          const qtyNet = component.outputWeight ? (Number(component.outputWeight) || qtyGross) : qtyGross;
+
+          let itemCorrectionFactor = null;
+          let itemCookingIndex = null;
+
+          if (component.outputWeight) {
+            const outVal = Number(component.outputWeight) || 0;
+            if (qtyGross > 0 && outVal > 0) {
+              const ratio = outVal / qtyGross;
+              if (stage.stageTypeCode === "coccao_preparo") {
+                itemCookingIndex = ratio.toString();
+              } else {
+                itemCorrectionFactor = ratio.toString();
+              }
+            }
+          }
+
+          return {
+            id: createDemoId("cmp"),
+            stageId,
+            itemId: component.itemId,
+            itemName:
+              store.items.find((item) => item.id === component.itemId)?.name ?? component.itemId,
+            componentType: component.componentType,
+            quantityUsed: component.quantityUsed,
+            quantityGross: component.quantityUsed,
+            quantityNet: qtyNet.toString(),
+            usageUnit: component.usageUnit,
+            correctionFactor: itemCorrectionFactor ?? stage.correctionFactor ?? "",
+            cookingIndex: itemCookingIndex ?? stage.cookingIndex ?? "",
+            notes: component.notes ?? "",
+            directCost: "0.0000",
+            inheritedCost: "0.0000",
+            totalCost: "0.0000",
+            impactPercent: "0.0000"
+          };
+        });
       });
 
       const ficha: DemoFichaRecord = {
@@ -1808,7 +1857,8 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         variableExpensePercent: input.variableExpensePercent ?? null,
         preparationMode: input.preparationMode,
         notes: input.notes,
-        updatedAt: "2026-03-13T15:10:00.000Z",
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         stages,
         components,
         expandedRows: [],
@@ -1861,7 +1911,8 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         id: createDemoId("ficha"),
         version: highestVersion + 1,
         status: "rascunho",
-        updatedAt: "2026-03-13T15:05:00.000Z",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         components: duplicateComponents(source.components),
         expandedRows: cloneDemoStore(source.expandedRows)
       };

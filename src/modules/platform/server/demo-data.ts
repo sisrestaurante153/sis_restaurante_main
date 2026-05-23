@@ -156,6 +156,7 @@ export interface DemoFichaRecord {
   variableExpensePercent: string | null;
   preparationMode: string;
   notes: string;
+  createdAt: string;
   updatedAt: string;
   stages: DemoStageRecord[];
   components: DemoComponentRecord[];
@@ -590,6 +591,7 @@ function createInitialDemoStore(): DemoStore {
         variableExpensePercent: null,
         preparationMode: "Refogar, reduzir e resfriar.",
         notes: "Receita de referencia para pratos e marmitas.",
+        createdAt: "2026-03-13T14:12:00.000Z",
         updatedAt: "2026-03-13T14:12:00.000Z",
         stages: [
           {
@@ -698,6 +700,7 @@ function createInitialDemoStore(): DemoStore {
         variableExpensePercent: null,
         preparationMode: "Montagem final em bancada quente.",
         notes: "Versao operacional para salao e take-away.",
+        createdAt: "2026-03-13T14:15:00.000Z",
         updatedAt: "2026-03-13T14:15:00.000Z",
         stages: [
           {

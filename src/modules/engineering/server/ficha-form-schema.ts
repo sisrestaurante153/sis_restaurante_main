@@ -45,7 +45,10 @@ const componentSchema = z.object({
   quantityUsed: nonEmptyString,
   usageUnit: nonEmptyString,
   levelLabel: z.string().trim().optional().transform((value) => value || undefined),
-  notes: z.string().trim().default("")
+  notes: z.string().trim().default(""),
+  outputWeight: z.string().trim().optional(),
+  correctionFactor: z.string().trim().optional(),
+  cookingIndex: z.string().trim().optional()
 });
 
 const stageSchema = z
@@ -136,17 +139,37 @@ function findLastStageOutputQuantity(stages: Array<z.infer<typeof stageSchema>>)
 
 function flattenStageItems(stages: Array<z.infer<typeof stageSchema>>) {
   return stages.flatMap((stage) =>
-    stage.items.map((item) => ({
-      ...item,
-      quantityGross: item.quantityUsed,
-      quantityNet: item.quantityUsed,
-      correctionFactor: stage.correctionFactor,
-      cookingIndex: stage.cookingIndex,
-      stageId: stage.id,
-      stageTypeId: stage.stageTypeId,
-      stageTypeCode: stage.stageTypeCode,
-      stageName: stage.name
-    }))
+    stage.items.map((item) => {
+      const qtyGross = Number(item.quantityUsed) || 0;
+      const qtyNet = item.outputWeight ? (Number(item.outputWeight) || qtyGross) : qtyGross;
+
+      let itemCorrectionFactor = undefined;
+      let itemCookingIndex = undefined;
+
+      if (item.outputWeight) {
+        const outVal = Number(item.outputWeight) || 0;
+        if (qtyGross > 0 && outVal > 0) {
+          const ratio = outVal / qtyGross;
+          if (stage.stageTypeCode === "coccao_preparo") {
+            itemCookingIndex = ratio.toString();
+          } else {
+            itemCorrectionFactor = ratio.toString();
+          }
+        }
+      }
+
+      return {
+        ...item,
+        quantityGross: item.quantityUsed,
+        quantityNet: qtyNet.toString(),
+        correctionFactor: itemCorrectionFactor ?? stage.correctionFactor,
+        cookingIndex: itemCookingIndex ?? stage.cookingIndex,
+        stageId: stage.id,
+        stageTypeId: stage.stageTypeId,
+        stageTypeCode: stage.stageTypeCode,
+        stageName: stage.name
+      };
+    })
   );
 }
 

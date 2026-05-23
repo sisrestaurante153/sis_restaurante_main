@@ -651,8 +651,8 @@ export function ComponentsEditor({
                         />
 
                         {/* Phase 09.2 B2: "+ Adicionar itens" no rodape (padrao consistente com A1). */}
-                        <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-                          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => addAssemblyRow()}>
+                        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                          <Button type="button" variant="contained" startIcon={<AddIcon />} onClick={() => addAssemblyRow()}>
                             Adicionar itens
                           </Button>
                         </Box>
@@ -662,6 +662,7 @@ export function ComponentsEditor({
                 ) : null}
 
                 <Button
+                  type="button"
                   variant={assemblyEnabled ? "text" : "outlined"}
                   onClick={() => setAssemblyEnabled((current) => !current)}
                   sx={{ alignSelf: "stretch" }}

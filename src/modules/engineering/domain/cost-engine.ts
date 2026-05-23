@@ -366,6 +366,8 @@ function cloneGraphWithOverrides(graph: CalculationGraph, overrides: readonly Co
 }
 
 export function calculateItemCost(graph: CalculationGraph, itemId: string): CalculatedItemCost {
+  const edges = buildGraphEdges(graph);
+  buildDependencyClosure(edges);
   return calculateNode(graph, itemId, new Map());
 }
 

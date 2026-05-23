@@ -8,8 +8,10 @@ import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { RefreshCw } from "lucide-react";
+import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { FormSection } from "@/components/ui/FormSection";
+import { ImportFichaModal, normalizeName } from "./ImportFichaModal";
+import type { ImportedFichaData } from "./ImportFichaModal";
 import {
   saveFichaAction,
   type EngineeringFormState
@@ -19,7 +21,7 @@ import {
   type ComponentsEditorSummary,
   type QuadroFinalState
 } from "@/modules/engineering/ui/components-editor";
-import type { FichaStageEditor, StageTypeOption } from "@/modules/engineering/ui/components-editor.types";
+import type { FichaStageEditor, StageTypeOption, ComponentEditorRow } from "@/modules/engineering/ui/components-editor.types";
 import { TotaisIndicadores } from "@/modules/engineering/ui/TotaisIndicadores";
 
 // Bug 1: useFormStatus desativa o botão enquanto a action está pendente (evita duplo clique).
@@ -248,6 +250,110 @@ export function FichaForm({
   );
   const [statusValue, setStatusValue] = useState(initialValues?.status ?? "rascunho");
 
+  // New controlled states for Excel import and full form synchronization
+  const [portions, setPortions] = useState(initialValues?.portions ?? "1.0000");
+  const [preparationMode, setPreparationMode] = useState(initialValues?.preparationMode ?? "");
+  const [notes, setNotes] = useState(initialValues?.notes ?? "");
+  const [currentStages, setCurrentStages] = useState(() => initialValues?.stages ?? []);
+  const [editorKey, setEditorKey] = useState(0);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+
+  const handleImport = (data: ImportedFichaData) => {
+    if (data.productName) {
+      setDisplayName(data.productName);
+    }
+    if (data.yieldValue) {
+      setPortions(data.yieldValue);
+    }
+
+    const matchedItems: ComponentEditorRow[] = data.ingredients.map((ing) => {
+      const match = itemOptions.find(
+        (opt) => normalizeName(opt.name) === ing.normalizedName
+      );
+
+      const componentType = match
+        ? match.type === "embalagem"
+          ? "embalagem"
+          : match.type === "apoio"
+            ? "apoio"
+            : "ingrediente"
+        : "ingrediente";
+
+      const qty = ing.grossWeight ? ing.grossWeight.replace(",", ".") : "1.0000";
+      const out = ing.netWeight ? ing.netWeight.replace(",", ".") : "";
+
+      const stageType = ing.ic
+        ? stageTypeOptions?.find((o) => o.code === "coccao_preparo")
+        : stageTypeOptions?.find((o) => o.code === "limpeza_pre_preparo");
+
+      return {
+        itemId: match ? match.id : "",
+        componentType,
+        quantityUsed: qty,
+        usageUnit: ing.unit || (match ? match.usageUnit : "kg"),
+        levelLabel: "N1",
+        notes: "",
+        outputWeight: out,
+        stageTypeId: stageType?.id,
+        stageTypeCode: stageType?.code,
+        stageTypeLabel: stageType?.label
+      };
+    });
+
+    const firstStageType = stageTypeOptions?.[0];
+    const newStages = [
+      {
+        id: `stage-${Date.now()}`,
+        name: "Etapa 1",
+        stageTypeId: firstStageType?.id ?? "",
+        stageTypeCode: firstStageType?.code ?? "limpeza_pre_preparo",
+        stageTypeLabel: firstStageType?.label ?? "Limpeza / Pre-Preparo",
+        outputQuantity: "",
+        correctionFactor: "",
+        cookingIndex: "",
+        notes: "",
+        items: matchedItems
+      }
+    ];
+
+    if (data.packaging.length > 0) {
+      const matchedPackaging: ComponentEditorRow[] = data.packaging.map((pkg) => {
+        const match = itemOptions.find(
+          (opt) => normalizeName(opt.name) === pkg.normalizedName
+        );
+
+        const qty = pkg.quantity ? pkg.quantity.replace(",", ".") : "1.0000";
+
+        return {
+          itemId: match ? match.id : "",
+          componentType: "embalagem" as const,
+          quantityUsed: qty,
+          usageUnit: pkg.unit || (match ? match.usageUnit : "un"),
+          levelLabel: "N1",
+          notes: ""
+        };
+      });
+
+      const montagemStageType = stageTypeOptions?.find((o) => o.code === "montagem");
+      newStages.push({
+        id: "assembly-stage",
+        name: "Montagem e Descartaveis",
+        stageTypeId: montagemStageType?.id ?? "",
+        stageTypeCode: montagemStageType?.code ?? "montagem",
+        stageTypeLabel: montagemStageType?.label ?? "Montagem",
+        outputQuantity: "",
+        correctionFactor: "",
+        cookingIndex: "",
+        notes: "",
+        items: matchedPackaging
+      });
+    }
+
+    setCurrentStages(newStages);
+    setEditorKey((prev) => prev + 1);
+    setIsDirty(true);
+  };
+
   const formSummary: ComponentsEditorSummary = useMemo(
     () =>
       initialValues?.summary ?? {
@@ -274,7 +380,7 @@ export function FichaForm({
 
   const editorStages = useMemo<FichaStageEditor[] | undefined>(
     () =>
-      initialValues?.stages?.map((stage) => ({
+      currentStages?.map((stage) => ({
         id: stage.id,
         name: stage.name,
         stageTypeId: stage.stageTypeId,
@@ -295,10 +401,11 @@ export function FichaForm({
           quantityUsed: item.quantityUsed,
           usageUnit: item.usageUnit,
           levelLabel: item.levelLabel,
-          notes: item.notes
+          notes: item.notes,
+          outputWeight: (item as { outputWeight?: string }).outputWeight ?? ""
         }))
       })),
-    [initialValues?.stages]
+    [currentStages]
   );
 
   function getFieldError(field: string) {
@@ -329,8 +436,29 @@ export function FichaForm({
 
       {state.message ? <Alert ref={errorAlertRef} severity="error">{state.message}</Alert> : null}
 
-      <input type="hidden" name="portions" value={initialValues?.portions ?? "1.0000"} />
+      <input type="hidden" name="portions" value={portions} />
       <input type="hidden" name="yieldUnitCode" value={yieldUnitCode} />
+
+      {/* Import Spreadsheet Action Bar */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: -2 }}>
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={() => setImportModalOpen(true)}
+          startIcon={<FileSpreadsheet className="w-4 h-4" />}
+          sx={{
+            borderColor: "#D3D1C7",
+            color: "#5F5E5A",
+            "&:hover": {
+              borderColor: "#185FA5",
+              color: "#185FA5",
+              background: "#F4F8FC"
+            }
+          }}
+        >
+          Importar Planilha
+        </Button>
+      </Box>
 
       <FormSection title="Identificacao">
         {/*
@@ -480,6 +608,7 @@ export function FichaForm({
           Estado do Quadro Final fica lifted para que a ordem na UI seja:
           Identificacao -> ComponentsEditor -> Finalizacao -> Quadro Final. */}
       <ComponentsEditor
+        key={`editor-${editorKey}`}
         itemOptions={availableComponentOptions}
         stageTypeOptions={stageTypeOptions}
         unitOptions={unitOptions}
@@ -517,7 +646,8 @@ export function FichaForm({
             }
             name="preparationMode"
             placeholder="Descreva o passo a passo do preparo para o operador de cozinha..."
-            defaultValue={initialValues?.preparationMode ?? ""}
+            value={preparationMode}
+            onChange={(e) => setPreparationMode(e.target.value)}
             error={Boolean(getFieldError("preparationMode"))}
             helperText={getFieldError("preparationMode") ?? " "}
           />
@@ -536,7 +666,8 @@ export function FichaForm({
             }
             name="notes"
             placeholder="Observacoes gerais, alertas ou informacoes complementares..."
-            defaultValue={initialValues?.notes ?? ""}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             error={Boolean(getFieldError("notes"))}
             helperText={getFieldError("notes") ?? " "}
           />
@@ -555,6 +686,12 @@ export function FichaForm({
       <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 1 }}>
         <SubmitButton isDirty={isDirty} />
       </Box>
+
+      <ImportFichaModal
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImport={handleImport}
+      />
 
       {children}
     </Stack>
