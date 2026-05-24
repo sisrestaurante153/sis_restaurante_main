@@ -371,10 +371,10 @@ function CmvHealthBar({
 }) {
   const SCALE_MAX = 60;
   const ZONES = [
-    { label: "Excelente",  desc: "Sua margem está ótima",             from: 0,  to: 30,       color: "#D6F0E0", border: "#8ECFA8", fg: "#0F5A22" },
-    { label: "Saudável",   desc: "Operação equilibrada",              from: 30, to: 35,       color: TOKENS.verdeL, border: TOKENS.verdeB, fg: TOKENS.verde },
-    { label: "Atenção",    desc: "Revise preços ou insumos",          from: 35, to: 40,       color: TOKENS.ambarL, border: "#FAC775", fg: TOKENS.ambar },
-    { label: "Crítico",    desc: "Produto provavelmente no prejuízo", from: 40, to: SCALE_MAX, color: TOKENS.vermL, border: "#F09595", fg: TOKENS.verm },
+    { label: "Excelente",  range: "< 30%",    desc: "Sua margem está ótima",             from: 0,  to: 30,       color: "#D6F0E0", border: "#8ECFA8", fg: "#0F5A22" },
+    { label: "Saudável",   range: "30% a 35%", desc: "Operação equilibrada",              from: 30, to: 35,       color: TOKENS.verdeL, border: TOKENS.verdeB, fg: TOKENS.verde },
+    { label: "Atenção",    range: "35% a 40%", desc: "Revise preços ou insumos",          from: 35, to: 40,       color: TOKENS.ambarL, border: "#FAC775", fg: TOKENS.ambar },
+    { label: "Crítico",    range: "> 40%",    desc: "Produto provavelmente no prejuízo", from: 40, to: SCALE_MAX, color: TOKENS.vermL, border: "#F09595", fg: TOKENS.verm },
   ] as const;
 
   const ratio = cmvHealthPercent ? parseFloat(cmvHealthPercent) : null;
@@ -416,7 +416,7 @@ function CmvHealthBar({
       </Box>
 
       {/* Faixas coloridas + agulha */}
-      <Box sx={{ position: "relative", height: 14, display: "flex", gap: "3px", overflow: "visible" }}>
+      <Box sx={{ position: "relative", height: 14, display: "flex", gap: "3px", overflow: "visible", mb: "4px" }}>
         {ZONES.map((zone) => (
           <Box
             key={zone.label}
@@ -460,8 +460,19 @@ function CmvHealthBar({
         )}
       </Box>
 
+      {/* Nomenclaturas das faixas de porcentagem logo abaixo dos blocos de cores */}
+      <Box sx={{ display: "flex", gap: "3px", mb: "6px", mt: "4px" }}>
+        {ZONES.map((zone) => (
+          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "center" }}>
+            <Typography component="div" sx={{ fontSize: 9, color: TOKENS.text3, fontWeight: 500 }}>
+              {zone.range}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
       {/* Labels das zonas com descrição de ação */}
-      <Box sx={{ display: "flex", gap: "3px", mt: "8px" }}>
+      <Box sx={{ display: "flex", gap: "3px" }}>
         {ZONES.map((zone) => (
           <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "center", px: "2px" }}>
             <Typography component="div" sx={{ fontSize: 10, color: zone.fg, fontWeight: 700, lineHeight: 1.2 }}>
@@ -474,15 +485,8 @@ function CmvHealthBar({
         ))}
       </Box>
 
-      {/* Limites das faixas */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: "4px", px: "1px" }}>
-        {["0%", "30%", "35%", "40%", "60%+"].map((label) => (
-          <Typography key={label} component="span" sx={{ fontSize: 8, color: TOKENS.text3 }}>{label}</Typography>
-        ))}
-      </Box>
-
       {/* Legenda em linguagem simples */}
-      <Typography component="span" sx={{ fontSize: 9, color: TOKENS.text3, display: "block", mt: "8px", textAlign: "center", letterSpacing: "0.02em" }}>
+      <Typography component="span" sx={{ fontSize: 9, color: TOKENS.text3, display: "block", mt: "10px", textAlign: "center", letterSpacing: "0.02em" }}>
         Percentual do custo em relação ao preço de venda
       </Typography>
     </Box>

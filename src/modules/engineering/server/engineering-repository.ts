@@ -189,6 +189,8 @@ function buildFichaIndicators(input: { totalGross: string; totalNet: string; fin
 }
 
 function resolveDemoFichaItem(store: ReturnType<typeof getDemoStore>, input: SaveFichaInput) {
+  const normalizedName = toNormalizedName(input.displayName);
+
   if (input.itemId) {
     const linkedItem = store.items.find((item) => item.id === input.itemId);
 
@@ -196,19 +198,60 @@ function resolveDemoFichaItem(store: ReturnType<typeof getDemoStore>, input: Sav
       throw new Error(`Item ${input.itemId} nao encontrado.`);
     }
 
+    if (linkedItem.normalizedName !== normalizedName) {
+      const targetItem = store.items.find((item) => item.normalizedName === normalizedName);
+      if (targetItem) {
+        if (input.code) {
+          targetItem.code = input.code.trim();
+        }
+        return targetItem;
+      }
+
+      const created: DemoItemRecord = {
+        id: createDemoId("item"),
+        code: input.code?.trim() || `FCH-${String(store.items.length + 1).padStart(3, "0")}`,
+        name: input.displayName.trim(),
+        normalizedName,
+        description: "Item canonico criado automaticamente a partir da ficha tecnica.",
+        type: input.itemType,
+        operationalCategory: input.groupOperational,
+        stockUnit: input.yieldUnitCode,
+        usageUnit: input.yieldUnitCode,
+        purchaseUnit: input.yieldUnitCode,
+        purchaseQuantity: "1.0000",
+        purchaseCost: "0.0000",
+        conversionFactor: "1.0000",
+        supplier: "Cadastro automatico da ficha",
+        active: true,
+        aliases: [],
+        lastCalculationAt: "2026-03-13T15:10:00.000Z",
+        fichaStatus: null,
+        costs: {
+          direct: "0.0000",
+          inherited: "0.0000",
+          packaging: "0.0000",
+          total: "0.0000"
+        }
+      };
+      store.items.unshift(created);
+      return created;
+    }
+
     return linkedItem;
   }
 
-  const normalizedName = toNormalizedName(input.displayName);
   const existing = store.items.find((item) => item.normalizedName === normalizedName);
 
   if (existing) {
+    if (input.code) {
+      existing.code = input.code.trim();
+    }
     return existing;
   }
 
   const created: DemoItemRecord = {
     id: createDemoId("item"),
-    code: `FCH-${String(store.items.length + 1).padStart(3, "0")}`,
+    code: input.code?.trim() || `FCH-${String(store.items.length + 1).padStart(3, "0")}`,
     name: input.displayName.trim(),
     normalizedName,
     description: "Item canonico criado automaticamente a partir da ficha tecnica.",
@@ -421,6 +464,8 @@ async function resolveCanonicalFichaItem(
   input: SaveFichaInput,
   restaurantId: string
 ) {
+  const normalizedName = toNormalizedName(input.displayName);
+
   if (input.itemId) {
     const existing = await tx.item.findUniqueOrThrow({
       where: { cd_item: input.itemId },
@@ -428,6 +473,49 @@ async function resolveCanonicalFichaItem(
         unidadeUsoPadrao: true
       }
     });
+
+    if (existing.nm_normalizado !== normalizedName) {
+      const targetItem = await tx.item.findUnique({
+        where: {
+          nm_normalizado_cd_restaurante: {
+            nm_normalizado: normalizedName,
+            cd_restaurante: restaurantId
+          }
+        },
+        include: {
+          unidadeUsoPadrao: true
+        }
+      });
+
+      if (targetItem) {
+        if (input.code && targetItem.ds_codigo_interno !== input.code.trim()) {
+          return tx.item.update({
+            where: { cd_item: targetItem.cd_item },
+            data: { ds_codigo_interno: input.code.trim() },
+            include: { unidadeUsoPadrao: true }
+          });
+        }
+        return targetItem;
+      }
+
+      const yieldUnit = await ensureUnit(tx, input.yieldUnitCode);
+      return tx.item.create({
+        data: {
+          nm_item: input.displayName.trim(),
+          ds_codigo_interno: input.code?.trim() || null,
+          nm_normalizado: normalizedName,
+          nm_categoria_operacional: input.groupOperational,
+          tp_item: input.itemType,
+          cd_unidade_estoque: yieldUnit.cd_unidade_medida,
+          cd_unidade_uso_padrao: yieldUnit.cd_unidade_medida,
+          cd_restaurante: restaurantId,
+          sn_ativo: true
+        },
+        include: {
+          unidadeUsoPadrao: true
+        }
+      });
+    }
 
     if (input.code && existing.ds_codigo_interno !== input.code.trim()) {
       return tx.item.update({
@@ -440,7 +528,6 @@ async function resolveCanonicalFichaItem(
     return existing;
   }
 
-  const normalizedName = toNormalizedName(input.displayName);
   const existing = await tx.item.findUnique({
     where: {
       nm_normalizado_cd_restaurante: {
@@ -1100,6 +1187,8 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
         ? await tx.fichaTecnica.update({
             where: { cd_ficha_tecnica: existing.cd_ficha_tecnica },
             data: {
+              cd_item_resultante: item.cd_item,
+              nr_versao: existing.cd_item_resultante === item.cd_item ? existing.nr_versao : (highestVersion._max.nr_versao ?? 0) + 1,
               cd_restaurante: restaurantId,
               cd_modalidade: modality.cd_modalidade,
               nm_exibicao: input.displayName.trim(),
@@ -1842,7 +1931,9 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
       const highestVersion = store.fichas
         .filter((entry) => entry.itemId === linkedItem.id)
         .reduce((maxVersion, entry) => Math.max(maxVersion, entry.version), 0);
-      const version = existing ? existing.version : highestVersion + 1;
+      const version = existing
+        ? (existing.itemId === linkedItem.id ? existing.version : highestVersion + 1)
+        : highestVersion + 1;
       const stages: DemoStageRecord[] = input.stages.map((stage, index) => ({
         id: stage.id ?? createDemoId("stage"),
         name: normalizeStageName(stage.name, index + 1),

@@ -55,8 +55,11 @@ const UNIT_ALIASES: Record<string, string> = {
   mililitro: "ml",
   un: "un",
   und: "un",
+  unid: "un",
   unidade: "un",
   unidades: "un",
+  porcao: "un",
+  porcoes: "un",
   maco: "maço",
   maço: "maço",
 };
@@ -90,6 +93,57 @@ function extractLabelValue(rows: unknown[][], label: string): unknown {
         return row[index + 1];
       }
     }
+  }
+  return null;
+}
+
+// Returns `count` consecutive values that follow the matching label cell.
+function extractLabelValues(rows: unknown[][], label: string, count: number): unknown[] {
+  const wanted = normalizeHeader(label);
+  for (const row of rows) {
+    if (!row) continue;
+    for (let index = 0; index < row.length; index++) {
+      if (normalizeHeader(row[index]) === wanted) {
+        return Array.from({ length: count }, (_, i) => row[index + 1 + i]);
+      }
+    }
+  }
+  return [];
+}
+
+// Strips a leading number from a cell value when the unit is written as
+// "90 unid" — takes only the text part for alias lookup.
+function extractUnitFromCell(raw: unknown): string {
+  const text = normalizeName(raw);
+  const unitOnly = text.replace(/^[\d\s,.]+/, "").trim();
+  return UNIT_ALIASES[unitOnly] ?? (unitOnly || "kg");
+}
+
+// Tries several label variants for the "Rendimento" row and returns the
+// post-cooking weight (column after the label) and its unit (column after that).
+// Returns null if the row is absent or the weight value is not a valid number.
+function extractPostCookingData(rows: unknown[][]): { outputWeight: string; unit: string } | null {
+  const RENDIMENTO_LABELS = [
+    "rendimento em porcoes",
+    "rendimento em porcao",
+    "rendimento em procoes",
+    "rendimento",
+  ];
+
+  for (const label of RENDIMENTO_LABELS) {
+    const vals = extractLabelValues(rows, label, 2);
+    if (!vals.length) continue;
+
+    const [weightRaw, unitRaw] = vals;
+    const weightNum = parseFloat(String(weightRaw ?? "").replace(",", "."));
+    if (!isNaN(weightNum) && weightNum > 0) {
+      return {
+        outputWeight: weightNum.toFixed(4),
+        unit: extractUnitFromCell(unitRaw),
+      };
+    }
+    // label found but weight invalid → stop trying other variants
+    break;
   }
   return null;
 }
@@ -263,11 +317,17 @@ export interface MatchedPackagingItem {
   unit: string;
 }
 
+export interface MatchedCoccaoFinal {
+  outputWeight: string;
+  unit: string;
+}
+
 export interface MatchedImportData {
   productName: string;
   yieldValue: string;
   ingredients: MatchedIngredient[];
   packaging: MatchedPackagingItem[];
+  coccaoFinal: MatchedCoccaoFinal | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -387,6 +447,8 @@ export function ImportFichaModal({ open, onClose, onImport, itemOptions }: Impor
         }
       }
 
+      const coccaoFinal = extractPostCookingData(rows);
+
       const { index: headerIndex, columns } = findIngredientHeader(rows);
       const { ingredients, packaging } = parseIngredientRows(rows, headerIndex, columns);
 
@@ -444,6 +506,7 @@ export function ImportFichaModal({ open, onClose, onImport, itemOptions }: Impor
         yieldValue: yieldValueStr,
         ingredients: matchedIngredients,
         packaging: matchedPackaging,
+        coccaoFinal,
       });
       setStep("review");
     } catch (err: unknown) {
@@ -692,6 +755,29 @@ export function ImportFichaModal({ open, onClose, onImport, itemOptions }: Impor
                 </Box>
               ))}
             </Box>
+
+            {matchedData.coccaoFinal && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mt: 1.5,
+                  p: "8px 12px",
+                  borderRadius: "6px",
+                  bgcolor: "#EAF3DE",
+                  border: "0.5px solid #B5D9A4"
+                }}
+              >
+                <CheckCircle2 size={13} style={{ color: "#1B6B2C", flexShrink: 0 }} />
+                <Typography variant="caption" sx={{ color: "#1B6B2C", fontWeight: 600 }}>
+                  Coccão Final detectada:
+                </Typography>
+                <Typography variant="caption" sx={{ color: "#27500A" }}>
+                  {matchedData.coccaoFinal.outputWeight.replace(".", ",")} {matchedData.coccaoFinal.unit}
+                </Typography>
+              </Box>
+            )}
 
             {unmatchedCount > 0 && (
               <Typography variant="caption" sx={{ display: "block", mt: 1.5, color: "#5F5E5A" }}>

@@ -335,6 +335,25 @@ export function FichaForm({
       };
     });
 
+    // Append the CoccaoFinal row when the spreadsheet contained a valid
+    // "Rendimento em porções" entry (post-cooking weight + unit).
+    if (data.coccaoFinal) {
+      const coccaoStageType = stageTypeOptions?.find((o) => o.code === "coccao_preparo");
+      matchedItems.push({
+        itemId: "",
+        componentType: "ingrediente",
+        quantityUsed: "1.0000",
+        usageUnit: data.coccaoFinal.unit,
+        levelLabel: `N${matchedItems.length + 1}`,
+        notes: "",
+        outputWeight: data.coccaoFinal.outputWeight,
+        stageTypeId: coccaoStageType?.id,
+        stageTypeCode: coccaoStageType?.code ?? "coccao_preparo",
+        stageTypeLabel: coccaoStageType?.label ?? "Coccão / Preparo",
+        isCoccaoFinal: true
+      });
+    }
+
     const firstStageType = stageTypeOptions?.[0];
     const newStages = [
       {

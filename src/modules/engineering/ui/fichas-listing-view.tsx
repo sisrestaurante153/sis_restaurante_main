@@ -479,12 +479,15 @@ export function FichasListingView({
                   const groupLabel = row.groupOperational ?? "Sem grupo";
 
                   return (
-                    <tr
+                    <Link
                       key={row.id}
-                      onClick={() => router.push(`/fichas/${row.id}` as never)}
+                      href={`/fichas/${row.id}`}
                       style={{
+                        display: "table-row",
                         borderBottom: `0.5px solid ${BORDER}`,
-                        cursor: "pointer"
+                        cursor: "pointer",
+                        textDecoration: "none",
+                        color: "inherit"
                       }}
                       onMouseEnter={(event) => {
                         event.currentTarget.style.background = "#F7F7F5";
@@ -495,7 +498,7 @@ export function FichasListingView({
                     >
                       <td style={cellStyle}>
                         <span style={{ fontSize: 11, color: TEXT_3 }}>
-                          {row.code && row.code.trim() !== "" ? row.code : "--"}
+                           {row.code && row.code.trim() !== "" ? row.code : "--"}
                         </span>
                       </td>
                       <td style={cellStyle}>
@@ -636,7 +639,7 @@ export function FichasListingView({
                           <span style={{ color: TEXT_3 }}>—</span>
                         )}
                       </td>
-                    </tr>
+                    </Link>
                   );
                 })
               )}
