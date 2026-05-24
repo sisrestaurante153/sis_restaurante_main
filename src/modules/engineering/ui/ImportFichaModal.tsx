@@ -10,16 +10,19 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
+import LinearProgress from "@mui/material/LinearProgress";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Grow from "@mui/material/Grow";
-import { FileSpreadsheet, Upload, CheckCircle2 } from "lucide-react";
+import { FileSpreadsheet, Upload, CheckCircle2, AlertCircle, CheckCheck } from "lucide-react";
 
-// Normalization helpers matching Python 1:1
+// ---------------------------------------------------------------------------
+// Normalization helpers (exported so ficha-form can use the same logic)
+// ---------------------------------------------------------------------------
 function stripAccents(value: string): string {
-  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  return value.normalize("NFKD").replace(/[̀-ͯ]/g, "");
 }
 
 export function normalizeName(value: unknown): string {
@@ -60,10 +63,16 @@ const UNIT_ALIASES: Record<string, string> = {
 
 function normalizeUnit(value: unknown): string {
   const normalized = normalizeName(value);
-  if (!normalized) return "kg"; // default fallback
+  if (!normalized) return "kg";
   return UNIT_ALIASES[normalized] ?? normalized;
 }
 
+// ---------------------------------------------------------------------------
+// FIX: SUMMARY_MARKERS are now SKIPPED (continue) instead of stopping the
+// loop (break). Previously a "Peso Total Bruto" row appearing mid-table (e.g.
+// as a sub-total right after "Sal refinado") would stop all subsequent
+// ingredient processing. The new stop condition uses 5+ consecutive empty rows.
+// ---------------------------------------------------------------------------
 const SUMMARY_MARKERS = new Set([
   "peso total bruto",
   "peso total limpo",
@@ -105,6 +114,9 @@ function findIngredientHeader(rows: unknown[][]): { index: number; columns: Reco
   throw new Error("Tabela de ingredientes (cabeçalho 'Ingredientes') não foi encontrada nesta aba.");
 }
 
+// ---------------------------------------------------------------------------
+// Private types for raw Excel parsing
+// ---------------------------------------------------------------------------
 interface ExcelIngredient {
   rawName: string;
   normalizedName: string;
@@ -126,11 +138,12 @@ function parseIngredientRows(
   rows: unknown[][],
   headerIndex: number,
   columns: Record<string, number>
-) {
+): { ingredients: ExcelIngredient[]; packaging: ExcelPackaging[] } {
   const ingredients: ExcelIngredient[] = [];
   const packaging: ExcelPackaging[] = [];
   let inPackagingSection = false;
   let packagingColumns: Record<string, number> | null = null;
+  let consecutiveEmpty = 0;
 
   for (let idx = headerIndex + 1; idx < rows.length; idx++) {
     const row = rows[idx];
@@ -139,11 +152,13 @@ function parseIngredientRows(
     const ingredientNameVal = row[columns["ingredientes"] ?? 0];
     const normalizedName = normalizeName(ingredientNameVal);
 
+    // FIX: skip summary/total rows instead of breaking — a mid-table total row
+    // would previously stop all processing of subsequent ingredients.
     if (SUMMARY_MARKERS.has(normalizedName)) {
-      break;
+      continue;
     }
 
-    const isPackagingMarker = row.some(val => 
+    const isPackagingMarker = row.some(val =>
       typeof val === "string" && normalizeName(val).includes("embalagens somente restaurante delivery")
     );
 
@@ -158,7 +173,7 @@ function parseIngredientRows(
         packagingColumns = {};
         normalizedRow.forEach((val, colIdx) => {
           if (val) {
-            packagingColumns![val] = colIdx;
+            (packagingColumns as Record<string, number>)[val] = colIdx;
           }
         });
         continue;
@@ -185,8 +200,13 @@ function parseIngredientRows(
     }
 
     if (!ingredientNameVal) {
+      consecutiveEmpty++;
+      // FIX: 5 consecutive empty rows signal end-of-table without relying on
+      // SUMMARY_MARKERS (which may appear in the middle of the spreadsheet).
+      if (consecutiveEmpty >= 5) break;
       continue;
     }
+    consecutiveEmpty = 0;
 
     const grossWeight = columns["peso bruto"] !== undefined ? row[columns["peso bruto"]] : null;
     const netWeight = columns["peso limpo"] !== undefined ? row[columns["peso limpo"]] : null;
@@ -208,25 +228,85 @@ function parseIngredientRows(
   return { ingredients, packaging };
 }
 
-export interface ImportedFichaData {
+// ---------------------------------------------------------------------------
+// Public exported types
+// ---------------------------------------------------------------------------
+export interface ItemOptionForMatch {
+  id: string;
+  name: string;
+  type: string;
+  usageUnit: string;
+}
+
+export interface MatchedIngredient {
+  rawName: string;
+  normalizedName: string;
+  itemId: string;
+  itemType: string;
+  itemUsageUnit: string;
+  matched: boolean;
+  grossWeight: string;
+  netWeight: string;
+  unit: string;
+  fc: string;
+  ic: string;
+}
+
+export interface MatchedPackagingItem {
+  rawName: string;
+  normalizedName: string;
+  itemId: string;
+  itemType: string;
+  itemUsageUnit: string;
+  matched: boolean;
+  quantity: string;
+  unit: string;
+}
+
+export interface MatchedImportData {
   productName: string;
   yieldValue: string;
-  ingredients: ExcelIngredient[];
-  packaging: ExcelPackaging[];
+  ingredients: MatchedIngredient[];
+  packaging: MatchedPackagingItem[];
 }
+
+// ---------------------------------------------------------------------------
+// Modal
+// ---------------------------------------------------------------------------
+type Step = "idle" | "processing" | "review";
 
 interface ImportFichaModalProps {
   open: boolean;
   onClose: () => void;
-  onImport: (data: ImportedFichaData) => void;
+  onImport: (data: MatchedImportData) => void;
+  itemOptions: ItemOptionForMatch[];
 }
 
-export function ImportFichaModal({ open, onClose, onImport }: ImportFichaModalProps) {
+export function ImportFichaModal({ open, onClose, onImport, itemOptions }: ImportFichaModalProps) {
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>("idle");
+  const [progress, setProgress] = useState({ current: 0, total: 1, name: "" });
+  const [matchedData, setMatchedData] = useState<MatchedImportData | null>(null);
+
+  function resetState() {
+    setWorkbook(null);
+    setSheetNames([]);
+    setSelectedSheet("");
+    setFileName("");
+    setError(null);
+    setStep("idle");
+    setProgress({ current: 0, total: 1, name: "" });
+    setMatchedData(null);
+  }
+
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -268,14 +348,20 @@ export function ImportFichaModal({ open, onClose, onImport }: ImportFichaModalPr
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!workbook || !selectedSheet) return;
+
+    setError(null);
+    setStep("processing");
+    setProgress({ current: 0, total: 1, name: "Analisando planilha..." });
+
+    // Yield one frame so the loading UI renders before synchronous parsing begins
+    await new Promise<void>(r => setTimeout(r, 30));
 
     try {
       const worksheet = workbook.Sheets[selectedSheet];
       if (!worksheet) {
-        setError(`Aba "${selectedSheet}" não encontrada no arquivo.`);
-        return;
+        throw new Error(`Aba "${selectedSheet}" não encontrada no arquivo.`);
       }
 
       const rows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
@@ -287,10 +373,11 @@ export function ImportFichaModal({ open, onClose, onImport }: ImportFichaModalPr
         selectedSheet
       ).trim();
 
-      const yieldVal = extractLabelValue(rows, "Rendimento em proções") ||
-                       extractLabelValue(rows, "Rendimento em porções") ||
-                       extractLabelValue(rows, "Rendimento") ||
-                       "1.0000";
+      const yieldVal =
+        extractLabelValue(rows, "Rendimento em proções") ||
+        extractLabelValue(rows, "Rendimento em porções") ||
+        extractLabelValue(rows, "Rendimento") ||
+        "1.0000";
 
       let yieldValueStr = "1.0000";
       if (yieldVal !== null && yieldVal !== undefined) {
@@ -303,105 +390,334 @@ export function ImportFichaModal({ open, onClose, onImport }: ImportFichaModalPr
       const { index: headerIndex, columns } = findIngredientHeader(rows);
       const { ingredients, packaging } = parseIngredientRows(rows, headerIndex, columns);
 
-      onImport({
+      const total = ingredients.length + packaging.length || 1;
+
+      // -----------------------------------------------------------------------
+      // Async match loop — yields to the UI every 10 items so the browser stays
+      // responsive and the progress text updates are visible.
+      // -----------------------------------------------------------------------
+      const matchedIngredients: MatchedIngredient[] = [];
+      for (let i = 0; i < ingredients.length; i++) {
+        const ing = ingredients[i];
+        setProgress({ current: i + 1, total, name: ing.rawName });
+        if (i % 10 === 0) {
+          await new Promise<void>(r => setTimeout(r, 0));
+        }
+        const match = itemOptions.find(opt => normalizeName(opt.name) === ing.normalizedName);
+        matchedIngredients.push({
+          rawName: ing.rawName,
+          normalizedName: ing.normalizedName,
+          itemId: match?.id ?? "",
+          itemType: match?.type ?? "",
+          itemUsageUnit: match?.usageUnit ?? "",
+          matched: !!match,
+          grossWeight: ing.grossWeight,
+          netWeight: ing.netWeight,
+          unit: ing.unit || (match?.usageUnit ?? "kg"),
+          fc: ing.fc,
+          ic: ing.ic,
+        });
+      }
+
+      const matchedPackaging: MatchedPackagingItem[] = [];
+      for (let i = 0; i < packaging.length; i++) {
+        const pkg = packaging[i];
+        setProgress({ current: ingredients.length + i + 1, total, name: pkg.rawName });
+        if (i % 10 === 0) {
+          await new Promise<void>(r => setTimeout(r, 0));
+        }
+        const match = itemOptions.find(opt => normalizeName(opt.name) === pkg.normalizedName);
+        matchedPackaging.push({
+          rawName: pkg.rawName,
+          normalizedName: pkg.normalizedName,
+          itemId: match?.id ?? "",
+          itemType: match?.type ?? "",
+          itemUsageUnit: match?.usageUnit ?? "",
+          matched: !!match,
+          quantity: pkg.quantity,
+          unit: pkg.unit || (match?.usageUnit ?? "un"),
+        });
+      }
+
+      setMatchedData({
         productName,
         yieldValue: yieldValueStr,
-        ingredients,
-        packaging
+        ingredients: matchedIngredients,
+        packaging: matchedPackaging,
       });
-      onClose();
+      setStep("review");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || "Erro ao processar a planilha. Verifique a formatação da aba.");
+      setStep("idle");
     }
   };
+
+  const handleImportConfirm = () => {
+    if (!matchedData) return;
+    onImport(matchedData);
+    handleClose();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
+  const progressPct = Math.round((progress.current / Math.max(progress.total, 1)) * 100);
+
+  const unmatchedCount =
+    (matchedData?.ingredients.filter(i => !i.matched).length ?? 0) +
+    (matchedData?.packaging.filter(p => !p.matched).length ?? 0);
+  const totalCount =
+    (matchedData?.ingredients.length ?? 0) + (matchedData?.packaging.length ?? 0);
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={step === "processing" ? undefined : handleClose}
       maxWidth="sm"
       fullWidth
-      TransitionComponent={Grow}
+      slots={{ transition: Grow }}
     >
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, pb: 1 }}>
-        <FileSpreadsheet className="text-emerald-600 w-6 h-6" />
+        <FileSpreadsheet size={22} style={{ color: "#1B6B2C", flexShrink: 0 }} />
         <Typography variant="h6" fontWeight={700}>
-          Importar Ficha de Planilha
+          {step === "review" ? "Resultado da importação" : "Importar Ficha de Planilha"}
         </Typography>
       </DialogTitle>
-      <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Selecione um arquivo Excel contendo as fichas técnicas. O sistema lerá as abas e preencherá automaticamente as informações da ficha correspondente.
-        </Typography>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Box sx={{ mb: 3 }}>
-          <Button
-            component="label"
-            variant="contained"
-            startIcon={<Upload />}
-            sx={{
-              backgroundColor: "#185FA5",
-              "&:hover": { backgroundColor: "#0C447C" }
-            }}
-          >
-            Selecionar Arquivo .xlsx
-            <input
-              type="file"
-              hidden
-              accept=".xlsx,.xls"
-              onChange={handleFileUpload}
-            />
-          </Button>
-          {fileName && (
-            <Typography variant="body2" sx={{ mt: 1, fontWeight: 500, color: "text.primary" }}>
-              Arquivo: {fileName}
+      {/* ------------------------------------------------------------------ */}
+      {/* STEP: idle — file picker + sheet selector                           */}
+      {/* ------------------------------------------------------------------ */}
+      {step === "idle" && (
+        <>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Selecione um arquivo Excel contendo as fichas técnicas. O sistema lerá as abas e preencherá automaticamente as informações da ficha correspondente.
             </Typography>
-          )}
-        </Box>
 
-        {sheetNames.length > 0 && (
-          <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-            <InputLabel id="select-sheet-label">Selecione a Aba (Receita)</InputLabel>
-            <Select
-              labelId="select-sheet-label"
-              value={selectedSheet}
-              label="Selecione a Aba (Receita)"
-              onChange={(e) => setSelectedSheet(e.target.value)}
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
+
+            <Box sx={{ mb: 3 }}>
+              <Button
+                component="label"
+                variant="contained"
+                startIcon={<Upload size={16} />}
+                sx={{
+                  backgroundColor: "#185FA5",
+                  "&:hover": { backgroundColor: "#0C447C" }
+                }}
+              >
+                Selecionar Arquivo .xlsx
+                <input
+                  type="file"
+                  hidden
+                  accept=".xlsx,.xls"
+                  onChange={handleFileUpload}
+                />
+              </Button>
+              {fileName && (
+                <Typography variant="body2" sx={{ mt: 1, fontWeight: 500, color: "text.primary" }}>
+                  Arquivo: {fileName}
+                </Typography>
+              )}
+            </Box>
+
+            {sheetNames.length > 0 && (
+              <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                <InputLabel id="select-sheet-label">Selecione a Aba (Receita)</InputLabel>
+                <Select
+                  labelId="select-sheet-label"
+                  value={selectedSheet}
+                  label="Selecione a Aba (Receita)"
+                  onChange={(e) => setSelectedSheet(e.target.value)}
+                >
+                  {sheetNames.map((name) => (
+                    <MenuItem key={name} value={name}>
+                      {name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button variant="outlined" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              disabled={!workbook || !selectedSheet}
+              onClick={handleConfirm}
+              startIcon={<CheckCircle2 size={16} />}
+              sx={{
+                backgroundColor: "#1B6B2C",
+                "&:hover": { backgroundColor: "#124B1E" },
+                "&.Mui-disabled": { backgroundColor: "#E2E8F0" }
+              }}
             >
-              {sheetNames.map((name) => (
-                <MenuItem key={name} value={name}>
-                  {name}
-                </MenuItem>
+              Preencher Ficha
+            </Button>
+          </DialogActions>
+        </>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* STEP: processing — async match with per-ingredient progress          */}
+      {/* ------------------------------------------------------------------ */}
+      {step === "processing" && (
+        <DialogContent>
+          <Box sx={{ py: 2 }}>
+            <Typography variant="body2" sx={{ mb: 1, color: "#5F5E5A", fontWeight: 500 }}>
+              {progress.current === 0
+                ? "Analisando planilha..."
+                : `Processando ingrediente ${progress.current} de ${progress.total}`}
+            </Typography>
+
+            {progress.name && progress.current > 0 && (
+              <Typography
+                variant="body2"
+                sx={{
+                  mb: 2,
+                  color: "#185FA5",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {progress.name}
+              </Typography>
+            )}
+
+            <LinearProgress
+              variant={progress.current === 0 ? "indeterminate" : "determinate"}
+              value={progressPct}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: "#E8E6DC",
+                "& .MuiLinearProgress-bar": { bgcolor: "#185FA5", borderRadius: 3 }
+              }}
+            />
+
+            <Typography variant="caption" sx={{ mt: 1, display: "block", color: "#888780" }}>
+              Por favor, aguarde. Isso pode levar alguns segundos para fichas com muitos ingredientes.
+            </Typography>
+          </Box>
+        </DialogContent>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* STEP: review — summary of matched / unmatched items                 */}
+      {/* ------------------------------------------------------------------ */}
+      {step === "review" && matchedData && (
+        <>
+          <DialogContent>
+            {/* Summary header */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                mb: 2,
+                p: "10px 14px",
+                borderRadius: "8px",
+                bgcolor: unmatchedCount === 0 ? "#EAF3DE" : "#FFF8E6",
+                border: `0.5px solid ${unmatchedCount === 0 ? "#B5D9A4" : "#F5C842"}`
+              }}
+            >
+              {unmatchedCount === 0 ? (
+                <CheckCheck size={18} style={{ color: "#1B6B2C", flexShrink: 0 }} />
+              ) : (
+                <AlertCircle size={18} style={{ color: "#854F0B", flexShrink: 0 }} />
+              )}
+              <Typography variant="body2" fontWeight={600} sx={{ color: unmatchedCount === 0 ? "#1B6B2C" : "#854F0B" }}>
+                {unmatchedCount === 0
+                  ? `${totalCount} ingrediente${totalCount !== 1 ? "s" : ""} encontrado${totalCount !== 1 ? "s" : ""} no catálogo`
+                  : `${totalCount - unmatchedCount} de ${totalCount} encontrado${totalCount - unmatchedCount !== 1 ? "s" : ""} — ${unmatchedCount} não localizado${unmatchedCount !== 1 ? "s" : ""}`}
+              </Typography>
+            </Box>
+
+            {/* Ingredient list */}
+            <Box
+              sx={{
+                maxHeight: 300,
+                overflowY: "auto",
+                border: "0.5px solid #D3D1C7",
+                borderRadius: "8px",
+                "& > *:not(:last-child)": { borderBottom: "0.5px solid #ECEAE0" }
+              }}
+            >
+              {[...matchedData.ingredients, ...matchedData.packaging].map((item, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    px: 1.5,
+                    py: "6px",
+                    bgcolor: item.matched ? "transparent" : "#FFF5F5"
+                  }}
+                >
+                  {item.matched ? (
+                    <CheckCircle2 size={14} style={{ color: "#1B6B2C", flexShrink: 0 }} />
+                  ) : (
+                    <AlertCircle size={14} style={{ color: "#A32D2D", flexShrink: 0 }} />
+                  )}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: 12,
+                      color: item.matched ? "#2C2C2A" : "#A32D2D",
+                      fontWeight: item.matched ? 400 : 600,
+                      flex: 1,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {item.rawName}
+                  </Typography>
+                  {!item.matched && (
+                    <Typography variant="caption" sx={{ fontSize: 10, color: "#A32D2D", flexShrink: 0 }}>
+                      não encontrado
+                    </Typography>
+                  )}
+                </Box>
               ))}
-            </Select>
-          </FormControl>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button variant="outlined" onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button
-          variant="contained"
-          disabled={!workbook || !selectedSheet}
-          onClick={handleConfirm}
-          startIcon={<CheckCircle2 className="w-4 h-4" />}
-          sx={{
-            backgroundColor: "#1B6B2C",
-            "&:hover": { backgroundColor: "#124B1E" },
-            "&.Mui-disabled": { backgroundColor: "#E2E8F0" }
-          }}
-        >
-          Preencher Ficha
-        </Button>
-      </DialogActions>
+            </Box>
+
+            {unmatchedCount > 0 && (
+              <Typography variant="caption" sx={{ display: "block", mt: 1.5, color: "#5F5E5A" }}>
+                Itens não encontrados serão adicionados em vermelho na ficha. Você pode selecionar o item correto manualmente após importar.
+              </Typography>
+            )}
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button variant="outlined" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleImportConfirm}
+              startIcon={<CheckCheck size={16} />}
+              sx={{
+                backgroundColor: "#1B6B2C",
+                "&:hover": { backgroundColor: "#124B1E" }
+              }}
+            >
+              {unmatchedCount === 0 ? "Importar" : "Importar mesmo assim"}
+            </Button>
+          </DialogActions>
+        </>
+      )}
     </Dialog>
   );
 }

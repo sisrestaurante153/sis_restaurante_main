@@ -11,8 +11,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { FormSection } from "@/components/ui/FormSection";
-import { ImportFichaModal, normalizeName } from "./ImportFichaModal";
-import type { ImportedFichaData } from "./ImportFichaModal";
+import { ImportFichaModal } from "./ImportFichaModal";
+import type { MatchedImportData } from "./ImportFichaModal";
 import {
   saveFichaAction,
   autoSaveFichaAction,
@@ -297,7 +297,7 @@ export function FichaForm({
   const [editorKey, setEditorKey] = useState(0);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
-  const handleImport = (data: ImportedFichaData) => {
+  const handleImport = (data: MatchedImportData) => {
     if (data.productName) {
       setDisplayName(data.productName);
     }
@@ -306,14 +306,10 @@ export function FichaForm({
     }
 
     const matchedItems: ComponentEditorRow[] = data.ingredients.map((ing) => {
-      const match = itemOptions.find(
-        (opt) => normalizeName(opt.name) === ing.normalizedName
-      );
-
-      const componentType = match
-        ? match.type === "embalagem"
+      const componentType = ing.matched
+        ? ing.itemType === "embalagem"
           ? "embalagem"
-          : match.type === "apoio"
+          : ing.itemType === "apoio"
             ? "apoio"
             : "ingrediente"
         : "ingrediente";
@@ -326,10 +322,10 @@ export function FichaForm({
         : stageTypeOptions?.find((o) => o.code === "limpeza_pre_preparo");
 
       return {
-        itemId: match ? match.id : "",
+        itemId: ing.itemId,
         componentType,
         quantityUsed: qty,
-        usageUnit: ing.unit || (match ? match.usageUnit : "kg"),
+        usageUnit: ing.unit,
         levelLabel: "N1",
         notes: "",
         outputWeight: out,
@@ -356,22 +352,14 @@ export function FichaForm({
     ];
 
     if (data.packaging.length > 0) {
-      const matchedPackaging: ComponentEditorRow[] = data.packaging.map((pkg) => {
-        const match = itemOptions.find(
-          (opt) => normalizeName(opt.name) === pkg.normalizedName
-        );
-
-        const qty = pkg.quantity ? pkg.quantity.replace(",", ".") : "1.0000";
-
-        return {
-          itemId: match ? match.id : "",
-          componentType: "embalagem" as const,
-          quantityUsed: qty,
-          usageUnit: pkg.unit || (match ? match.usageUnit : "un"),
-          levelLabel: "N1",
-          notes: ""
-        };
-      });
+      const matchedPackaging: ComponentEditorRow[] = data.packaging.map((pkg) => ({
+        itemId: pkg.itemId,
+        componentType: "embalagem" as const,
+        quantityUsed: pkg.quantity ? pkg.quantity.replace(",", ".") : "1.0000",
+        usageUnit: pkg.unit,
+        levelLabel: "N1",
+        notes: ""
+      }));
 
       const montagemStageType = stageTypeOptions?.find((o) => o.code === "montagem");
       newStages.push({
@@ -749,6 +737,7 @@ export function FichaForm({
         open={importModalOpen}
         onClose={() => setImportModalOpen(false)}
         onImport={handleImport}
+        itemOptions={itemOptions}
       />
 
       {children}
