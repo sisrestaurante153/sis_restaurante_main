@@ -422,7 +422,13 @@ export function getMasterDataRepository() {
     },
 
     async listStageTypes() {
-      return (await listStageTypesWithPrisma()) ?? listStageTypesFromDemo();
+      const rows = (await listStageTypesWithPrisma()) ?? listStageTypesFromDemo();
+      const ORDER: Record<string, number> = { limpeza_pre_preparo: 0, coccao_preparo: 1 };
+      return rows.slice().sort((a, b) => {
+        const oa = ORDER[a.code] ?? 99;
+        const ob = ORDER[b.code] ?? 99;
+        return oa !== ob ? oa - ob : a.name.localeCompare(b.name);
+      });
     },
 
     async getItemFormOptions() {
