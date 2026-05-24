@@ -628,6 +628,18 @@ export function FichaFlatGrid({
                       placeholder="Qtde Final"
                       value={row.outputWeight ?? ""}
                       onChange={(value) => onUpdateRow(index, { outputWeight: value })}
+                      onBlur={(event) => {
+                        const raw = event.target.value.replace(",", ".");
+                        const num = parseFloat(raw);
+                        if (!raw.trim() || isNaN(num) || num === 0) {
+                          onUpdateRow(index, {
+                            stageTypeId: undefined,
+                            stageTypeCode: undefined,
+                            stageTypeLabel: undefined,
+                            outputWeight: ""
+                          });
+                        }
+                      }}
                     />
                     {/* Quick 20260424 fase2 #5 rev3: hint embaixo do Peso volta pra
                         spacer invisivel — o calculo agora vive na coluna FC/IC dedicada. */}

@@ -269,9 +269,15 @@ export function ComponentsEditor({
     // Ajuste 2: remover silenciosamente linhas sem item E com qtde zerada/vazia
     // antes de serializar. Linhas sem item mas com qtde > 0 permanecem e geram
     // erro no servidor (visualmente destacadas pelo showRowErrors).
-    const rowsForSerialization = deferredFlatRows.filter(
-      (row) => row.isCoccaoFinal || row.itemId || Number(row.quantityUsed || "0") > 0
-    );
+    const rowsForSerialization = deferredFlatRows
+      .filter((row) => row.isCoccaoFinal || row.itemId || Number(row.quantityUsed || "0") > 0)
+      .map((row) => {
+        // Etapa intermediária sem peso preenchido → remove a etapa silenciosamente.
+        if (!row.isCoccaoFinal && row.stageTypeCode && (!row.outputWeight || Number(row.outputWeight) === 0)) {
+          return { ...row, stageTypeId: undefined, stageTypeCode: undefined, stageTypeLabel: undefined, outputWeight: "" };
+        }
+        return row;
+      });
     const { stages } = groupRowsToStages(rowsForSerialization, stageTypeOptions);
     return stages.map((stage) => {
       const metrics = computeStageMetrics(stage, itemOptions);
