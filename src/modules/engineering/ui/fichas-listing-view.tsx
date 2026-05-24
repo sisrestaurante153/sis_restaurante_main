@@ -34,6 +34,8 @@ interface FichaListRow {
   notes?: string;
 }
 
+type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "sellingPrice" | "updatedAt" | "status";
+
 interface FichasListingViewProps {
   items: FichaListRow[];
   page: number;
@@ -41,7 +43,11 @@ interface FichasListingViewProps {
   totalCount: number;
   query: string;
   status: string;
+  sortBy?: FichaSortBy;
+  sortDir?: "asc" | "desc";
 }
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const BORDER = "#D3D1C7";
 const TEXT = "#2C2C2A";
@@ -180,7 +186,9 @@ export function FichasListingView({
   pageSize,
   totalCount,
   query,
-  status
+  status,
+  sortBy,
+  sortDir
 }: FichasListingViewProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -205,12 +213,21 @@ export function FichasListingView({
     [items, modalidadeValue, grupoValue]
   );
 
-  function buildHref(next: { query?: string; status?: string; page?: number; pageSize?: number }) {
+  function buildHref(next: {
+    query?: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: FichaSortBy | null;
+    sortDir?: "asc" | "desc" | null;
+  }) {
     const params = new URLSearchParams();
     const nextQuery = next.query ?? queryValue;
     const nextStatus = next.status ?? statusValue;
     const nextPage = next.page ?? page;
     const nextPageSize = next.pageSize ?? pageSize;
+    const nextSortBy = next.sortBy === null ? undefined : (next.sortBy ?? sortBy);
+    const nextSortDir = next.sortDir === null ? undefined : (next.sortDir ?? sortDir);
 
     if (nextQuery.trim()) {
       params.set("query", nextQuery.trim());
@@ -224,8 +241,26 @@ export function FichasListingView({
     if (nextPageSize !== 10) {
       params.set("pageSize", String(nextPageSize));
     }
+    if (nextSortBy) {
+      params.set("sortBy", nextSortBy);
+    }
+    if (nextSortDir) {
+      params.set("sortDir", nextSortDir);
+    }
     const search = params.toString();
     return search ? `/fichas?${search}` : "/fichas";
+  }
+
+  function handleSortClick(col: FichaSortBy) {
+    if (sortBy === col) {
+      if (sortDir === "asc") {
+        router.push(buildHref({ page: 1, sortBy: col, sortDir: "desc" }) as never);
+      } else {
+        router.push(buildHref({ page: 1, sortBy: null, sortDir: null }) as never);
+      }
+    } else {
+      router.push(buildHref({ page: 1, sortBy: col, sortDir: "asc" }) as never);
+    }
   }
 
   const headerCellStyle: React.CSSProperties = {
@@ -241,6 +276,48 @@ export function FichasListingView({
     textOverflow: "ellipsis",
     userSelect: "none"
   };
+
+  function SortableHeader({
+    col,
+    label,
+    align = "left"
+  }: {
+    col: FichaSortBy;
+    label: string;
+    align?: "left" | "right" | "center";
+  }) {
+    const isActive = sortBy === col;
+    const activeColor = AZUL;
+    const inactiveColor = "#C8C6BE";
+    return (
+      <th
+        style={{ ...headerCellStyle, textAlign: align, cursor: "pointer" }}
+        onClick={() => handleSortClick(col)}
+        aria-sort={isActive ? (sortDir === "desc" ? "descending" : "ascending") : "none"}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start" }}>
+          {label}
+          <svg
+            width="8"
+            height="10"
+            viewBox="0 0 8 10"
+            fill="none"
+            aria-hidden="true"
+            style={{ flexShrink: 0 }}
+          >
+            <path
+              d="M4 1L1.5 4H6.5L4 1Z"
+              fill={isActive && sortDir === "asc" ? activeColor : inactiveColor}
+            />
+            <path
+              d="M4 9L6.5 6H1.5L4 9Z"
+              fill={isActive && sortDir === "desc" ? activeColor : inactiveColor}
+            />
+          </svg>
+        </span>
+      </th>
+    );
+  }
 
   const cellStyle: React.CSSProperties = {
     padding: "8px 7px",
@@ -356,27 +433,18 @@ export function FichasListingView({
             </colgroup>
             <thead>
               <tr style={{ background: BG, borderBottom: `0.5px solid ${BORDER}` }}>
-                <th style={headerCellStyle}>Codigo</th>
-                <th style={headerCellStyle}>
-                  Produto
-                  <Box
-                    component="span"
-                    sx={{ fontSize: 8, color: AZUL, marginLeft: "4px" }}
-                    aria-hidden="true"
-                  >
-                    ▲
-                  </Box>
-                </th>
-                <th style={headerCellStyle}>Modalidade</th>
-                <th style={headerCellStyle}>Grupo Operacional</th>
+                <SortableHeader col="code" label="Codigo" />
+                <SortableHeader col="produto" label="Produto" />
+                <SortableHeader col="modalidade" label="Modalidade" />
+                <SortableHeader col="grupo" label="Grupo Operacional" />
                 <th style={{ ...headerCellStyle, textAlign: "center" }}>Componentes</th>
                 <th style={{ ...headerCellStyle, textAlign: "right" }}>FC</th>
                 <th style={{ ...headerCellStyle, textAlign: "right" }}>IC</th>
                 <th style={{ ...headerCellStyle, textAlign: "right" }}>Custo Total</th>
-                <th style={{ ...headerCellStyle, textAlign: "right" }}>Preco de Venda</th>
+                <SortableHeader col="sellingPrice" label="Preco de Venda" align="right" />
                 <th style={{ ...headerCellStyle, textAlign: "right" }}>Margem</th>
-                <th style={headerCellStyle}>Ult. Atualizacao</th>
-                <th style={{ ...headerCellStyle, textAlign: "center" }}>Status</th>
+                <SortableHeader col="updatedAt" label="Ult. Atualizacao" />
+                <SortableHeader col="status" label="Status" align="center" />
                 <th style={{ ...headerCellStyle, textAlign: "center" }}>Obs</th>
               </tr>
             </thead>
@@ -581,8 +649,12 @@ export function FichasListingView({
           pageSize={pageSize}
           totalCount={totalCount}
           itemsNoun="fichas"
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
           onPageChange={(nextPage) =>
-            router.push(buildHref({ page: nextPage, pageSize }) as never)
+            router.push(buildHref({ page: nextPage }) as never)
+          }
+          onPageSizeChange={(nextSize) =>
+            router.push(buildHref({ page: 1, pageSize: nextSize }) as never)
           }
         />
       </Box>

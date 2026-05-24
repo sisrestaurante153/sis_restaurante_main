@@ -30,11 +30,15 @@ import {
 } from "@/modules/platform/server/demo-data";
 import { recalculateDemoStoreCosts } from "@/modules/platform/server/demo-costing";
 
+export type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "sellingPrice" | "updatedAt" | "status";
+
 export interface ListFichasInput {
   page: number;
   pageSize: number;
   query: string;
   status?: DemoFichaStatus | "all";
+  sortBy?: FichaSortBy;
+  sortDir?: "asc" | "desc";
 }
 
 export interface SaveFichaInput {
@@ -910,6 +914,30 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   };
 }
 
+function buildFichasOrderBy(
+  sortBy: FichaSortBy | undefined,
+  sortDir: "asc" | "desc" | undefined
+): Prisma.FichaTecnicaOrderByWithRelationInput[] {
+  const dir = sortDir ?? "asc";
+  switch (sortBy) {
+    case "code":
+      return [{ itemResultante: { ds_codigo_interno: dir } }, { ts_atualizacao: "desc" }];
+    case "produto":
+      return [{ itemResultante: { nm_item: dir } }, { nr_versao: "desc" }];
+    case "modalidade":
+      return [{ modalidade: { nm_modalidade: dir } }, { ts_atualizacao: "desc" }];
+    case "grupo":
+      return [{ itemResultante: { nm_categoria_operacional: dir } }, { ts_atualizacao: "desc" }];
+    case "sellingPrice":
+      return [{ vl_preco_venda: dir }, { ts_atualizacao: "desc" }];
+    case "status":
+      return [{ tp_status: dir }, { ts_atualizacao: "desc" }];
+    case "updatedAt":
+    default:
+      return [{ ts_atualizacao: dir }, { nr_versao: "desc" }];
+  }
+}
+
 async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
@@ -958,7 +986,7 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
       prisma.fichaTecnica.count({ where }),
       prisma.fichaTecnica.findMany({
         where,
-        orderBy: [{ ts_atualizacao: "desc" }, { nr_versao: "desc" }],
+        orderBy: buildFichasOrderBy(input.sortBy, input.sortDir),
         skip: (Math.max(input.page, 1) - 1) * input.pageSize,
         take: input.pageSize,
         include: {
@@ -1723,8 +1751,8 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         }));
     },
 
-    async listFichas({ page, pageSize, query, status = "all" }: ListFichasInput) {
-      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status }, restaurantId);
+    async listFichas({ page, pageSize, query, status = "all", sortBy, sortDir }: ListFichasInput) {
+      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status, sortBy, sortDir }, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1741,7 +1769,38 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         return matchesQuery && matchesStatus;
       });
 
-      const sorted = [...filtered].sort((left, right) => right.version - left.version);
+      const dir = sortDir === "desc" ? -1 : 1;
+      const sorted = filtered.slice().sort((a, b) => {
+        switch (sortBy) {
+          case "code": {
+            const store = getDemoStore();
+            const aCode = store.items.find((i) => i.id === a.itemId)?.code ?? "";
+            const bCode = store.items.find((i) => i.id === b.itemId)?.code ?? "";
+            const aNum = Number(aCode), bNum = Number(bCode);
+            if (!isNaN(aNum) && !isNaN(bNum)) return dir * (aNum - bNum);
+            return dir * aCode.localeCompare(bCode, "pt-BR", { sensitivity: "base" });
+          }
+          case "produto":
+            return dir * a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" });
+          case "modalidade":
+            return dir * a.modalityLabel.localeCompare(b.modalityLabel, "pt-BR", { sensitivity: "base" });
+          case "grupo": {
+            const store = getDemoStore();
+            const aGrp = store.items.find((i) => i.id === a.itemId)?.operationalCategory ?? "";
+            const bGrp = store.items.find((i) => i.id === b.itemId)?.operationalCategory ?? "";
+            return dir * aGrp.localeCompare(bGrp, "pt-BR", { sensitivity: "base" });
+          }
+          case "sellingPrice":
+            return dir * (Number(a.salePrice ?? "0") - Number(b.salePrice ?? "0"));
+          case "status":
+            return dir * a.status.localeCompare(b.status, "pt-BR", { sensitivity: "base" });
+          case "updatedAt":
+            return dir * a.updatedAt.localeCompare(b.updatedAt) || dir * (a.version - b.version);
+          default:
+            return b.updatedAt.localeCompare(a.updatedAt) || b.version - a.version;
+        }
+      });
+
       const paginated = paginate(sorted, page, pageSize);
 
       return {

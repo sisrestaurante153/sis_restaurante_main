@@ -1,4 +1,4 @@
-import { getEngineeringRepository } from "@/modules/engineering/server/engineering-repository";
+import { getEngineeringRepository, type FichaSortBy } from "@/modules/engineering/server/engineering-repository";
 import { requirePermission } from "@/modules/access/server/authorization";
 import {
   DesktopNewFichaAction,
@@ -7,6 +7,8 @@ import {
 import { PageHeader } from "@/modules/platform/ui/page-header";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const VALID_SORT_BY: FichaSortBy[] = ["code", "produto", "modalidade", "grupo", "sellingPrice", "updatedAt", "status"];
 
 function getSingle(searchParam: string | string[] | undefined, fallback = "") {
   return Array.isArray(searchParam) ? searchParam[0] ?? fallback : searchParam ?? fallback;
@@ -23,13 +25,20 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
     | "all";
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "10"));
+  const rawSortBy = getSingle(resolvedSearchParams.sortBy);
+  const sortBy = VALID_SORT_BY.includes(rawSortBy as FichaSortBy) ? (rawSortBy as FichaSortBy) : undefined;
+  const rawSortDir = getSingle(resolvedSearchParams.sortDir);
+  const sortDir = rawSortDir === "asc" || rawSortDir === "desc" ? rawSortDir : undefined;
+
   const actor = await requirePermission("ficha.read");
   const repository = getEngineeringRepository(actor.restaurantId);
   const result = await repository.listFichas({
     query,
     status,
     page,
-    pageSize
+    pageSize,
+    sortBy,
+    sortDir
   });
 
   return (
@@ -52,6 +61,8 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
         totalCount={result.totalCount}
         query={query}
         status={status}
+        sortBy={sortBy}
+        sortDir={sortDir}
       />
     </>
   );

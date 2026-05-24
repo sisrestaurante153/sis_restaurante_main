@@ -20,6 +20,8 @@ export interface ListingPaginationProps {
   totalCount: number;
   onPageChange: (page: number) => void;
   itemsNoun: string; // e.g. "fichas" | "itens"
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (size: number) => void;
 }
 
 type PagToken = number | "...";
@@ -50,7 +52,9 @@ export function ListingPagination({
   pageSize,
   totalCount,
   onPageChange,
-  itemsNoun
+  itemsNoun,
+  pageSizeOptions,
+  onPageSizeChange
 }: ListingPaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -104,13 +108,49 @@ export function ListingPagination({
         gap: 1
       }}
     >
-      <Typography
-        component="span"
-        sx={{ fontSize: 12, color: "#888780" }}
-        data-testid="listing-pagination-info"
-      >
-        {`Mostrando ${start}-${end} de ${totalCount} ${itemsNoun}`}
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
+        {pageSizeOptions && onPageSizeChange && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography component="span" sx={{ fontSize: 12, color: "#888780" }}>
+              Exibir:
+            </Typography>
+            <Box
+              component="select"
+              value={pageSize}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onPageSizeChange(Number(e.target.value))
+              }
+              sx={{
+                fontSize: 12,
+                color: "#5F5E5A",
+                border: "0.5px solid #D3D1C7",
+                borderRadius: "4px",
+                padding: "3px 6px",
+                bgcolor: "#fff",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                "&:focus": { outline: "none", borderColor: "#185FA5" }
+              }}
+            >
+              {pageSizeOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </Box>
+            <Typography component="span" sx={{ fontSize: 12, color: "#888780" }}>
+              por página
+            </Typography>
+          </Stack>
+        )}
+        <Typography
+          component="span"
+          sx={{ fontSize: 12, color: "#888780" }}
+          data-testid="listing-pagination-info"
+        >
+          {`Mostrando ${start}-${end} de ${totalCount} ${itemsNoun}`}
+        </Typography>
+      </Stack>
 
       <Stack direction="row" spacing={0.5} role="navigation" aria-label="Paginacao">
         <Box

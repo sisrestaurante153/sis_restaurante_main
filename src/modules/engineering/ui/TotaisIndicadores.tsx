@@ -360,37 +360,6 @@ function resolveCmvStyle(status: ComponentsEditorSummary["cmvHealthStatus"]) {
   return { bg: "#EEEEEE", fg: TOKENS.text3, border: TOKENS.border, label: "Indefinido" };
 }
 
-// Badge CMV com status + %.
-function CmvHealthBadge({
-  status,
-  cmvHealthPercent
-}: {
-  status: ComponentsEditorSummary["cmvHealthStatus"];
-  cmvHealthPercent?: string | null;
-}) {
-  const resolved = resolveCmvStyle(status);
-  const ratio = cmvHealthPercent ? parseFloat(cmvHealthPercent) : null;
-  const pctLabel = ratio !== null && Number.isFinite(ratio) ? ` · ${(ratio * 100).toFixed(1)}%` : "";
-
-  return (
-    <Box
-      component="span"
-      sx={{
-        fontSize: 10,
-        fontWeight: 600,
-        padding: "2px 8px",
-        borderRadius: "20px",
-        letterSpacing: "0.04em",
-        background: resolved.bg,
-        color: resolved.fg,
-        border: `0.5px solid ${resolved.border}`
-      }}
-    >
-      {resolved.label}{pctLabel}
-    </Box>
-  );
-}
-
 // Barra horizontal de saude do CMV com 4 faixas, marcador na posicao real e
 // linguagem clara para qualquer pessoa — sem jargao tecnico.
 function CmvHealthBar({
@@ -415,7 +384,7 @@ function CmvHealthBar({
 
   // Texto do tooltip da agulha: explica o que o CMV significa em linguagem simples.
   const needleTooltip = cmvPct !== null
-    ? `Seu CMV atual é ${cmvPct.toFixed(2)}% — isso significa que para cada R$ 1,00 vendido, R$ ${(cmvPct / 100).toFixed(2).replace(".", ",")} é custo de insumos`
+    ? `Seu CMV atual é ${cmvPct.toFixed(2)}% — isso significa que para cada R$ 1,00 vendido, R$ ${(cmvPct / 100).toFixed(2).replace(".", ",")} é custo de insumos`
     : "";
 
   return (
