@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react"; // useMemo mantido para evitar re-render desnecessário de visibleItems
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AddIcon from "@mui/icons-material/Add";
@@ -43,6 +43,8 @@ interface FichasListingViewProps {
   totalCount: number;
   query: string;
   status: string;
+  modalidade?: string;
+  grupo?: string;
   sortBy?: FichaSortBy;
   sortDir?: "asc" | "desc";
 }
@@ -187,6 +189,8 @@ export function FichasListingView({
   totalCount,
   query,
   status,
+  modalidade = "all",
+  grupo = "all",
   sortBy,
   sortDir
 }: FichasListingViewProps) {
@@ -195,27 +199,24 @@ export function FichasListingView({
   const smUp = useMediaQuery(theme.breakpoints.up("sm"));
   const [queryValue, setQueryValue] = useState(query);
   const [statusValue, setStatusValue] = useState(status);
-  const [modalidadeValue, setModalidadeValue] = useState("all");
-  const [grupoValue, setGrupoValue] = useState("all");
+  const [modalidadeValue, setModalidadeValue] = useState(modalidade);
+  const [grupoValue, setGrupoValue] = useState(grupo);
 
   useEffect(() => {
     setQueryValue(query);
     setStatusValue(status);
-  }, [query, status]);
+    setModalidadeValue(modalidade);
+    setGrupoValue(grupo);
+  }, [query, status, modalidade, grupo]);
 
-  const visibleItems = useMemo(
-    () =>
-      items.filter(
-        (row) =>
-          matchesSelect(modalidadeValue, row.modalityLabel) &&
-          matchesSelect(grupoValue, row.groupOperational)
-      ),
-    [items, modalidadeValue, grupoValue]
-  );
+  // items já vêm filtrados do servidor; useMemo mantido apenas como identidade
+  const visibleItems = useMemo(() => items, [items]);
 
   function buildHref(next: {
     query?: string;
     status?: string;
+    modalidade?: string | null;
+    grupo?: string | null;
     page?: number;
     pageSize?: number;
     sortBy?: FichaSortBy | null;
@@ -224,6 +225,8 @@ export function FichasListingView({
     const params = new URLSearchParams();
     const nextQuery = next.query ?? queryValue;
     const nextStatus = next.status ?? statusValue;
+    const nextModalidade = next.modalidade === null ? "all" : (next.modalidade ?? modalidadeValue);
+    const nextGrupo = next.grupo === null ? "all" : (next.grupo ?? grupoValue);
     const nextPage = next.page ?? page;
     const nextPageSize = next.pageSize ?? pageSize;
     const nextSortBy = next.sortBy === null ? undefined : (next.sortBy ?? sortBy);
@@ -234,6 +237,12 @@ export function FichasListingView({
     }
     if (nextStatus !== "all") {
       params.set("status", nextStatus);
+    }
+    if (nextModalidade !== "all") {
+      params.set("modalidade", nextModalidade);
+    }
+    if (nextGrupo !== "all") {
+      params.set("grupo", nextGrupo);
     }
     if (nextPage > 1) {
       params.set("page", String(nextPage));
@@ -352,7 +361,10 @@ export function FichasListingView({
 
         <FlatSelect
           value={modalidadeValue}
-          onChange={(next) => setModalidadeValue(next)}
+          onChange={(next) => {
+            setModalidadeValue(next);
+            router.push(buildHref({ modalidade: next, page: 1 }) as never);
+          }}
           options={MODALIDADE_OPTIONS}
           ariaLabel="Modalidade"
           name="modalidade"
@@ -360,7 +372,10 @@ export function FichasListingView({
 
         <FlatSelect
           value={grupoValue}
-          onChange={(next) => setGrupoValue(next)}
+          onChange={(next) => {
+            setGrupoValue(next);
+            router.push(buildHref({ grupo: next, page: 1 }) as never);
+          }}
           options={GRUPO_OPTIONS}
           ariaLabel="Grupo"
           name="grupo"
@@ -368,7 +383,10 @@ export function FichasListingView({
 
         <FlatSelect
           value={statusValue}
-          onChange={(next) => setStatusValue(next)}
+          onChange={(next) => {
+            setStatusValue(next);
+            router.push(buildHref({ status: next, page: 1 }) as never);
+          }}
           options={STATUS_OPTIONS}
           ariaLabel="Status"
           name="status"
@@ -402,9 +420,7 @@ export function FichasListingView({
             Fichas Tecnicas
           </Box>
           <Box sx={{ fontSize: 11, color: TEXT_3, marginTop: "2px" }}>
-            {modalidadeValue !== "all" || grupoValue !== "all"
-              ? `${visibleItems.length} de ${totalCount} fichas encontradas`
-              : `${totalCount} fichas encontradas`}
+            {`${totalCount} fichas encontradas`}
           </Box>
         </Box>
 

@@ -463,7 +463,7 @@ function CmvHealthBar({
       {/* Nomenclaturas das faixas de porcentagem logo abaixo dos blocos de cores */}
       <Box sx={{ display: "flex", gap: "3px", mb: "6px", mt: "4px" }}>
         {ZONES.map((zone) => (
-          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "center" }}>
+          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "left" }}>
             <Typography component="div" sx={{ fontSize: 9, color: TOKENS.text3, fontWeight: 500 }}>
               {zone.range}
             </Typography>
@@ -474,7 +474,7 @@ function CmvHealthBar({
       {/* Labels das zonas com descrição de ação */}
       <Box sx={{ display: "flex", gap: "3px" }}>
         {ZONES.map((zone) => (
-          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "center", px: "2px" }}>
+          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "left", px: "2px" }}>
             <Typography component="div" sx={{ fontSize: 10, color: zone.fg, fontWeight: 700, lineHeight: 1.2 }}>
               {zone.label}
             </Typography>
@@ -493,50 +493,108 @@ function CmvHealthBar({
   );
 }
 
-// Bar + labels (0% / mc% / 100%).
+// Barra de margem de contribuição com 4 faixas — mesmo design do CmvHealthBar.
+// Escala: 0-35% Crítico | 35-50% Atenção | 50-65% Saudável | 65%+ Excelente (cap 80%).
 function MargemBar({ mcPercent }: { mcPercent: number | null }) {
-  const pct = mcPercent === null ? 0 : Math.max(0, Math.min(100, mcPercent));
-  const color =
+  const SCALE_MAX = 80;
+  const MC_ZONES = [
+    { label: "Crítico",   range: "< 35%",      from: 0,  to: 35,       color: TOKENS.vermL,  border: "#F09595", fg: TOKENS.verm  },
+    { label: "Atenção",   range: "35% a 50%",  from: 35, to: 50,       color: TOKENS.ambarL, border: "#FAC775", fg: TOKENS.ambar },
+    { label: "Saudável",  range: "50% a 65%",  from: 50, to: 65,       color: TOKENS.verdeL, border: TOKENS.verdeB, fg: TOKENS.verde },
+    { label: "Excelente", range: "> 65%",       from: 65, to: SCALE_MAX, color: "#D6F0E0",    border: "#8ECFA8", fg: "#0F5A22"   },
+  ] as const;
+
+  const capped = mcPercent !== null ? Math.min(mcPercent, SCALE_MAX) : null;
+  const needlePct = capped !== null ? (capped / SCALE_MAX) * 100 : null;
+  const activeZone =
     mcPercent === null
-      ? TOKENS.text3
-      : mcPercent > 60
-        ? TOKENS.verde
-        : mcPercent >= 35
-          ? TOKENS.ambar
-          : TOKENS.verm;
+      ? null
+      : mcPercent < 35
+        ? MC_ZONES[0]
+        : mcPercent < 50
+          ? MC_ZONES[1]
+          : mcPercent < 65
+            ? MC_ZONES[2]
+            : MC_ZONES[3];
+
   return (
     <Box sx={{ padding: "4px 18px 12px" }}>
-      <Box
-        sx={{
-          height: 4,
-          background: TOKENS.border,
-          borderRadius: "2px",
-          overflow: "hidden"
-        }}
-      >
-        <Box
-          sx={{
-            height: "100%",
-            width: `${pct}%`,
-            background: color,
-            borderRadius: "2px",
-            transition: "width 0.4s ease, background 0.4s ease"
-          }}
-        />
+      {/* Faixas coloridas + agulha */}
+      <Box sx={{ position: "relative", height: 14, display: "flex", gap: "3px", overflow: "visible", mb: "4px" }}>
+        {MC_ZONES.map((zone) => (
+          <Box
+            key={zone.label}
+            sx={{
+              flex: zone.to - zone.from,
+              height: "100%",
+              background: zone.color,
+              border: `0.5px solid ${zone.border}`,
+              borderRadius: "5px"
+            }}
+          />
+        ))}
+        {needlePct !== null && (
+          <Box
+            sx={{
+              position: "absolute",
+              left: `${needlePct}%`,
+              top: "-5px",
+              transform: "translateX(-50%)",
+              width: "3px",
+              height: "24px",
+              background: TOKENS.text,
+              borderRadius: "2px",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                bottom: "-6px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: TOKENS.text
+              }
+            }}
+          />
+        )}
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginTop: "5px",
-          fontSize: 10,
-          color: TOKENS.text3
-        }}
-      >
-        <Box component="span">0%</Box>
-        <Box component="span">{mcPercent === null ? "--" : `${pct.toFixed(0)}%`}</Box>
-        <Box component="span">100%</Box>
+
+      {/* Rótulos de faixa alinhados ao início de cada zona */}
+      <Box sx={{ display: "flex", gap: "3px", mb: "4px" }}>
+        {MC_ZONES.map((zone) => (
+          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "left" }}>
+            <Typography component="div" sx={{ fontSize: 9, color: TOKENS.text3, fontWeight: 500 }}>
+              {zone.range}
+            </Typography>
+          </Box>
+        ))}
       </Box>
+
+      {/* Nome das zonas */}
+      <Box sx={{ display: "flex", gap: "3px" }}>
+        {MC_ZONES.map((zone) => (
+          <Box key={zone.label} sx={{ flex: zone.to - zone.from, textAlign: "left" }}>
+            <Typography
+              component="div"
+              sx={{
+                fontSize: 10,
+                color: activeZone?.label === zone.label ? zone.fg : TOKENS.text3,
+                fontWeight: activeZone?.label === zone.label ? 700 : 400,
+                lineHeight: 1.2
+              }}
+            >
+              {zone.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {mcPercent !== null && (
+        <Typography component="span" sx={{ fontSize: 9, color: TOKENS.text3, display: "block", mt: "6px", textAlign: "center", letterSpacing: "0.02em" }}>
+          Margem de contribuição atual: {mcPercent.toFixed(1)}%
+        </Typography>
+      )}
     </Box>
   );
 }

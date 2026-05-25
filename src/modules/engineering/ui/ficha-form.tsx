@@ -472,6 +472,11 @@ export function FichaForm({
       action={formAction}
       spacing={4}
       noValidate
+      onKeyDown={(e: React.KeyboardEvent<HTMLFormElement>) => {
+        if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+          e.preventDefault();
+        }
+      }}
       onChange={() => {
         setIsDirty(true);
         scheduleAutosave();

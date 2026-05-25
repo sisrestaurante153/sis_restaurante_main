@@ -37,6 +37,8 @@ export interface ListFichasInput {
   pageSize: number;
   query: string;
   status?: DemoFichaStatus | "all";
+  modalidade?: string;
+  grupo?: string;
   sortBy?: FichaSortBy;
   sortDir?: "asc" | "desc";
 }
@@ -498,18 +500,16 @@ async function resolveCanonicalFichaItem(
         return targetItem;
       }
 
-      const yieldUnit = await ensureUnit(tx, input.yieldUnitCode);
-      return tx.item.create({
+      // Nenhum item com o novo nome existe — renomeia o item atual in-place para
+      // evitar violar a unique constraint (ds_codigo_interno, cd_restaurante).
+      return tx.item.update({
+        where: { cd_item: input.itemId },
         data: {
           nm_item: input.displayName.trim(),
-          ds_codigo_interno: input.code?.trim() || null,
           nm_normalizado: normalizedName,
+          ds_codigo_interno: input.code?.trim() || null,
           nm_categoria_operacional: input.groupOperational,
-          tp_item: input.itemType,
-          cd_unidade_estoque: yieldUnit.cd_unidade_medida,
-          cd_unidade_uso_padrao: yieldUnit.cd_unidade_medida,
-          cd_restaurante: restaurantId,
-          sn_ativo: true
+          tp_item: input.itemType
         },
         include: {
           unidadeUsoPadrao: true
@@ -792,7 +792,7 @@ function mapExpandedRows(record: NonNullable<FichaRecord>) {
       const itemName = typeof typedRow.itemName === "string" ? typedRow.itemName : "";
       const totalCost = typeof typedRow.totalCost === "string" ? typedRow.totalCost : "0.0000";
 
-      const matchedComponent = record.componentes.find((component) => path.startsWith(component.itemComponente.nm_item));
+      const matchedComponent = record.componentes.find((component) => component.itemComponente && path.startsWith(component.itemComponente.nm_item));
       const componentType = matchedComponent?.tp_componente ?? "ingrediente";
       const usageUnit = matchedComponent?.unidadeUso.ds_codigo ?? matchedComponent?.itemComponente.unidadeUsoPadrao?.ds_codigo ?? "un";
 
@@ -827,12 +827,12 @@ function mapStageRows(record: NonNullable<FichaRecord>) {
       const hasCustomWeight = component.vl_fator_correcao !== null || component.vl_indice_coccao !== null;
       return {
         itemId: component.cd_item_componente,
-        itemName: component.itemComponente.nm_item,
+        itemName: component.itemComponente?.nm_item ?? "",
         componentType: component.tp_componente,
         quantityUsed: component.vl_qtd_bruta.toFixed(4),
         quantityGross: component.vl_qtd_bruta.toFixed(4),
         quantityNet: component.vl_qtd_limpa?.toFixed(4) ?? component.vl_qtd_bruta.toFixed(4),
-        usageUnit: component.unidadeUso.ds_codigo,
+        usageUnit: component.unidadeUso?.ds_codigo ?? "kg",
         levelLabel: `N${index + 1}`,
         correctionFactor: component.vl_fator_correcao?.toFixed(6) ?? "",
         cookingIndex: component.vl_indice_coccao?.toFixed(6) ?? "",
@@ -1042,6 +1042,18 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
     AND: [
       { cd_restaurante: restaurantId },
       input.status && input.status !== "all" ? { tp_status: input.status } : {},
+      // Filtro modalidade
+      input.modalidade && input.modalidade !== "all"
+        ? input.modalidade === "__none__"
+          ? { cd_modalidade: null }
+          : { modalidade: { nm_modalidade: { contains: input.modalidade, mode: "insensitive" } } }
+        : {},
+      // Filtro grupo operacional
+      input.grupo && input.grupo !== "all"
+        ? input.grupo === "__none__"
+          ? { itemResultante: { nm_categoria_operacional: null } }
+          : { itemResultante: { nm_categoria_operacional: { contains: input.grupo, mode: "insensitive" } } }
+        : {},
       query
         ? {
             OR: [
@@ -1126,7 +1138,8 @@ async function getFichaDetailWithPrisma(fichaId: string, restaurantId: string) {
   try {
     const ficha = await queryFicha(prisma, fichaId, restaurantId);
     return ficha ? mapFichaDetail(ficha) : null;
-  } catch {
+  } catch (error) {
+    console.error("[getFichaDetailWithPrisma] Erro ao carregar ficha", fichaId, error);
     return null;
   }
 }
@@ -1840,8 +1853,8 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         }));
     },
 
-    async listFichas({ page, pageSize, query, status = "all", sortBy, sortDir }: ListFichasInput) {
-      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status, sortBy, sortDir }, restaurantId);
+    async listFichas({ page, pageSize, query, status = "all", modalidade, grupo, sortBy, sortDir }: ListFichasInput) {
+      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status, modalidade, grupo, sortBy, sortDir }, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -1854,8 +1867,21 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
             .toLowerCase()
             .includes(normalizedQuery);
         const matchesStatus = status === "all" ? true : ficha.status === status;
+        const matchesModalidade =
+          !modalidade || modalidade === "all"
+            ? true
+            : modalidade === "__none__"
+              ? !ficha.modalityLabel || /sem /i.test(ficha.modalityLabel)
+              : ficha.modalityLabel.toLowerCase() === modalidade.toLowerCase();
+        const fichaGrupo = getDemoStore().items.find((i) => i.id === ficha.itemId)?.operationalCategory ?? "";
+        const matchesGrupo =
+          !grupo || grupo === "all"
+            ? true
+            : grupo === "__none__"
+              ? !fichaGrupo || /sem /i.test(fichaGrupo)
+              : fichaGrupo.toLowerCase() === grupo.toLowerCase();
 
-        return matchesQuery && matchesStatus;
+        return matchesQuery && matchesStatus && matchesModalidade && matchesGrupo;
       });
 
       const dir = sortDir === "desc" ? -1 : 1;

@@ -100,7 +100,7 @@ function mapPurchases(item: CatalogItemRecord) {
       usagePrice: precoUso.toFixed(4),
       usageIsFixedFromPrimary: !isPrimary,
       baseUnitCost: purchase.vl_custo_unitario_base.toFixed(6),
-      priceUpdatedAt: purchase.ts_atualizacao_preco?.toISOString().slice(0, 10) ?? "",
+      priceUpdatedAt: purchase.ts_atualizacao_preco?.toISOString() ?? "",
       notes: purchase.ds_observacao ?? ""
     };
   });

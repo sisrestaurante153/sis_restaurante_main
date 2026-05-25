@@ -164,7 +164,7 @@ function toItemDetail(item: DemoItemRecord) {
       purchaseIsPrimary: true,
       usageQuantity,
       usagePrice,
-      priceUpdatedAt: item.lastCalculationAt.slice(0, 10)
+      priceUpdatedAt: item.lastCalculationAt
     },
     purchases: [
       {
@@ -180,7 +180,7 @@ function toItemDetail(item: DemoItemRecord) {
         conversionFactor: item.conversionFactor,
         usagePrice,
         usageIsFixedFromPrimary: false, // demo single row is always principal
-        priceUpdatedAt: item.lastCalculationAt.slice(0, 10),
+        priceUpdatedAt: item.lastCalculationAt,
         notes: ""
       }
     ],

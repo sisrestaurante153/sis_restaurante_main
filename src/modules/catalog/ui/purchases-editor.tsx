@@ -19,7 +19,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { FormSection } from "@/components/ui/FormSection";
 
@@ -384,22 +384,20 @@ export function PurchasesEditor({
                     <input type="hidden" name="purchaseIsPrimary" value={String(row.purchaseIsPrimary)} />
                     <Box>
                       <input type="hidden" name="purchasePriceUpdatedAt" value={row.priceUpdatedAt} />
-                      <DatePicker
+                      <DateTimePicker
                         label="Atualizado em"
-                        format="DD/MM/YYYY"
+                        format="DD/MM/YYYY, HH:mm"
                         value={row.priceUpdatedAt ? dayjs(row.priceUpdatedAt) : null}
                         onChange={(value) =>
                           updateRow(index, {
-                            priceUpdatedAt: value ? value.format("YYYY-MM-DD") : ""
+                            priceUpdatedAt: value ? value.toISOString() : ""
                           })
                         }
                         slotProps={{
                           textField: {
                             fullWidth: true,
                             size: "small",
-                            // Phase 09-02 D-15: placeholder pixel-perfect fornecedor 2+
-                            // (HTML update/tela-item-v1.html linha 310).
-                            placeholder: !isPrimary ? "dd/mm/aaaa" : undefined,
+                            placeholder: !isPrimary ? "dd/mm/aaaa, hh:mm" : undefined,
                             sx: editableWhiteSx
                           }
                         }}
@@ -659,13 +657,13 @@ export function PurchasesEditor({
                   />
 
                   <input type="hidden" name="purchasePriceUpdatedAt" value={row.priceUpdatedAt} />
-                  <DatePicker
+                  <DateTimePicker
                     label="Atualizado em"
-                    format="DD/MM/YYYY"
+                    format="DD/MM/YYYY, HH:mm"
                     value={row.priceUpdatedAt ? dayjs(row.priceUpdatedAt) : null}
                     onChange={(value) =>
                       updateRow(index, {
-                        priceUpdatedAt: value ? value.format("YYYY-MM-DD") : ""
+                        priceUpdatedAt: value ? value.toISOString() : ""
                       })
                     }
                     slotProps={{

@@ -23,6 +23,8 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
     | "inativa"
     | "arquivada"
     | "all";
+  const modalidade = getSingle(resolvedSearchParams.modalidade, "all");
+  const grupo = getSingle(resolvedSearchParams.grupo, "all");
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "10"));
   const rawSortBy = getSingle(resolvedSearchParams.sortBy);
@@ -35,6 +37,8 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
   const result = await repository.listFichas({
     query,
     status,
+    modalidade,
+    grupo,
     page,
     pageSize,
     sortBy,
@@ -61,6 +65,8 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
         totalCount={result.totalCount}
         query={query}
         status={status}
+        modalidade={modalidade}
+        grupo={grupo}
         sortBy={sortBy}
         sortDir={sortDir}
       />
