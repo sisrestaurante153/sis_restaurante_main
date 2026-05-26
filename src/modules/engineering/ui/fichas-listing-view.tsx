@@ -90,13 +90,6 @@ const STATUS_OPTIONS = [
   { value: "arquivada", label: "Arquivada" }
 ];
 
-function matchesSelect(selectValue: string, rowValue?: string | null) {
-  if (selectValue === "all") return true;
-  if (selectValue === "__none__") {
-    return !rowValue || rowValue.trim() === "" || /sem /i.test(rowValue);
-  }
-  return (rowValue ?? "").toLowerCase() === selectValue.toLowerCase();
-}
 
 function formatCurrency(value: string) {
   return new Intl.NumberFormat("pt-BR", {
