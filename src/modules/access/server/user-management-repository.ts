@@ -26,6 +26,24 @@ export interface UpdateUserInput {
   active: boolean;
 }
 
+const DEFAULT_ROLES = [
+  { ds_codigo: "admin",      nm_role: "Administrador"        },
+  { ds_codigo: "engenharia", nm_role: "Engenharia de Produto" },
+  { ds_codigo: "consulta",   nm_role: "Consulta"              },
+] as const;
+
+async function ensureDefaultRoles(prisma: NonNullable<ReturnType<typeof getPrismaClient>>) {
+  const count = await prisma.role.count();
+  if (count >= DEFAULT_ROLES.length) return;
+  for (const role of DEFAULT_ROLES) {
+    await prisma.role.upsert({
+      where: { ds_codigo: role.ds_codigo },
+      update: {},
+      create: { ds_codigo: role.ds_codigo, nm_role: role.nm_role }
+    });
+  }
+}
+
 export function getUserManagementRepository() {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
@@ -33,6 +51,7 @@ export function getUserManagementRepository() {
   return {
     async listUsers(restaurantId: string): Promise<UserRecord[]> {
       if (!prisma) return [];
+      await ensureDefaultRoles(prisma);
       const users = await prisma.user.findMany({
         where: { cd_restaurante: restaurantId },
         orderBy: { ts_criacao: "desc" },
@@ -62,6 +81,7 @@ export function getUserManagementRepository() {
 
     async createUser(input: CreateUserInput): Promise<string> {
       if (!prisma) throw new Error("Banco de dados não disponível.");
+      await ensureDefaultRoles(prisma);
       const role = await prisma.role.findFirst({ where: { ds_codigo: input.roleCode } });
       if (!role) throw new Error(`Perfil "${input.roleCode}" não encontrado.`);
 

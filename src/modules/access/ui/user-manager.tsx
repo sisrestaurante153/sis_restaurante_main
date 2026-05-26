@@ -21,6 +21,7 @@ import {
   DialogTitle,
   FormControl,
   IconButton,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Select,
@@ -37,6 +38,8 @@ import {
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 
 const ROLES = [
   { value: "admin", label: "Administrador" },
@@ -79,6 +82,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [showPassword, setShowPassword] = useState(false);
   const isEditing = Boolean(form.id);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -100,6 +104,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
 
   function openCreate() {
     setForm(EMPTY_FORM);
+    setShowPassword(false);
     setError(null);
     setDialogOpen(true);
   }
@@ -287,13 +292,29 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
             {!isEditing && (
               <TextField
                 label="Senha inicial"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={form.password}
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 fullWidth
                 size="small"
                 required
                 helperText="Mínimo 6 caracteres. O usuário pode alterar depois."
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setShowPassword((v) => !v)}
+                          edge="end"
+                          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        >
+                          {showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }
+                }}
               />
             )}
 

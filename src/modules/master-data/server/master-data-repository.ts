@@ -41,12 +41,16 @@ const DEFAULT_SUPPLIERS = [
 ] as const;
 
 const DEFAULT_UNITS: Array<{ code: string; name: string; measureType: unidade_tipo }> = [
-  { code: "kg", name: "Quilograma", measureType: "massa" },
-  { code: "g", name: "Grama", measureType: "massa" },
-  { code: "l", name: "Litro", measureType: "volume" },
-  { code: "ml", name: "Mililitro", measureType: "volume" },
-  { code: "un", name: "Unidade", measureType: "contagem" },
-  { code: "maco", name: "Maco", measureType: "contagem" }
+  { code: "kg",  name: "Quilograma", measureType: "massa"    },
+  { code: "g",   name: "Grama",      measureType: "massa"    },
+  { code: "l",   name: "Litro",      measureType: "volume"   },
+  { code: "ml",  name: "Mililitro",  measureType: "volume"   },
+  { code: "un",  name: "Unidade",    measureType: "contagem" },
+  { code: "frd", name: "Fardo",      measureType: "contagem" },
+  { code: "cx",  name: "Caixa",      measureType: "contagem" },
+  { code: "pct", name: "Pacote",     measureType: "contagem" },
+  { code: "mç",  name: "Maço",       measureType: "contagem" },
+  { code: "bdj", name: "Bandeja",    measureType: "contagem" },
 ];
 
 const DEFAULT_OPERATIONAL_CATEGORIES = [
@@ -123,15 +127,14 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
     });
   }
 
-  if (unitCount === 0) {
-    await tx.unidadeMedida.createMany({
-      data: DEFAULT_UNITS.map((unit) => ({
-        ds_codigo: unit.code,
-        nm_unidade: unit.name,
-        tp_unidade: unit.measureType,
-        sn_ativo: true
-      })),
-      skipDuplicates: true
+  // Upsert canonical units so new entries are always present (even when DB already had units).
+  // update:{} preserves any name/type changes made by the user in the admin UI.
+  void unitCount;
+  for (const unit of DEFAULT_UNITS) {
+    await tx.unidadeMedida.upsert({
+      where: { ds_codigo: unit.code },
+      update: {},
+      create: { ds_codigo: unit.code, nm_unidade: unit.name, tp_unidade: unit.measureType, sn_ativo: true }
     });
   }
 
@@ -258,6 +261,15 @@ async function listUnitsWithPrisma() {
   }
 
   try {
+    // Remove legacy "maço" duplicate; canonical code is "mç".
+    // If FK constraint prevents hard delete, deactivate instead.
+    const mçCount = await prisma.unidadeMedida.count({ where: { ds_codigo: "mç" } });
+    if (mçCount > 0) {
+      await prisma.unidadeMedida.deleteMany({ where: { ds_codigo: "maço" } }).catch(async () => {
+        await prisma.unidadeMedida.updateMany({ where: { ds_codigo: "maço" }, data: { sn_ativo: false } }).catch(() => {});
+      });
+    }
+
     await prisma.$transaction(async (tx) => {
       await ensureMasterDataRegistry(tx);
     });
@@ -781,36 +793,34 @@ export function getMasterDataRepository() {
       const code = input.code.trim().toLowerCase();
 
       if (prisma) {
-        try {
-          const record = input.id
-            ? await prisma.unidadeMedida.update({
-                where: { cd_unidade_medida: input.id },
-                data: {
-                  ds_codigo: code,
-                  nm_unidade: input.name.trim(),
-                  tp_unidade: input.measureType,
-                  sn_ativo: input.active
-                }
-              })
-            : await prisma.unidadeMedida.create({
-                data: {
-                  ds_codigo: code,
-                  nm_unidade: input.name.trim(),
-                  tp_unidade: input.measureType,
-                  sn_ativo: input.active
-                }
-              });
+        // When Prisma is connected, let errors propagate so the action can show
+        // a real error message instead of silently accepting a no-op.
+        const record = input.id
+          ? await prisma.unidadeMedida.update({
+              where: { cd_unidade_medida: input.id },
+              data: {
+                ds_codigo: code,
+                nm_unidade: input.name.trim(),
+                tp_unidade: input.measureType,
+                sn_ativo: input.active
+              }
+            })
+          : await prisma.unidadeMedida.create({
+              data: {
+                ds_codigo: code,
+                nm_unidade: input.name.trim(),
+                tp_unidade: input.measureType,
+                sn_ativo: input.active
+              }
+            });
 
-          return {
-            id: record.cd_unidade_medida,
-            code: record.ds_codigo,
-            name: record.nm_unidade,
-            measureType: UNIT_TYPE_LABELS[record.tp_unidade],
-            active: record.sn_ativo
-          };
-        } catch {
-          // fall back to demo storage
-        }
+        return {
+          id: record.cd_unidade_medida,
+          code: record.ds_codigo,
+          name: record.nm_unidade,
+          measureType: UNIT_TYPE_LABELS[record.tp_unidade],
+          active: record.sn_ativo
+        };
       }
 
       const store = getDemoStore();
