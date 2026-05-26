@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import { FlatSelect } from "@/components/ui/FlatSelect";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ListingPagination } from "@/components/ui/ListingPagination";
+import { patchItemQuickAction } from "@/modules/catalog/server/catalog-actions";
 
 interface ItemRow {
   id: string;
@@ -48,6 +49,8 @@ interface ItemsListingViewProps {
   status: string;
   category: string;
   categoryOptions: Array<{ value: string; label: string }>;
+  sort?: string;
+  order?: string;
 }
 
 const TYPE_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -83,8 +86,6 @@ const statusOptions = [
 ];
 
 type SortableField = "name" | "baseUnitCost" | "usagePrice" | "updatedAt";
-type SortDirection = "asc" | "desc";
-type SortState = { field: SortableField; order: SortDirection } | null;
 
 interface ColumnDef {
   field: string;
@@ -97,12 +98,12 @@ interface ColumnDef {
 
 const COLUMNS: ColumnDef[] = [
   { field: "code", header: "Codigo", className: "c-cod", width: 72 },
-  { field: "name", header: "Nome do Item", className: "c-nome", width: 162, sortable: "name" },
+  { field: "name", header: "Nome do Item", className: "c-nome", width: 200, sortable: "name" },
   { field: "type", header: "Tipo", className: "c-tipo", width: 92 },
   { field: "category", header: "Categoria", className: "c-cat", width: 102 },
   { field: "purchaseQuantity", header: "Qtde Compra", className: "c-qtdc", width: 72, align: "right" },
   { field: "stockUnit", header: "Un. Compra", className: "c-unc", width: 54 },
-  { field: "baseUnitCost", header: "Preco Compra", className: "c-precc", width: 74, align: "right", sortable: "baseUnitCost" },
+  { field: "baseUnitCost", header: "Preco Compra", className: "c-precc", width: 90, align: "right", sortable: "baseUnitCost" },
   { field: "conversionFactor", header: "Fator Conv.", className: "c-fator", width: 62, align: "right" },
   { field: "usageQuantity", header: "Qtde Uso", className: "c-qtdu", width: 64, align: "right" },
   { field: "usageUnit", header: "Un. Uso", className: "c-unu", width: 50 },
@@ -113,13 +114,15 @@ const COLUMNS: ColumnDef[] = [
   { field: "description", header: "Obs", className: "c-obs", width: 40, align: "center" }
 ];
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
 function formatCurrency(value: string | null | undefined) {
   if (value === "--") {
     return "--";
   }
   const num = Number(value);
   if (!value || !Number.isFinite(num) || num === 0) {
-    return "\u2014";
+    return "—";
   }
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -135,7 +138,7 @@ function formatDecimal(value: string | null | undefined) {
   }
   const num = Number(value);
   if (!value || !Number.isFinite(num) || num === 0) {
-    return "\u2014";
+    return "—";
   }
   return new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: 4,
@@ -145,11 +148,11 @@ function formatDecimal(value: string | null | undefined) {
 
 function formatDateShort(isoString: string | null | undefined) {
   if (!isoString) {
-    return "\u2014";
+    return "—";
   }
   const d = new Date(isoString);
   if (Number.isNaN(d.getTime())) {
-    return "\u2014";
+    return "—";
   }
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -225,7 +228,7 @@ function StatusBadge({ active }: { active: boolean }) {
 
 function SupplierCell({ row }: { row: ItemRow }) {
   if (!row.supplierName) {
-    return <span style={{ color: "#888780", fontSize: 11 }}>{"\u2014"}</span>;
+    return <span style={{ color: "#888780", fontSize: 11 }}>{"—"}</span>;
   }
   if (row.supplierName === "--") {
     return <span style={{ fontSize: 11, color: "#5F5E5A" }}>--</span>;
@@ -289,7 +292,7 @@ function SupplierCell({ row }: { row: ItemRow }) {
 
 function ObservationCell({ description }: { description?: string }) {
   if (!description) {
-    return <span style={{ color: "#888780" }}>{"\u2014"}</span>;
+    return <span style={{ color: "#888780" }}>{"—"}</span>;
   }
   return (
     <Tooltip title="Ver observacao">
@@ -307,6 +310,120 @@ function ObservationCell({ description }: { description?: string }) {
   );
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+interface InlineEditCellProps {
+  value: string;
+  displayValue: string;
+  onSave: (next: string) => Promise<void>;
+  align?: "left" | "right";
+  inputStyle?: CSSProperties;
+  children: ReactNode;
+}
+
+function InlineEditCell({ value, onSave, align = "left", inputStyle, children }: InlineEditCellProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const startEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDraft(value);
+    setSaveStatus("idle");
+    setEditing(true);
+  }, [value]);
+
+  const commitEdit = useCallback(async () => {
+    const trimmed = draft.trim();
+    if (trimmed === value.trim()) {
+      setEditing(false);
+      return;
+    }
+    setSaveStatus("saving");
+    try {
+      await onSave(trimmed);
+      setSaveStatus("saved");
+      setEditing(false);
+      setTimeout(() => setSaveStatus("idle"), 1500);
+    } catch {
+      setSaveStatus("error");
+    }
+  }, [draft, value, onSave]);
+
+  const cancelEdit = useCallback(() => {
+    setEditing(false);
+    setSaveStatus("idle");
+  }, []);
+
+  if (editing) {
+    return (
+      <td
+        role="gridcell"
+        style={{ padding: "4px 7px", verticalAlign: "middle" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); void commitEdit(); }
+              if (e.key === "Escape") cancelEdit();
+            }}
+            onBlur={() => void commitEdit()}
+            style={{
+              fontSize: 12,
+              padding: "2px 5px",
+              border: "1px solid #185FA5",
+              borderRadius: 4,
+              outline: "none",
+              width: "100%",
+              textAlign: align,
+              background: "#fff",
+              ...inputStyle
+            }}
+          />
+          {saveStatus === "saving" && (
+            <span style={{ fontSize: 10, color: "#888780", whiteSpace: "nowrap" }}>Salvando…</span>
+          )}
+          {saveStatus === "error" && (
+            <span style={{ fontSize: 10, color: "#A32D2D", whiteSpace: "nowrap" }}>Erro</span>
+          )}
+        </div>
+      </td>
+    );
+  }
+
+  return (
+    <td
+      role="gridcell"
+      style={{ padding: "8px 7px", verticalAlign: "middle", cursor: "text" }}
+      onClick={startEdit}
+      title="Clique para editar"
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {children}
+        {saveStatus === "saved" && (
+          <span style={{ fontSize: 10, color: "#1B6B2C", whiteSpace: "nowrap" }}>Salvo ✓</span>
+        )}
+        {saveStatus === "error" && (
+          <span style={{ fontSize: 10, color: "#A32D2D", whiteSpace: "nowrap" }}>Erro</span>
+        )}
+      </div>
+    </td>
+  );
+}
+
 export function ItemsListingView({
   items,
   page,
@@ -316,7 +433,9 @@ export function ItemsListingView({
   type,
   status,
   category,
-  categoryOptions
+  categoryOptions,
+  sort,
+  order
 }: ItemsListingViewProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -325,7 +444,6 @@ export function ItemsListingView({
   const [typeValue, setTypeValue] = useState(type);
   const [statusValue, setStatusValue] = useState(status);
   const [categoryValue, setCategoryValue] = useState(category);
-  const [sortState, setSortState] = useState<SortState>({ field: "name", order: "asc" });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -342,8 +460,8 @@ export function ItemsListingView({
     category?: string;
     page?: number;
     pageSize?: number;
-    sort?: string;
-    order?: string;
+    sort?: string | null;
+    order?: string | null;
   }) {
     const params = new URLSearchParams();
     const nextQuery = next.query ?? queryValue;
@@ -352,6 +470,8 @@ export function ItemsListingView({
     const nextCategory = next.category ?? categoryValue;
     const nextPage = next.page ?? page;
     const nextPageSize = next.pageSize ?? pageSize;
+    const nextSort = next.sort === null ? undefined : (next.sort ?? sort);
+    const nextOrder = next.order === null ? undefined : (next.order ?? order);
 
     if (nextQuery.trim()) {
       params.set("query", nextQuery.trim());
@@ -373,16 +493,16 @@ export function ItemsListingView({
       params.set("page", String(nextPage));
     }
 
-    if (nextPageSize !== 10) {
+    if (nextPageSize !== 100) {
       params.set("pageSize", String(nextPageSize));
     }
 
-    if (next.sort) {
-      params.set("sort", next.sort);
+    if (nextSort) {
+      params.set("sort", nextSort);
     }
 
-    if (next.order) {
-      params.set("order", next.order);
+    if (nextOrder) {
+      params.set("order", nextOrder);
     }
 
     const search = params.toString();
@@ -415,16 +535,21 @@ export function ItemsListingView({
     [categoryOptions]
   );
 
-  function toggleSort(field: SortableField) {
-    const nextOrder: SortDirection =
-      sortState?.field === field && sortState.order === "asc" ? "desc" : "asc";
-    setSortState({ field, order: nextOrder });
-    navigateImmediate({ sort: field, order: nextOrder });
+  function handleSortClick(field: SortableField) {
+    if (sort === field) {
+      if (order === "asc") {
+        router.push(buildHref({ page: 1, sort: field, order: "desc" }) as never);
+      } else {
+        router.push(buildHref({ page: 1, sort: null, order: null }) as never);
+      }
+    } else {
+      router.push(buildHref({ page: 1, sort: field, order: "asc" }) as never);
+    }
   }
 
   const categoryLabel = (value: string) => {
     if (!value || value === "sem categoria") {
-      return "\u2014";
+      return "—";
     }
     return value;
   };
@@ -510,8 +635,9 @@ export function ItemsListingView({
         <Box sx={{ width: "100%", overflowX: "auto" }}>
           <ItemsTable
             items={items}
-            sortState={sortState}
-            onSort={toggleSort}
+            sortField={sort as SortableField | undefined}
+            sortOrder={order as "asc" | "desc" | undefined}
+            onSort={handleSortClick}
             onRowClick={(row) => router.push(`/itens/${row.id}` as never)}
             categoryLabel={categoryLabel}
           />
@@ -522,8 +648,12 @@ export function ItemsListingView({
           pageSize={pageSize}
           totalCount={totalCount}
           itemsNoun="itens"
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
           onPageChange={(nextPage) =>
             router.push(buildHref({ page: nextPage, pageSize }) as never)
+          }
+          onPageSizeChange={(nextSize) =>
+            router.push(buildHref({ page: 1, pageSize: nextSize }) as never)
           }
         />
       </Box>
@@ -550,13 +680,14 @@ export function ItemsListingView({
 
 interface ItemsTableProps {
   items: ItemRow[];
-  sortState: SortState;
+  sortField?: SortableField;
+  sortOrder?: "asc" | "desc";
   onSort: (field: SortableField) => void;
   onRowClick: (row: ItemRow) => void;
   categoryLabel: (value: string) => string;
 }
 
-function ItemsTable({ items, sortState, onSort, onRowClick, categoryLabel }: ItemsTableProps) {
+function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryLabel }: ItemsTableProps) {
   const thBase: CSSProperties = {
     padding: "8px 7px",
     fontSize: 10,
@@ -601,10 +732,6 @@ function ItemsTable({ items, sortState, onSort, onRowClick, categoryLabel }: Ite
                   textAlign: col.align ?? "left",
                   cursor: col.sortable ? "pointer" : "default"
                 }}
-                data-field={col.field}
-                data-sortable={String(Boolean(col.sortable))}
-                data-width={String(col.width)}
-                data-flex=""
               >
                 {col.header}
               </th>
@@ -644,28 +771,42 @@ function ItemsTable({ items, sortState, onSort, onRowClick, categoryLabel }: Ite
       <thead data-testid="column-headers">
         <tr>
           {COLUMNS.map((col) => {
-            const isSorted = col.sortable && sortState?.field === col.sortable;
-            const arrow = isSorted ? (sortState?.order === "asc" ? " \u25B2" : " \u25BC") : "";
+            const isActive = col.sortable && sortField === col.sortable;
             const headerStyle: CSSProperties = {
               ...thBase,
               textAlign: col.align ?? "left",
               cursor: col.sortable ? "pointer" : "default",
-              color: isSorted ? "#185FA5" : thBase.color
+              color: isActive ? "#185FA5" : thBase.color
             };
             return (
               <th
                 key={col.field}
                 style={headerStyle}
                 onClick={() => col.sortable && onSort(col.sortable)}
-                data-field={col.field}
-                data-sortable={String(Boolean(col.sortable))}
-                data-width={String(col.width)}
-                data-flex=""
+                aria-sort={isActive ? (sortOrder === "desc" ? "descending" : "ascending") : "none"}
               >
-                {col.header}
-                {arrow ? (
-                  <span style={{ fontSize: 8, color: "#185FA5" }}>{arrow}</span>
-                ) : null}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 3, justifyContent: col.align === "right" ? "flex-end" : col.align === "center" ? "center" : "flex-start" }}>
+                  {col.header}
+                  {col.sortable && (
+                    <svg
+                      width="8"
+                      height="10"
+                      viewBox="0 0 8 10"
+                      fill="none"
+                      aria-hidden="true"
+                      style={{ flexShrink: 0 }}
+                    >
+                      <path
+                        d="M4 1L1.5 4H6.5L4 1Z"
+                        fill={isActive && sortOrder === "asc" ? "#185FA5" : "#C8C6BE"}
+                      />
+                      <path
+                        d="M4 9L6.5 6H1.5L4 9Z"
+                        fill={isActive && sortOrder === "desc" ? "#185FA5" : "#C8C6BE"}
+                      />
+                    </svg>
+                  )}
+                </span>
               </th>
             );
           })}
@@ -695,6 +836,8 @@ interface ItemRowViewProps {
 
 function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) {
   const [hover, setHover] = useState(false);
+  const [localName, setLocalName] = useState(row.name);
+  const [localCost, setLocalCost] = useState(row.baseUnitCost);
 
   const rowStyle: CSSProperties = {
     borderBottom: "0.5px solid #D3D1C7",
@@ -708,6 +851,21 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
   const rightMuted: CSSProperties = { ...mutedStyle, textAlign: "right" };
   const centerStyle: CSSProperties = { ...tdBase, textAlign: "center" };
 
+  const handleSaveName = useCallback(async (next: string) => {
+    if (!next) throw new Error("Nome não pode estar vazio.");
+    const result = await patchItemQuickAction({ itemId: row.id, name: next });
+    if (!result.ok) throw new Error(result.message ?? "Erro ao salvar.");
+    setLocalName(next);
+  }, [row.id]);
+
+  const handleSaveCost = useCallback(async (next: string) => {
+    const num = Number(next.replace(",", "."));
+    if (!Number.isFinite(num) || num < 0) throw new Error("Valor inválido.");
+    const result = await patchItemQuickAction({ itemId: row.id, purchaseCost: String(num) });
+    if (!result.ok) throw new Error(result.message ?? "Erro ao salvar.");
+    setLocalCost(String(num));
+  }, [row.id]);
+
   return (
     <tr
       role="row"
@@ -716,84 +874,71 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <CellView style={tdBase} field="code">
+      <td role="gridcell" data-field="code" style={tdBase}>
         <span style={{ fontSize: 11, color: "#185FA5" }}>{row.code}</span>
-      </CellView>
-      <CellView style={tdBase} field="name">
+      </td>
+      <InlineEditCell
+        value={localName}
+        displayValue={localName}
+        onSave={handleSaveName}
+      >
         <span
-          title={row.name}
           style={{
             fontWeight: 500,
             fontSize: 13,
-            color: "#2C2C2A",
-            display: "block",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap"
+            color: "#2C2C2A"
           }}
         >
-          {row.name}
+          {localName}
         </span>
-      </CellView>
-      <CellView style={tdBase} field="type">
+      </InlineEditCell>
+      <td role="gridcell" data-field="type" style={tdBase}>
         <TypeBadge type={row.type} />
-      </CellView>
-      <CellView style={mutedStyle} field="category" title={row.category}>
+      </td>
+      <td role="gridcell" data-field="category" style={mutedStyle} title={row.category}>
         {categoryLabel(row.category)}
-      </CellView>
-      <CellView style={rightStyle} field="purchaseQuantity">
+      </td>
+      <td role="gridcell" data-field="purchaseQuantity" style={rightStyle}>
         {formatDecimal(row.purchaseQuantity)}
-      </CellView>
-      <CellView style={mutedStyle} field="stockUnit">
-        {row.stockUnit || "\u2014"}
-      </CellView>
-      <CellView style={rightStyle} field="baseUnitCost">
-        {formatCurrency(row.baseUnitCost)}
-      </CellView>
-      <CellView style={rightStyle} field="conversionFactor">
-        {formatDecimal(row.conversionFactor)}
-      </CellView>
-      <CellView style={rightStyle} field="usageQuantity">
-        {formatDecimal(row.usageQuantity)}
-      </CellView>
-      <CellView style={mutedStyle} field="usageUnit">
-        {row.usageUnit || "\u2014"}
-      </CellView>
-      <CellView
-        style={{ ...rightStyle, color: "#1B6B2C", fontWeight: 500 }}
-        field="usagePrice"
+      </td>
+      <td role="gridcell" data-field="stockUnit" style={mutedStyle}>
+        {row.stockUnit || "—"}
+      </td>
+      <InlineEditCell
+        value={localCost === "—" || localCost === "--" ? "" : localCost}
+        displayValue={localCost}
+        onSave={handleSaveCost}
+        align="right"
       >
+        <span style={{ fontSize: 12, color: "#2C2C2A", textAlign: "right", display: "block", width: "100%" }}>
+          {formatCurrency(localCost)}
+        </span>
+      </InlineEditCell>
+      <td role="gridcell" data-field="conversionFactor" style={rightStyle}>
+        {formatDecimal(row.conversionFactor)}
+      </td>
+      <td role="gridcell" data-field="usageQuantity" style={rightStyle}>
+        {formatDecimal(row.usageQuantity)}
+      </td>
+      <td role="gridcell" data-field="usageUnit" style={mutedStyle}>
+        {row.usageUnit || "—"}
+      </td>
+      <td role="gridcell" data-field="usagePrice" style={{ ...rightStyle, color: "#1B6B2C", fontWeight: 500 }}>
         {formatCurrency(row.usagePrice)}
-      </CellView>
-      <CellView style={tdBase} field="supplierName">
+      </td>
+      <td role="gridcell" data-field="supplierName" style={tdBase}>
         <SupplierCell row={row} />
-      </CellView>
-      <CellView style={centerStyle} field="active">
+      </td>
+      <td role="gridcell" data-field="active" style={centerStyle}>
         <StatusBadge active={row.active} />
-      </CellView>
-      <CellView style={rightMuted} field="updatedAt" textAlign="left">
+      </td>
+      <td role="gridcell" data-field="updatedAt" style={{ ...rightMuted, textAlign: "left" }}>
         {formatDateShort(row.updatedAt)}
-      </CellView>
-      <CellView style={centerStyle} field="description">
+      </td>
+      <td role="gridcell" data-field="description" style={centerStyle}>
         <ObservationCell description={row.description} />
-      </CellView>
+      </td>
     </tr>
   );
 }
 
-interface CellViewProps {
-  style: CSSProperties;
-  field: string;
-  title?: string;
-  textAlign?: "left" | "right" | "center";
-  children: ReactNode;
-}
-
-function CellView({ style, field, title, textAlign, children }: CellViewProps) {
-  const finalStyle: CSSProperties = textAlign ? { ...style, textAlign } : style;
-  return (
-    <td role="gridcell" data-field={field} style={finalStyle} title={title}>
-      {children}
-    </td>
-  );
-}

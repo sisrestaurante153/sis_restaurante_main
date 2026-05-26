@@ -6,7 +6,14 @@ import { NextResponse } from "next/server";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-const SUBSCRIPTION_EXEMPT = ["/assinatura", "/login", "/registro", "/forbidden", "/api"];
+const SUBSCRIPTION_EXEMPT = [
+  "/assinatura",
+  "/login",
+  "/logout",
+  "/forbidden",
+  "/api/health",
+  "/api/asaas/webhook"
+];
 
 function isSubscriptionExempt(pathname: string) {
   return SUBSCRIPTION_EXEMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -59,7 +66,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!isSubscriptionExempt(pathname)) {
-    if (isSubscriptionBlocked(session.subscriptionStatus, session.trialEndsAt)) {
+    if (isSubscriptionBlocked(session.subscriptionStatus, session.trialEndsAt, session.nextBillingDate)) {
       return NextResponse.redirect(new URL("/assinatura?blocked=1", request.url));
     }
   }

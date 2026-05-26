@@ -85,6 +85,27 @@ export async function saveItemAction(
   redirect(`/itens/${item.id}?saved=1`);
 }
 
+export interface PatchItemQuickResult {
+  ok: boolean;
+  message?: string;
+}
+
+export async function patchItemQuickAction(input: {
+  itemId: string;
+  name?: string;
+  purchaseCost?: string;
+}): Promise<PatchItemQuickResult> {
+  const actor = await resolveCatalogActor();
+  const repository = getCatalogRepository(actor.restaurantId);
+  try {
+    await repository.patchItemQuick(input);
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro ao salvar.";
+    return { ok: false, message };
+  }
+}
+
 export async function deleteItemAction(formData: FormData) {
   const actor = await resolveCatalogActor();
   const itemId = formData.get("itemId")?.toString() ?? "";

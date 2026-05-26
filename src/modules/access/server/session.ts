@@ -10,6 +10,7 @@ export interface SessionPayload {
   roleCodes: string[];
   subscriptionStatus: SubscriptionStatus;
   trialEndsAt: string | null;
+  nextBillingDate: string | null;
   issuedAt: string;
   expiresAt: string;
 }

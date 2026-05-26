@@ -3,7 +3,7 @@ import { buildImportDashboardSnapshot } from "@/modules/import/server/import-exe
 import { getImportRepository } from "@/modules/import/server/import-repository";
 
 export async function GET() {
-  const session = await requirePermission("import.run");
+  const session = await requirePermission("import.read");
 
   const repository = getImportRepository(session.restaurantId);
   const [activeExecution, history] = await Promise.all([

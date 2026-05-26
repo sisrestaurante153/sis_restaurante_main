@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react"; // useMemo mantido para evitar re-render desnecessário de visibleItems
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { patchFichaQuickAction } from "@/modules/engineering/server/engineering-actions";
 import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -160,6 +161,116 @@ function MarginPill({ value }: { value?: string | null }) {
   );
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+interface InlineEditCellProps {
+  value: string;
+  onSave: (next: string) => Promise<void>;
+  align?: "left" | "right";
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}
+
+function InlineEditCell({ value, onSave, align = "left", style, children }: InlineEditCellProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const startEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDraft(value);
+    setSaveStatus("idle");
+    setEditing(true);
+  }, [value]);
+
+  const commitEdit = useCallback(async () => {
+    const trimmed = draft.trim();
+    if (trimmed === value.trim()) {
+      setEditing(false);
+      return;
+    }
+    setSaveStatus("saving");
+    try {
+      await onSave(trimmed);
+      setSaveStatus("saved");
+      setEditing(false);
+      setTimeout(() => setSaveStatus("idle"), 1500);
+    } catch {
+      setSaveStatus("error");
+    }
+  }, [draft, value, onSave]);
+
+  const cancelEdit = useCallback(() => {
+    setEditing(false);
+    setSaveStatus("idle");
+  }, []);
+
+  if (editing) {
+    return (
+      <td
+        style={{ ...style, padding: "4px 7px", verticalAlign: "middle" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); void commitEdit(); }
+              if (e.key === "Escape") cancelEdit();
+            }}
+            onBlur={() => void commitEdit()}
+            style={{
+              fontSize: 12,
+              padding: "2px 5px",
+              border: "1px solid #185FA5",
+              borderRadius: 4,
+              outline: "none",
+              width: "100%",
+              textAlign: align,
+              background: "#fff"
+            }}
+          />
+          {saveStatus === "saving" && (
+            <span style={{ fontSize: 10, color: "#888780", whiteSpace: "nowrap" }}>Salvando…</span>
+          )}
+          {saveStatus === "error" && (
+            <span style={{ fontSize: 10, color: "#A32D2D", whiteSpace: "nowrap" }}>Erro</span>
+          )}
+        </div>
+      </td>
+    );
+  }
+
+  return (
+    <td
+      style={{ ...style, padding: "8px 7px", cursor: "text" }}
+      onClick={startEdit}
+      title="Clique para editar"
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: align === "right" ? "flex-end" : "flex-start" }}>
+        {children}
+        {saveStatus === "saved" && (
+          <span style={{ fontSize: 10, color: "#1B6B2C", whiteSpace: "nowrap" }}>✓</span>
+        )}
+        {saveStatus === "error" && (
+          <span style={{ fontSize: 10, color: "#A32D2D", whiteSpace: "nowrap" }}>Erro</span>
+        )}
+      </div>
+    </td>
+  );
+}
+
 export function DesktopNewFichaAction() {
   const theme = useTheme();
   const smUp = useMediaQuery(theme.breakpoints.up("sm"));
@@ -300,8 +411,8 @@ export function FichasListingView({
         <span style={{ display: "inline-flex", alignItems: "center", gap: 3, justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start" }}>
           {label}
           <svg
-            width="8"
-            height="10"
+            width="12"
+            height="14"
             viewBox="0 0 8 10"
             fill="none"
             aria-hidden="true"
@@ -473,184 +584,14 @@ export function FichasListingView({
                   </td>
                 </tr>
               ) : (
-                visibleItems.map((row) => {
-                  const fc = formatPercent(row.correctionFactor);
-                  const ic = formatPercent(row.cookingIndex);
-                  const custoNumeric = Number(row.totalCost);
-                  const hasCusto = Number.isFinite(custoNumeric) && custoNumeric > 0;
-                  const pvFormatted = formatOptionalCurrency(row.sellingPrice);
-                  const statusLower = (row.status ?? "").toLowerCase();
-                  const isAtiva = statusLower === "ativa";
-                  const statusLabel = row.status
-                    ? row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase()
-                    : "";
-                  const modalityLabel = row.modalityLabel ?? "Sem modalidade";
-                  const groupLabel = row.groupOperational ?? "Sem grupo";
-
-                  return (
-                    <Link
-                      key={row.id}
-                      href={`/fichas/${row.id}`}
-                      style={{
-                        display: "table-row",
-                        borderBottom: `0.5px solid ${BORDER}`,
-                        cursor: "pointer",
-                        textDecoration: "none",
-                        color: "inherit"
-                      }}
-                      onMouseEnter={(event) => {
-                        event.currentTarget.style.background = "#F7F7F5";
-                      }}
-                      onMouseLeave={(event) => {
-                        event.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <td style={cellStyle}>
-                        <span style={{ fontSize: 11, color: TEXT_3 }}>
-                           {row.code && row.code.trim() !== "" ? row.code : "--"}
-                        </span>
-                      </td>
-                      <td style={cellStyle}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                              overflow: "hidden",
-                              fontWeight: 500,
-                              fontSize: 13,
-                              color: TEXT
-                            }}
-                          >
-                            <span
-                              title={row.itemName}
-                              style={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap"
-                              }}
-                            >
-                              {row.itemName}
-                            </span>
-                            <span
-                              style={{
-                                flexShrink: 0,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                color: AZUL,
-                                background: AZUL_L,
-                                border: `0.5px solid ${AZUL_B}`,
-                                borderRadius: 4,
-                                padding: "1px 5px"
-                              }}
-                            >
-                              V{row.version}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 10, color: TEXT_3 }}>
-                            {`${modalityLabel.toLowerCase()} · ${groupLabel.toLowerCase()}`}
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }} title={modalityLabel}>
-                        {modalityLabel}
-                      </td>
-                      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }} title={groupLabel}>
-                        {groupLabel}
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "center" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            fontSize: 11,
-                            padding: "2px 8px",
-                            borderRadius: 4,
-                            fontWeight: 500,
-                            background: BG,
-                            border: `0.5px solid ${BORDER}`,
-                            color: TEXT_2
-                          }}
-                        >
-                          {`${row.componentCount} ${row.componentCount === 1 ? "item" : "itens"}`}
-                        </span>
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "right" }}>
-                        <span style={{ color: fc.color, fontWeight: 500 }}>{fc.text}</span>
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "right" }}>
-                        <span style={{ color: ic.color, fontWeight: 500 }}>{ic.text}</span>
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "right" }}>
-                        {hasCusto ? (
-                          <span style={{ color: VERDE, fontWeight: 500 }}>
-                            {formatCurrency(row.totalCost)}
-                          </span>
-                        ) : (
-                          <span style={{ color: TEXT_3 }}>R$ 0,00</span>
-                        )}
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "right" }}>
-                        {pvFormatted ? (
-                          <span style={{ color: TEXT, fontWeight: 500 }}>{pvFormatted}</span>
-                        ) : (
-                          <span style={{ color: TEXT_3 }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ ...cellStyle }}>
-                        <MarginPill value={row.contributionMarginPercent} />
-                      </td>
-                      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }}>
-                        {formatDateShort(row.updatedAt)}
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "center" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            fontSize: 10,
-                            padding: "2px 7px",
-                            borderRadius: 4,
-                            fontWeight: 500,
-                            background: isAtiva ? VERDE_L : INATIVA_BG,
-                            color: isAtiva ? VERDE_TEXT : INATIVA_TEXT
-                          }}
-                        >
-                          {statusLabel}
-                        </span>
-                      </td>
-                      <td style={{ ...cellStyle, textAlign: "center" }}>
-                        {row.notes ? (
-                          <span
-                            title={row.notes}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: AZUL
-                            }}
-                            aria-label="Ver observacao"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                              aria-hidden="true"
-                            >
-                              <circle cx="8" cy="8" r="6.5" />
-                              <line x1="8" y1="7" x2="8" y2="11" />
-                              <circle cx="8" cy="5" r="0.5" fill="currentColor" />
-                            </svg>
-                          </span>
-                        ) : (
-                          <span style={{ color: TEXT_3 }}>—</span>
-                        )}
-                      </td>
-                    </Link>
-                  );
-                })
+                visibleItems.map((row) => (
+                  <FichaRowView
+                    key={row.id}
+                    row={row}
+                    cellStyle={cellStyle}
+                    onNavigate={() => router.push(`/fichas/${row.id}` as never)}
+                  />
+                ))
               )}
             </tbody>
           </table>
@@ -683,5 +624,207 @@ export function FichasListingView({
         </Fab>
       ) : null}
     </Stack>
+  );
+}
+
+interface FichaRowViewProps {
+  row: FichaListRow;
+  cellStyle: React.CSSProperties;
+  onNavigate: () => void;
+}
+
+function FichaRowView({ row, cellStyle, onNavigate }: FichaRowViewProps) {
+  const [hover, setHover] = useState(false);
+  const [localName, setLocalName] = useState(row.itemName);
+  const [localPrice, setLocalPrice] = useState(row.sellingPrice ?? "");
+
+  const fc = formatPercent(row.correctionFactor);
+  const ic = formatPercent(row.cookingIndex);
+  const custoNumeric = Number(row.totalCost);
+  const hasCusto = Number.isFinite(custoNumeric) && custoNumeric > 0;
+  const pvFormatted = formatOptionalCurrency(localPrice || null);
+  const statusLower = (row.status ?? "").toLowerCase();
+  const isAtiva = statusLower === "ativa";
+  const statusLabel = row.status
+    ? row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase()
+    : "";
+  const modalityLabel = row.modalityLabel ?? "Sem modalidade";
+  const groupLabel = row.groupOperational ?? "Sem grupo";
+
+  const handleSaveName = useCallback(async (next: string) => {
+    if (!next) throw new Error("Nome não pode estar vazio.");
+    const result = await patchFichaQuickAction({ fichaId: row.id, name: next });
+    if (!result.ok) throw new Error(result.message ?? "Erro ao salvar.");
+    setLocalName(next);
+  }, [row.id]);
+
+  const handleSavePrice = useCallback(async (next: string) => {
+    const num = next === "" ? "" : Number(next.replace(",", "."));
+    if (num !== "" && (!Number.isFinite(num) || (num as number) < 0)) throw new Error("Valor inválido.");
+    const result = await patchFichaQuickAction({ fichaId: row.id, sellingPrice: next === "" ? "" : String(num) });
+    if (!result.ok) throw new Error(result.message ?? "Erro ao salvar.");
+    setLocalPrice(next === "" ? "" : String(num));
+  }, [row.id]);
+
+  return (
+    <tr
+      style={{
+        borderBottom: `0.5px solid ${BORDER}`,
+        cursor: "pointer",
+        background: hover ? "#F7F7F5" : "transparent"
+      }}
+      onClick={onNavigate}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <td style={cellStyle}>
+        <span style={{ fontSize: 11, color: TEXT_3 }}>
+          {row.code && row.code.trim() !== "" ? row.code : "--"}
+        </span>
+      </td>
+      <InlineEditCell value={localName} onSave={handleSaveName} style={cellStyle}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              overflow: "hidden",
+              fontWeight: 500,
+              fontSize: 13,
+              color: TEXT
+            }}
+          >
+            <span
+              title={localName}
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap"
+              }}
+            >
+              {localName}
+            </span>
+            <span
+              style={{
+                flexShrink: 0,
+                fontSize: 10,
+                fontWeight: 600,
+                color: AZUL,
+                background: AZUL_L,
+                border: `0.5px solid ${AZUL_B}`,
+                borderRadius: 4,
+                padding: "1px 5px"
+              }}
+            >
+              V{row.version}
+            </span>
+          </div>
+          <div style={{ fontSize: 10, color: TEXT_3 }}>
+            {`${modalityLabel.toLowerCase()} · ${groupLabel.toLowerCase()}`}
+          </div>
+        </div>
+      </InlineEditCell>
+      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }} title={modalityLabel}>
+        {modalityLabel}
+      </td>
+      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }} title={groupLabel}>
+        {groupLabel}
+      </td>
+      <td style={{ ...cellStyle, textAlign: "center" }}>
+        <span
+          style={{
+            display: "inline-block",
+            fontSize: 11,
+            padding: "2px 8px",
+            borderRadius: 4,
+            fontWeight: 500,
+            background: BG,
+            border: `0.5px solid ${BORDER}`,
+            color: TEXT_2
+          }}
+        >
+          {`${row.componentCount} ${row.componentCount === 1 ? "item" : "itens"}`}
+        </span>
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>
+        <span style={{ color: fc.color, fontWeight: 500 }}>{fc.text}</span>
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>
+        <span style={{ color: ic.color, fontWeight: 500 }}>{ic.text}</span>
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>
+        {hasCusto ? (
+          <span style={{ color: VERDE, fontWeight: 500 }}>
+            {formatCurrency(row.totalCost)}
+          </span>
+        ) : (
+          <span style={{ color: TEXT_3 }}>R$ 0,00</span>
+        )}
+      </td>
+      <InlineEditCell
+        value={localPrice}
+        onSave={handleSavePrice}
+        align="right"
+        style={{ ...cellStyle, textAlign: "right" }}
+      >
+        {pvFormatted ? (
+          <span style={{ color: TEXT, fontWeight: 500 }}>{pvFormatted}</span>
+        ) : (
+          <span style={{ color: TEXT_3 }}>—</span>
+        )}
+      </InlineEditCell>
+      <td style={{ ...cellStyle }}>
+        <MarginPill value={row.contributionMarginPercent} />
+      </td>
+      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }}>
+        {formatDateShort(row.updatedAt)}
+      </td>
+      <td style={{ ...cellStyle, textAlign: "center" }}>
+        <span
+          style={{
+            display: "inline-block",
+            fontSize: 10,
+            padding: "2px 7px",
+            borderRadius: 4,
+            fontWeight: 500,
+            background: isAtiva ? VERDE_L : INATIVA_BG,
+            color: isAtiva ? VERDE_TEXT : INATIVA_TEXT
+          }}
+        >
+          {statusLabel}
+        </span>
+      </td>
+      <td style={{ ...cellStyle, textAlign: "center" }}>
+        {row.notes ? (
+          <span
+            title={row.notes}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: AZUL
+            }}
+            aria-label="Ver observacao"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="8" r="6.5" />
+              <line x1="8" y1="7" x2="8" y2="11" />
+              <circle cx="8" cy="5" r="0.5" fill="currentColor" />
+            </svg>
+          </span>
+        ) : (
+          <span style={{ color: TEXT_3 }}>—</span>
+        )}
+      </td>
+    </tr>
   );
 }

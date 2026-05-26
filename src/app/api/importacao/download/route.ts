@@ -49,7 +49,7 @@ function resolveContentType(artifact: string, executionMimeType: string | null) 
 }
 
 export async function GET(request: Request) {
-  const session = await requirePermission("import.run");
+  const session = await requirePermission("import.read");
 
   const url = new URL(request.url);
   const executionId = url.searchParams.get("executionId");

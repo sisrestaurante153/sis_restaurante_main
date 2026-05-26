@@ -32,6 +32,7 @@ export async function createUserSession(input: {
   roleCodes: string[];
   subscriptionStatus?: SubscriptionStatus;
   trialEndsAt?: string | null;
+  nextBillingDate?: string | null;
 }) {
   const issuedAt = new Date();
   const expiresAt = new Date(issuedAt.getTime() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
@@ -43,6 +44,7 @@ export async function createUserSession(input: {
     roleCodes: input.roleCodes,
     subscriptionStatus: input.subscriptionStatus ?? "active",
     trialEndsAt: input.trialEndsAt ?? null,
+    nextBillingDate: input.nextBillingDate ?? null,
     issuedAt: issuedAt.toISOString(),
     expiresAt: expiresAt.toISOString()
   };

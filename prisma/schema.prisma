@@ -641,4 +641,6 @@ enum assinatura_status {
   overdue
   cancelled
   suspended
+  bloqueada
+  expirada
 }

@@ -476,6 +476,10 @@ async function resolveCanonicalFichaItem(
       }
     });
 
+    if (existing.cd_restaurante && existing.cd_restaurante !== restaurantId) {
+      throw new Error("Acesso negado. Item pertence a outro restaurante.");
+    }
+
     if (existing.nm_normalizado !== normalizedName) {
       const targetItem = await tx.item.findUnique({
         where: {
@@ -1178,6 +1182,10 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
           })
         : null;
 
+      if (existing && existing.cd_restaurante !== restaurantId) {
+        throw new Error("Acesso negado. Ficha de outro restaurante.");
+      }
+
       const highestVersion = await tx.fichaTecnica.aggregate({
         where: { cd_item_resultante: item.cd_item },
         _max: { nr_versao: true }
@@ -1410,6 +1418,39 @@ async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
     }, { timeout: 30000 });
 
     return getFichaDetailWithPrisma(duplicated, restaurantId);
+  } catch {
+    return null;
+  }
+}
+
+async function patchFichaQuickWithPrisma(
+  input: { fichaId: string; name?: string; sellingPrice?: string },
+  restaurantId: string
+) {
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) return null;
+
+  const data: Record<string, unknown> = {};
+  if (input.name !== undefined) {
+    data.nm_exibicao = input.name.trim();
+  }
+  if (input.sellingPrice !== undefined) {
+    const parsed = input.sellingPrice === "" ? null : Number(input.sellingPrice);
+    if (input.sellingPrice !== "" && (parsed === null || !Number.isFinite(parsed))) {
+      throw new Error("Preço de venda inválido.");
+    }
+    data.vl_preco_venda = parsed;
+  }
+
+  if (Object.keys(data).length === 0) return null;
+
+  try {
+    await prisma.fichaTecnica.update({
+      where: { cd_ficha_tecnica: input.fichaId, cd_restaurante: restaurantId },
+      data
+    });
+    return true;
   } catch {
     return null;
   }
@@ -2098,6 +2139,20 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
       persistDemoStore(store);
 
       return toFichaDetail(store.fichas.find((entry) => entry.id === duplicated.id) ?? duplicated);
+    },
+
+    async patchFichaQuick(input: { fichaId: string; name?: string; sellingPrice?: string }) {
+      const prismaResult = await patchFichaQuickWithPrisma(input, restaurantId);
+      if (prismaResult !== null) return;
+
+      const store = getDemoStore();
+      const ficha = store.fichas.find((f) => f.id === input.fichaId);
+      if (!ficha) throw new Error(`Ficha ${input.fichaId} não encontrada.`);
+      if (input.name !== undefined) ficha.displayName = input.name.trim();
+      if (input.sellingPrice !== undefined) {
+        ficha.salePrice = input.sellingPrice === "" ? null : input.sellingPrice;
+      }
+      persistDemoStore(store);
     },
 
     async inactivateFicha(fichaId: string) {

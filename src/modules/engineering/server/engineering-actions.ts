@@ -144,6 +144,27 @@ export async function duplicateFichaAction(formData: FormData) {
   redirect(`/fichas/${ficha.id}?duplicated=1`);
 }
 
+export interface PatchFichaQuickResult {
+  ok: boolean;
+  message?: string;
+}
+
+export async function patchFichaQuickAction(input: {
+  fichaId: string;
+  name?: string;
+  sellingPrice?: string;
+}): Promise<PatchFichaQuickResult> {
+  const actor = await resolveEngineeringActor();
+  const repository = getEngineeringRepository(actor.restaurantId);
+  try {
+    await repository.patchFichaQuick(input);
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro ao salvar.";
+    return { ok: false, message };
+  }
+}
+
 export async function inactivateFichaAction(formData: FormData) {
   const actor = await resolveEngineeringActor();
   const fichaId = formData.get("id")?.toString();

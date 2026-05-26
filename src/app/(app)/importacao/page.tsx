@@ -16,7 +16,7 @@ type SearchParams = Promise<{
 }>;
 
 export default async function ImportPage({ searchParams }: { searchParams?: SearchParams }) {
-  const session = await requirePermission("import.run");
+  const session = await requirePermission("import.read");
 
   const repository = getImportRepository(session.restaurantId);
   const [activeExecution, history, params] = await Promise.all([

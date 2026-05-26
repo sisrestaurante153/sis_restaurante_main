@@ -17,7 +17,9 @@ export default async function ItemsPage({ searchParams }: { searchParams: Search
   const status = getSingle(resolvedSearchParams.status, "all") as "ativos" | "inativos" | "all";
   const category = getSingle(resolvedSearchParams.category, "all");
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
-  const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "10"));
+  const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "100"));
+  const sort = getSingle(resolvedSearchParams.sort) as "name" | "baseUnitCost" | "usagePrice" | "updatedAt" | "";
+  const order = getSingle(resolvedSearchParams.order) as "asc" | "desc" | "";
   const repository = getCatalogRepository(session.restaurantId);
   const masterData = getMasterDataRepository();
   const [result, categoryRows] = await Promise.all([
@@ -27,7 +29,9 @@ export default async function ItemsPage({ searchParams }: { searchParams: Search
       status,
       category,
       page,
-      pageSize
+      pageSize,
+      sort: sort || undefined,
+      order: order || undefined
     }),
     masterData.listOperationalCategories()
   ]);
@@ -58,6 +62,8 @@ export default async function ItemsPage({ searchParams }: { searchParams: Search
         status={status}
         category={category}
         categoryOptions={categoryOptions}
+        sort={sort || undefined}
+        order={order || undefined}
       />
     </>
   );

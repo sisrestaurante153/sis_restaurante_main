@@ -1,5 +1,6 @@
 import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import { getServerEnv } from "@/modules/platform/server/env";
+import type { assinatura_status } from "@/generated/prisma/client";
 import type {
   PlanCode,
   SubscriptionStatus,
@@ -16,7 +17,9 @@ function mapStatus(raw: string): SubscriptionStatus {
     active: "active",
     overdue: "overdue",
     cancelled: "cancelled",
-    suspended: "suspended"
+    suspended: "suspended",
+    bloqueada: "bloqueada",
+    expirada: "expirada"
   };
   return map[raw] ?? "active";
 }
@@ -180,7 +183,7 @@ export function getBillingRepository() {
       await db.assinatura.updateMany({
         where: { cd_asaas_subscription: asaasSubscriptionId },
         data: {
-          tp_status: status,
+          tp_status: status as assinatura_status,
           nr_dias_inadimplente: daysOverdue,
           ts_atualizacao: new Date()
         }

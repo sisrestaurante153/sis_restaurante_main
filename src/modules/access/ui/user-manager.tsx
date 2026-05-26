@@ -1,11 +1,12 @@
 "use client";
-
+ 
 import { useState, useEffect, useCallback } from "react";
 import {
   listUsersAction,
   createUserAction,
   updateUserAction,
-  deleteUserAction
+  deleteUserAction,
+  listRestaurantsAction
 } from "@/modules/access/server/user-management-actions";
 import type { UserRecord } from "@/modules/access/server/user-management-repository";
 import {
@@ -40,19 +41,19 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
-
+ 
 const ROLES = [
   { value: "admin", label: "Administrador" },
   { value: "engenharia", label: "Engenharia" },
   { value: "consulta", label: "Consulta" }
 ];
-
+ 
 const ROLE_COLORS: Record<string, "error" | "primary" | "default"> = {
   admin: "error",
   engenharia: "primary",
   consulta: "default"
 };
-
+ 
 type FormState = {
   id?: string;
   name: string;
@@ -60,34 +61,37 @@ type FormState = {
   password: string;
   roleCode: string;
   active: boolean;
+  restaurantId: string;
 };
-
+ 
 const EMPTY_FORM: FormState = {
   name: "",
   email: "",
   password: "",
   roleCode: "engenharia",
-  active: true
+  active: true,
+  restaurantId: ""
 };
-
+ 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
-
+ 
 export function UserManager({ currentUserId }: { currentUserId: string }) {
   const [users, setUsers] = useState<UserRecord[]>([]);
+  const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [showPassword, setShowPassword] = useState(false);
   const isEditing = Boolean(form.id);
-
+ 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingUser, setDeletingUser] = useState<UserRecord | null>(null);
-
+ 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -99,16 +103,28 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
-
+ 
+  const fetchRestaurants = useCallback(async () => {
+    try {
+      const data = await listRestaurantsAction();
+      setRestaurants(data);
+    } catch {
+      console.error("Erro ao carregar restaurantes.");
+    }
+  }, []);
+ 
+  useEffect(() => {
+    fetchUsers();
+    fetchRestaurants();
+  }, [fetchUsers, fetchRestaurants]);
+ 
   function openCreate() {
     setForm(EMPTY_FORM);
     setShowPassword(false);
     setError(null);
     setDialogOpen(true);
   }
-
+ 
   function openEdit(user: UserRecord) {
     setForm({
       id: user.id,
@@ -116,25 +132,38 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
       email: user.email,
       password: "",
       roleCode: user.roleCode ?? "consulta",
-      active: user.active
+      active: user.active,
+      restaurantId: user.restaurantId ?? ""
     });
     setError(null);
     setDialogOpen(true);
   }
-
+ 
   function openDelete(user: UserRecord) {
     setDeletingUser(user);
     setDeleteDialogOpen(true);
   }
-
+ 
   async function handleSave() {
     setSaving(true);
     setError(null);
     try {
       const result = form.id
-        ? await updateUserAction({ id: form.id, name: form.name, roleCode: form.roleCode, active: form.active })
-        : await createUserAction({ name: form.name, email: form.email, password: form.password, roleCode: form.roleCode });
-
+        ? await updateUserAction({
+            id: form.id,
+            name: form.name,
+            roleCode: form.roleCode,
+            active: form.active,
+            restaurantId: form.restaurantId || null
+          })
+        : await createUserAction({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+            roleCode: form.roleCode,
+            restaurantId: form.restaurantId || null
+          });
+ 
       if (!result.ok) {
         setError(result.message ?? "Erro ao salvar usuário.");
         return;
@@ -145,7 +174,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
       setSaving(false);
     }
   }
-
+ 
   async function handleDelete() {
     if (!deletingUser) return;
     setSaving(true);
@@ -163,7 +192,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
       setSaving(false);
     }
   }
-
+ 
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
@@ -179,7 +208,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
           Novo Usuário
         </Button>
       </Stack>
-
+ 
       {loading ? (
         <Box display="flex" justifyContent="center" py={6}>
           <CircularProgress size={32} />
@@ -191,6 +220,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
               <TableRow>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>E-mail</TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Restaurante</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Perfil</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Criado em</TableCell>
@@ -200,7 +230,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6, color: "text.secondary", fontSize: 13 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary", fontSize: 13 }}>
                     Nenhum usuário cadastrado.
                   </TableCell>
                 </TableRow>
@@ -216,6 +246,15 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
                       )}
                     </TableCell>
                     <TableCell sx={{ fontSize: 13, color: "text.secondary" }}>{user.email}</TableCell>
+                    <TableCell sx={{ fontSize: 13 }}>
+                      {user.restaurantName ? (
+                        user.restaurantName
+                      ) : (
+                        <Typography component="span" sx={{ color: "error.main", fontWeight: "bold", fontSize: 13 }}>
+                          Sem vínculo
+                        </Typography>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Chip
                         label={ROLES.find((r) => r.value === user.roleCode)?.label ?? user.roleCode ?? "—"}
@@ -259,14 +298,14 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
           </Table>
         </Box>
       )}
-
+ 
       {/* Dialog criar / editar */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{isEditing ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} mt={1}>
             {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
-
+ 
             <TextField
               label="Nome"
               value={form.name}
@@ -276,7 +315,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
               required
               autoFocus
             />
-
+ 
             <TextField
               label="E-mail"
               type="email"
@@ -288,7 +327,27 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
               disabled={isEditing}
               helperText={isEditing ? "O e-mail não pode ser alterado." : undefined}
             />
-
+ 
+            <FormControl fullWidth size="small">
+              <InputLabel>Restaurante</InputLabel>
+              <Select
+                label="Restaurante"
+                value={form.restaurantId}
+                onChange={(e) => setForm((f) => ({ ...f, restaurantId: e.target.value }))}
+              >
+                <MenuItem value="">
+                  <Typography component="span" sx={{ color: "error.main", fontWeight: "bold" }}>
+                    Sem vínculo
+                  </Typography>
+                </MenuItem>
+                {restaurants.map((r) => (
+                  <MenuItem key={r.id} value={r.id}>
+                    {r.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+ 
             {!isEditing && (
               <TextField
                 label="Senha inicial"
@@ -317,7 +376,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
                 }}
               />
             )}
-
+ 
             <FormControl fullWidth size="small" required>
               <InputLabel>Perfil</InputLabel>
               <Select
@@ -330,7 +389,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
                 ))}
               </Select>
             </FormControl>
-
+ 
             {isEditing && (
               <FormControl fullWidth size="small">
                 <InputLabel>Status</InputLabel>
@@ -358,7 +417,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
           </Button>
         </DialogActions>
       </Dialog>
-
+ 
       {/* Dialog confirmar exclusão */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Excluir usuário</DialogTitle>

@@ -54,11 +54,14 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
   const restaurantId = localUser?.restaurantId ?? "rest_padrao";
 
   await createUserSession({
-    userId: result.user.id,
+    userId: localUser?.id ?? result.user.id,
     restaurantId,
     email: result.user.email,
     name: result.user.nome,
     roleCodes: result.user.roleCodes,
+    subscriptionStatus: localUser?.subscriptionStatus,
+    trialEndsAt: localUser?.trialEndsAt,
+    nextBillingDate: localUser?.nextBillingDate
   });
 
   redirect("/dashboard");

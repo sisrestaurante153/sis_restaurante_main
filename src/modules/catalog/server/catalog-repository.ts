@@ -33,6 +33,8 @@ export interface ListItemsInput {
   type?: DemoItemType | "all";
   status?: "ativos" | "inativos" | "all";
   category?: string;
+  sort?: "name" | "baseUnitCost" | "usagePrice" | "updatedAt";
+  order?: "asc" | "desc";
 }
 
 export interface SaveItemInput {
@@ -353,7 +355,11 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
       prisma.item.count({ where }),
       prisma.item.findMany({
         where,
-        orderBy: { nm_item: "asc" },
+        orderBy: input.sort === "updatedAt"
+          ? { ts_atualizacao: input.order ?? "asc" }
+          : input.sort === "name"
+            ? { nm_item: input.order ?? "asc" }
+            : { nm_item: "asc" },
         skip: (Math.max(input.page, 1) - 1) * input.pageSize,
         take: input.pageSize,
         include: {
@@ -406,7 +412,7 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
   }
 }
 
-async function getItemDetailWithPrisma(itemId: string) {
+async function getItemDetailWithPrisma(itemId: string, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -416,6 +422,9 @@ async function getItemDetailWithPrisma(itemId: string) {
 
   try {
     const item = await queryItem(prisma, itemId);
+    if (item && item.cd_restaurante !== restaurantId) {
+      return null;
+    }
     return item ? mapItemDetail(item) : null;
   } catch {
     return null;
@@ -524,6 +533,16 @@ async function saveItemWithPrisma(input: SaveItemInput & { restaurantId: string 
         },
         select: { cd_item: true }
       });
+
+      if (input.id) {
+        const existing = await tx.item.findUnique({
+          where: { cd_item: input.id },
+          select: { cd_restaurante: true }
+        });
+        if (existing && existing.cd_restaurante !== input.restaurantId) {
+          throw new CatalogRepositoryError("Acesso negado. Item pertence a outro restaurante.");
+        }
+      }
 
       // Se código já existe e não estamos editando explicitamente, reutiliza o id do existente
       const resolvedId = input.id ?? duplicateCode?.cd_item;
@@ -653,7 +672,7 @@ async function saveItemWithPrisma(input: SaveItemInput & { restaurantId: string 
 
     if (!input.skipCascadeRecalculate) {
       await recalculateCascade(prisma, [item.cd_item], "item.save.web");
-      return getItemDetailWithPrisma(item.cd_item);
+      return getItemDetailWithPrisma(item.cd_item, input.restaurantId);
     }
     return null;
   } catch (error) {
@@ -679,7 +698,56 @@ async function countLinkedFichasWithPrisma(
   return new Set(linkedFichas.map((ficha) => ficha.cd_ficha_tecnica)).size;
 }
 
-async function deleteItemWithPrisma(itemId: string): Promise<CatalogDeleteResult | null> {
+async function patchItemQuickWithPrisma(
+  input: { itemId: string; name?: string; purchaseCost?: string },
+  restaurantId: string
+) {
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) return null;
+
+  try {
+    if (input.name !== undefined) {
+      await prisma.item.update({
+        where: { cd_item: input.itemId, cd_restaurante: restaurantId },
+        data: { nm_item: input.name.trim() }
+      });
+    }
+
+    if (input.purchaseCost !== undefined) {
+      const parsed = Number(input.purchaseCost);
+      if (!Number.isFinite(parsed) || parsed < 0) throw new Error("Preço de compra inválido.");
+
+      const primaryPurchase = await prisma.itemCompra.findFirst({
+        where: { cd_item: input.itemId, sn_principal: true },
+        include: { unidadeCompra: true }
+      });
+
+      if (primaryPurchase) {
+        const canonicalCost = calculateCanonicalUnitCost(
+          String(parsed),
+          String(primaryPurchase.vl_qtd_embalagem),
+          primaryPurchase.unidadeCompra?.ds_codigo ?? "un"
+        );
+        await prisma.itemCompra.update({
+          where: { cd_item_compra: primaryPurchase.cd_item_compra },
+          data: {
+            vl_custo_compra: String(parsed),
+            vl_custo_unitario_base: canonicalCost.toString()
+          }
+        });
+        await recalculateCascade(prisma, [input.itemId], "item.patch.quick");
+      }
+    }
+
+    return true;
+  } catch (err) {
+    if (err instanceof Error) throw err;
+    return null;
+  }
+}
+
+async function deleteItemWithPrisma(itemId: string, restaurantId: string): Promise<CatalogDeleteResult | null> {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
 
@@ -688,6 +756,18 @@ async function deleteItemWithPrisma(itemId: string): Promise<CatalogDeleteResult
   }
 
   try {
+    const item = await prisma.item.findUnique({
+      where: { cd_item: itemId },
+      select: { cd_restaurante: true }
+    });
+
+    if (!item || item.cd_restaurante !== restaurantId) {
+      return {
+        success: false,
+        reason: "Acesso negado. Item não encontrado ou de outro restaurante."
+      };
+    }
+
     const linkedFichaCount = await countLinkedFichasWithPrisma(prisma, itemId);
 
     if (linkedFichaCount > 0) {
@@ -747,7 +827,7 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
     },
 
     async getItemDetail(itemId: string) {
-      const prismaResult = await getItemDetailWithPrisma(itemId);
+      const prismaResult = await getItemDetailWithPrisma(itemId, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -868,7 +948,7 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
     },
 
     async deleteItem(itemId: string): Promise<CatalogDeleteResult> {
-      const prismaResult = await deleteItemWithPrisma(itemId);
+      const prismaResult = await deleteItemWithPrisma(itemId, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -904,6 +984,10 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
       persistDemoStore(store);
 
       return { success: true };
+    },
+
+    async patchItemQuick(input: { itemId: string; name?: string; purchaseCost?: string }) {
+      await patchItemQuickWithPrisma(input, restaurantId);
     },
 
     async recalculateItems(itemIds: string[]) {

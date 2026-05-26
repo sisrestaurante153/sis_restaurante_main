@@ -1,5 +1,5 @@
 export type PlanCode = "starter" | "pro" | "enterprise";
-export type SubscriptionStatus = "trial" | "active" | "overdue" | "cancelled" | "suspended";
+export type SubscriptionStatus = "trial" | "active" | "overdue" | "cancelled" | "suspended" | "bloqueada" | "expirada";
 export type PaymentMethod = "CREDIT_CARD" | "PIX";
 export type PaymentStatus = "CONFIRMED" | "RECEIVED" | "OVERDUE" | "REFUNDED" | "PENDING";
 

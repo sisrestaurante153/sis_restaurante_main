@@ -39,7 +39,8 @@ export async function POST(request: Request) {
     name: loginResult.user.nome,
     roleCodes: loginResult.user.roleCodes,
     subscriptionStatus: localUser?.subscriptionStatus ?? "active",
-    trialEndsAt: localUser?.trialEndsAt ?? null
+    trialEndsAt: localUser?.trialEndsAt ?? null,
+    nextBillingDate: localUser?.nextBillingDate ?? null
   });
 
   const response = NextResponse.json({ ok: true });

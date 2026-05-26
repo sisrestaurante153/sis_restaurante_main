@@ -6,6 +6,7 @@ export type PermissionCode =
   | "ficha.read"
   | "ficha.write"
   | "impact.read"
+  | "import.read"
   | "import.run"
   | "cost.recalculate"
   | "billing.manage";
@@ -22,6 +23,7 @@ const rolePermissions: Record<RoleCode, PermissionCode[]> = {
     "ficha.read",
     "ficha.write",
     "impact.read",
+    "import.read",
     "import.run",
     "cost.recalculate",
     "billing.manage"
@@ -32,30 +34,40 @@ const rolePermissions: Record<RoleCode, PermissionCode[]> = {
     "ficha.read",
     "ficha.write",
     "impact.read",
+    "import.read",
+    "import.run",
     "cost.recalculate"
   ],
-  consulta: ["item.read", "ficha.read", "impact.read"]
+  consulta: [
+    "item.read",
+    "ficha.read",
+    "impact.read",
+    "import.read"
+  ]
 };
 
 const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/itens\/novo$/, permission: "item.write" },
-  { pattern: /^\/itens\/[^/]+$/, permission: "item.write" },
+  { pattern: /^\/itens\/[^/]+$/, permission: "item.read" },
   { pattern: /^\/itens$/, permission: "item.read" },
-  { pattern: /^\/cadastros$/, permission: "item.write" },
+  { pattern: /^\/cadastros$/, permission: "item.read" },
+  { pattern: /^\/cadastros\/.*$/, permission: "item.read" },
   { pattern: /^\/fichas\/nova$/, permission: "ficha.write" },
-  { pattern: /^\/fichas\/[^/]+$/, permission: "ficha.write" },
+  { pattern: /^\/fichas\/[^/]+$/, permission: "ficha.read" },
   { pattern: /^\/fichas$/, permission: "ficha.read" },
   { pattern: /^\/dashboard$/, permission: "item.read" },
   { pattern: /^\/montagem$/, permission: "ficha.read" },
   { pattern: /^\/composicao$/, permission: "impact.read" },
   { pattern: /^\/custos$/, permission: "impact.read" },
-  { pattern: /^\/importacao$/, permission: "import.run" },
-  { pattern: /^\/importacao\/pendencias$/, permission: "import.run" },
+  { pattern: /^\/importacao$/, permission: "import.read" },
+  { pattern: /^\/importacao\/itens$/, permission: "import.run" },
+  { pattern: /^\/importacao\/pendencias$/, permission: "import.read" },
   { pattern: /^\/auditoria$/, permission: "item.read" },
   { pattern: /^\/billing$/, permission: "billing.manage" },
   { pattern: /^\/billing\/.*$/, permission: "billing.manage" },
   { pattern: /^\/usuarios$/, permission: "billing.manage" },
-  { pattern: /^\/planos$/, permission: "billing.manage" }
+  { pattern: /^\/planos$/, permission: "billing.manage" },
+  { pattern: /^\/restaurantes$/, permission: "billing.manage" }
 ];
 
 const publicPaths = ["/", "/login", "/registro", "/bem-vindo", "/forbidden", "/api/health"];

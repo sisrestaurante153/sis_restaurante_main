@@ -31,6 +31,7 @@ function buildPayload(overrides: Partial<SessionPayload> = {}): SessionPayload {
     roleCodes: ["admin"],
     subscriptionStatus: "active",
     trialEndsAt: null,
+    nextBillingDate: null,
     issuedAt: "2026-03-13T18:00:00.000Z",
     expiresAt: "2026-03-20T18:00:00.000Z",
     ...overrides
