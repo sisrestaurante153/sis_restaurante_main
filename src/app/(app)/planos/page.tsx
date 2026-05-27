@@ -18,7 +18,7 @@ export default async function PlanosPage() {
         </p>
       </div>
 
-      <PlanManager />
+      <PlanManager readOnly />
     </div>
   );
 }

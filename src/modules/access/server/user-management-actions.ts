@@ -26,7 +26,13 @@ export async function createUserAction(input: {
   roleCode: string;
   restaurantId?: string | null;
 }) {
-  await requirePermission("billing.manage");
+  const actor = await requirePermission("billing.manage");
+  const isSuperAdmin = actor.roleCodes.includes("super-admin");
+  const targetRestaurantId = isSuperAdmin ? input.restaurantId : actor.restaurantId;
+
+  if (input.roleCode === "super-admin" && !isSuperAdmin) {
+    return { ok: false as const, message: "Não é permitido atribuir perfil super-admin." };
+  }
 
   if (!input.name.trim() || !input.email.trim() || !input.password || !input.roleCode) {
     return { ok: false as const, message: "Preencha todos os campos obrigatórios." };
@@ -63,7 +69,7 @@ export async function createUserAction(input: {
         id: data.user.id,
         name: input.name,
         email: input.email,
-        restaurantId: input.restaurantId || null,
+        restaurantId: targetRestaurantId || null,
         roleCode: input.roleCode
       });
     } catch (prismaErr) {
@@ -86,6 +92,12 @@ export async function updateUserAction(input: {
   restaurantId?: string | null;
 }) {
   const actor = await requirePermission("billing.manage");
+  const isSuperAdmin = actor.roleCodes.includes("super-admin");
+  const targetRestaurantId = isSuperAdmin ? input.restaurantId : actor.restaurantId;
+
+  if (input.roleCode === "super-admin" && !isSuperAdmin) {
+    return { ok: false as const, message: "Não é permitido atribuir perfil super-admin." };
+  }
 
   if (!input.name.trim() || !input.roleCode) {
     return { ok: false as const, message: "Preencha todos os campos obrigatórios." };
@@ -117,7 +129,10 @@ export async function updateUserAction(input: {
     }
 
     // 2. Update locally
-    await repo.updateUser(input);
+    await repo.updateUser({
+      ...input,
+      restaurantId: targetRestaurantId
+    });
     return { ok: true as const };
   } catch (err) {
     return { ok: false as const, message: err instanceof Error ? err.message : "Erro ao atualizar usuário." };

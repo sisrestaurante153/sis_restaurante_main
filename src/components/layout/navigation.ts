@@ -9,6 +9,8 @@ import SellRoundedIcon from "@mui/icons-material/SellRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+
 export interface NavigationItem {
   href: string;
   label: string;
@@ -48,3 +50,50 @@ export const navigationSections: NavigationSection[] = [
     ]
   }
 ];
+
+export function getNavigationSections(roleCodes: string[]): NavigationSection[] {
+  const isSuperAdmin = roleCodes.includes("super-admin");
+  const isAdmin = roleCodes.includes("admin");
+
+  const sections: NavigationSection[] = [
+    {
+      label: "Principal",
+      items: [
+        { href: "/dashboard", label: "Dashboard", icon: SpaceDashboardRoundedIcon }
+      ]
+    },
+    {
+      label: "Cadastros",
+      items: [
+        { href: "/itens", label: "Itens", icon: Inventory2RoundedIcon },
+        { href: "/fichas", label: "Fichas Tecnicas", icon: LibraryBooksRoundedIcon },
+        { href: "/cadastros", label: "Cadastros", icon: HistoryEduRoundedIcon },
+        { href: "/importacao", label: "Importacao", icon: CloudUploadRoundedIcon }
+      ]
+    }
+  ];
+
+  if (isSuperAdmin) {
+    sections.push({
+      label: "Administracao",
+      adminOnly: true,
+      items: [
+        { href: "/restaurantes", label: "Restaurantes", icon: StorefrontRoundedIcon },
+        { href: "/admin/planos", label: "Planos", icon: SellRoundedIcon },
+        { href: "/auditoria", label: "Auditoria global", icon: HistoryRoundedIcon }
+      ]
+    });
+  } else if (isAdmin) {
+    sections.push({
+      label: "Administracao",
+      adminOnly: true,
+      items: [
+        { href: "/assinatura", label: "Assinaturas", icon: CreditCardRoundedIcon },
+        { href: "/planos", label: "Planos", icon: SellRoundedIcon },
+        { href: "/usuarios", label: "Usuários", icon: PeopleAltRoundedIcon }
+      ]
+    });
+  }
+
+  return sections;
+}

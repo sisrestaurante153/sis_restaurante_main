@@ -2,7 +2,7 @@ import { requirePermission } from "@/modules/access/server/authorization";
 import { RestaurantManager } from "@/modules/billing/ui/restaurant-manager";
 
 export default async function RestaurantesPage() {
-  await requirePermission("billing.manage");
+  await requirePermission("platform.manage");
 
   return (
     <div className="flex flex-col gap-6 pb-8">

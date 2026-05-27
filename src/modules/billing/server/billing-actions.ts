@@ -106,6 +106,18 @@ export async function registrarRestauranteAction(
       });
     });
 
+    // Envia e-mail de boas-vindas assincronamente
+    try {
+      const { sendWelcomeEmail } = await import("@/modules/platform/email-service");
+      sendWelcomeEmail({
+        email,
+        name: nm_responsavel,
+        restaurantName: nm_restaurante
+      }).catch(err => console.error("[registro] erro no sendWelcomeEmail catch", err));
+    } catch (err) {
+      console.error("[registro] erro ao carregar sendWelcomeEmail", err);
+    }
+
     // 3. Loga o usuário imediatamente
     const loginResult = await signInWithPassword(email, password);
     if (!loginResult.ok) {

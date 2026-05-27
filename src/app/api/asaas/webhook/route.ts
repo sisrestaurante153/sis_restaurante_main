@@ -25,8 +25,51 @@ interface AsaasWebhookPayload {
 function verifyToken(request: Request): boolean {
   const token = request.headers.get("asaas-access-token");
   const expected = process.env.ASAAS_WEBHOOK_TOKEN;
-  if (!expected) return true; // sem token configurado, aceita (só usar em dev)
+  if (!expected) {
+    console.warn("ASAAS_WEBHOOK_TOKEN não configurada nas variáveis de ambiente!");
+    return false;
+  }
   return token === expected;
+}
+
+const planLabels: Record<string, string> = {
+  starter: "Starter",
+  pro: "Pro",
+  enterprise: "Enterprise"
+};
+
+async function getRestaurantContact(asaasSubscriptionId: string) {
+  const { getPrismaClient } = await import("@/modules/platform/infra/prisma");
+  const { getServerEnv } = await import("@/modules/platform/server/env");
+  const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
+  if (!prisma) return null;
+
+  const subscription = await prisma.assinatura.findFirst({
+    where: { cd_asaas_subscription: asaasSubscriptionId },
+    include: {
+      restaurante: {
+        include: {
+          usuarios: {
+            take: 1,
+            orderBy: { ts_criacao: "asc" }
+          }
+        }
+      }
+    }
+  });
+
+  if (!subscription || !subscription.restaurante) return null;
+  const user = subscription.restaurante.usuarios[0];
+  if (!user) return null;
+
+  return {
+    email: user.ds_email,
+    name: user.nm_usuario,
+    restaurantName: subscription.restaurante.nm_restaurante,
+    plan: subscription.tp_plano,
+    status: subscription.tp_status,
+    value: Number(subscription.vl_mensal)
+  };
 }
 
 export async function POST(request: Request) {
@@ -67,6 +110,24 @@ export async function POST(request: Request) {
             paidAt: p.paymentDate ? new Date(p.paymentDate) : new Date()
           });
         }
+
+        // Dispara e-mail de confirmação de pagamento
+        try {
+          const contact = await getRestaurantContact(p.subscription);
+          if (contact) {
+            const { sendPaymentConfirmedEmail } = await import("@/modules/platform/email-service");
+            await sendPaymentConfirmedEmail({
+              email: contact.email,
+              name: contact.name,
+              restaurantName: contact.restaurantName,
+              planLabel: planLabels[contact.plan] || contact.plan,
+              value: contact.value
+            });
+          }
+        } catch (emailErr) {
+          console.error("[asaas-webhook] erro ao enviar email de pagamento confirmado", emailErr);
+        }
+
         break;
       }
 
@@ -92,6 +153,25 @@ export async function POST(request: Request) {
             paidAt: null
           });
         }
+
+        // Dispara e-mail de aviso de atraso
+        try {
+          const contact = await getRestaurantContact(p.subscription);
+          if (contact) {
+            const { sendOverdueEmail } = await import("@/modules/platform/email-service");
+            const formattedDueDate = new Date(p.dueDate).toLocaleDateString("pt-BR");
+            await sendOverdueEmail({
+              email: contact.email,
+              name: contact.name,
+              restaurantName: contact.restaurantName,
+              dueDate: formattedDueDate,
+              value: p.value
+            });
+          }
+        } catch (emailErr) {
+          console.error("[asaas-webhook] erro ao enviar email de atraso", emailErr);
+        }
+
         break;
       }
 
@@ -100,6 +180,21 @@ export async function POST(request: Request) {
         const subId = payload.subscription?.id ?? payload.payment?.subscription;
         if (subId) {
           await repo.updateSubscriptionStatus(subId, "cancelled");
+
+          // Dispara e-mail de suspensão/bloqueio
+          try {
+            const contact = await getRestaurantContact(subId);
+            if (contact) {
+              const { sendBlockedEmail } = await import("@/modules/platform/email-service");
+              await sendBlockedEmail({
+                email: contact.email,
+                name: contact.name,
+                restaurantName: contact.restaurantName
+              });
+            }
+          } catch (emailErr) {
+            console.error("[asaas-webhook] erro ao enviar email de bloqueio", emailErr);
+          }
         }
         break;
       }

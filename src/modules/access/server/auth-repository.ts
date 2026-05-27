@@ -12,14 +12,13 @@ export interface AuthUserWithSubscription extends AuthUserRecord {
 }
 
 const DEFAULT_ROLES = [
+  { ds_codigo: "super-admin", nm_role: "Super Administrador" },
   { ds_codigo: "admin",      nm_role: "Administrador"        },
   { ds_codigo: "engenharia", nm_role: "Engenharia de Produto" },
   { ds_codigo: "consulta",   nm_role: "Consulta"              },
 ] as const;
 
 async function ensureDefaultRoles(prisma: NonNullable<ReturnType<typeof getPrismaClient>>) {
-  const count = await prisma.role.count();
-  if (count >= DEFAULT_ROLES.length) return;
   for (const role of DEFAULT_ROLES) {
     await prisma.role.upsert({
       where: { ds_codigo: role.ds_codigo },

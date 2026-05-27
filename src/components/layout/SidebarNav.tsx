@@ -11,7 +11,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { navigationSections } from "@/components/layout/navigation";
+import { getNavigationSections } from "@/components/layout/navigation";
 
 interface SidebarNavProps {
   compact?: boolean;
@@ -27,10 +27,7 @@ export function SidebarNav({
   roleCodes = []
 }: SidebarNavProps = {}) {
   const pathname = usePathname();
-  const isAdmin = roleCodes.includes("admin");
-  const visibleSections = navigationSections.filter(
-    (section) => !section.adminOnly || isAdmin
-  );
+  const visibleSections = getNavigationSections(roleCodes);
 
   return (
     <Box component="nav" aria-label="Navegacao principal">

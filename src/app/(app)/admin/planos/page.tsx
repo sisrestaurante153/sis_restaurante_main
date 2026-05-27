@@ -1,6 +1,8 @@
+import { requirePermission } from "@/modules/access/server/authorization";
 import { PlanManager } from "@/modules/billing/ui/plan-manager";
 
-export default function AdminPlanosPage() {
+export default async function AdminPlanosPage() {
+  await requirePermission("platform.manage");
   return (
     <div className="space-y-6">
       <header>

@@ -31,14 +31,13 @@ export interface UpdateUserInput {
 }
 
 const DEFAULT_ROLES = [
+  { ds_codigo: "super-admin", nm_role: "Super Administrador" },
   { ds_codigo: "admin",      nm_role: "Administrador"        },
   { ds_codigo: "engenharia", nm_role: "Engenharia de Produto" },
   { ds_codigo: "consulta",   nm_role: "Consulta"              },
 ] as const;
 
 async function ensureDefaultRoles(prisma: NonNullable<ReturnType<typeof getPrismaClient>>) {
-  const count = await prisma.role.count();
-  if (count >= DEFAULT_ROLES.length) return;
   for (const role of DEFAULT_ROLES) {
     await prisma.role.upsert({
       where: { ds_codigo: role.ds_codigo },
@@ -53,7 +52,7 @@ export function getUserManagementRepository() {
   const prisma = getPrismaClient(env.DATABASE_URL);
 
   return {
-    async listUsers(restaurantId: string): Promise<UserRecord[]> {
+    async listUsers(restaurantId: string | null): Promise<UserRecord[]> {
       if (!prisma) return [];
       await ensureDefaultRoles(prisma);
 
@@ -139,8 +138,9 @@ export function getUserManagementRepository() {
         }
       }
 
-      // 4. Return all users in the system
+      // 4. Return users in the system (filtered by restaurant if applicable)
       const users = await prisma.user.findMany({
+        where: restaurantId ? { cd_restaurante: restaurantId } : {},
         orderBy: { ts_criacao: "desc" },
         include: {
           restaurante: true,

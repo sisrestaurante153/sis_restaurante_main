@@ -43,12 +43,14 @@ import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
  
 const ROLES = [
+  { value: "super-admin", label: "Super Administrador" },
   { value: "admin", label: "Administrador" },
   { value: "engenharia", label: "Engenharia" },
   { value: "consulta", label: "Consulta" }
 ];
  
-const ROLE_COLORS: Record<string, "error" | "primary" | "default"> = {
+const ROLE_COLORS: Record<string, "error" | "primary" | "secondary" | "default"> = {
+  "super-admin": "secondary",
   admin: "error",
   engenharia: "primary",
   consulta: "default"
@@ -77,7 +79,15 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
  
-export function UserManager({ currentUserId }: { currentUserId: string }) {
+export function UserManager({
+  currentUserId,
+  roleCodes = [],
+  restaurantId
+}: {
+  currentUserId: string;
+  roleCodes?: string[];
+  restaurantId?: string | null;
+}) {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +101,9 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingUser, setDeletingUser] = useState<UserRecord | null>(null);
+ 
+  const isSuperAdmin = roleCodes.includes("super-admin");
+  const visibleRoles = ROLES.filter((r) => r.value !== "super-admin" || isSuperAdmin);
  
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -119,7 +132,10 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
   }, [fetchUsers, fetchRestaurants]);
  
   function openCreate() {
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      restaurantId: restaurantId || ""
+    });
     setShowPassword(false);
     setError(null);
     setDialogOpen(true);
@@ -220,7 +236,9 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
               <TableRow>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>E-mail</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Restaurante</TableCell>
+                {isSuperAdmin && (
+                  <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Restaurante</TableCell>
+                )}
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Perfil</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary" }}>Criado em</TableCell>
@@ -246,15 +264,17 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
                       )}
                     </TableCell>
                     <TableCell sx={{ fontSize: 13, color: "text.secondary" }}>{user.email}</TableCell>
-                    <TableCell sx={{ fontSize: 13 }}>
-                      {user.restaurantName ? (
-                        user.restaurantName
-                      ) : (
-                        <Typography component="span" sx={{ color: "error.main", fontWeight: "bold", fontSize: 13 }}>
-                          Sem vínculo
-                        </Typography>
-                      )}
-                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell sx={{ fontSize: 13 }}>
+                        {user.restaurantName ? (
+                          user.restaurantName
+                        ) : (
+                          <Typography component="span" sx={{ color: "error.main", fontWeight: "bold", fontSize: 13 }}>
+                            Sem vínculo
+                          </Typography>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Chip
                         label={ROLES.find((r) => r.value === user.roleCode)?.label ?? user.roleCode ?? "—"}
@@ -328,25 +348,27 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
               helperText={isEditing ? "O e-mail não pode ser alterado." : undefined}
             />
  
-            <FormControl fullWidth size="small">
-              <InputLabel>Restaurante</InputLabel>
-              <Select
-                label="Restaurante"
-                value={form.restaurantId}
-                onChange={(e) => setForm((f) => ({ ...f, restaurantId: e.target.value }))}
-              >
-                <MenuItem value="">
-                  <Typography component="span" sx={{ color: "error.main", fontWeight: "bold" }}>
-                    Sem vínculo
-                  </Typography>
-                </MenuItem>
-                {restaurants.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>
-                    {r.name}
+            {isSuperAdmin && (
+              <FormControl fullWidth size="small">
+                <InputLabel>Restaurante</InputLabel>
+                <Select
+                  label="Restaurante"
+                  value={form.restaurantId}
+                  onChange={(e) => setForm((f) => ({ ...f, restaurantId: e.target.value }))}
+                >
+                  <MenuItem value="">
+                    <Typography component="span" sx={{ color: "error.main", fontWeight: "bold" }}>
+                      Sem vínculo
+                    </Typography>
                   </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                  {restaurants.map((r) => (
+                    <MenuItem key={r.id} value={r.id}>
+                      {r.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
  
             {!isEditing && (
               <TextField
@@ -384,7 +406,7 @@ export function UserManager({ currentUserId }: { currentUserId: string }) {
                 value={form.roleCode}
                 onChange={(e) => setForm((f) => ({ ...f, roleCode: e.target.value }))}
               >
-                {ROLES.map((r) => (
+                {visibleRoles.map((r) => (
                   <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>
                 ))}
               </Select>

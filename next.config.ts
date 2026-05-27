@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { resolveBasePath } from "./src/modules/platform/lib/base-path";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const basePath = resolveBasePath({
   explicitBasePath: process.env.NEXT_PUBLIC_BASE_PATH,
@@ -30,4 +31,13 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  org: "sis-restaurante",
+  project: "sis-restaurante",
+  widenClientFileUpload: true,
+  transpileClientSDK: false,
+  hideSourceMaps: true,
+  disableLogger: true,
+  automaticVercelMonitors: true,
+});

@@ -23,7 +23,11 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
-export function PlanManager() {
+interface PlanManagerProps {
+  readOnly?: boolean;
+}
+
+export function PlanManager({ readOnly = false }: PlanManagerProps) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -85,16 +89,18 @@ export function PlanManager() {
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h5" fontWeight={700}>Planos e Preços</Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddRoundedIcon />}
-          onClick={() => openDialog()}
-          sx={{ bgcolor: "#185FA5" }}
-        >
-          Novo Plano
-        </Button>
+        {!readOnly && (
+          <Button 
+            variant="contained" 
+            startIcon={<AddRoundedIcon />}
+            onClick={() => openDialog()}
+            sx={{ bgcolor: "#185FA5" }}
+          >
+            Novo Plano
+          </Button>
+        )}
       </Stack>
-
+ 
       <Grid container spacing={3}>
         {plans.map((plan) => (
           <Grid key={plan.code} size={{ xs: 12, md: 4 }}>
@@ -107,14 +113,16 @@ export function PlanManager() {
                       {plan.code}
                     </Typography>
                   </Box>
-                  <Stack direction="row" spacing={0.5}>
-                    <IconButton size="small" onClick={() => openDialog(plan)}>
-                      <EditRoundedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(plan.code)}>
-                      <DeleteRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
+                  {!readOnly && (
+                    <Stack direction="row" spacing={0.5}>
+                      <IconButton size="small" onClick={() => openDialog(plan)}>
+                        <EditRoundedIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" color="error" onClick={() => handleDelete(plan.code)}>
+                        <DeleteRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  )}
                 </Stack>
 
                 <Typography variant="h4" fontWeight={800} color="primary" sx={{ mt: 2, mb: 1 }}>

@@ -51,8 +51,8 @@ export default async function AssinaturaPage(props: {
   const isOverdue = subscription.status === "overdue";
   const isBlocked = subscription.status === "cancelled" || subscription.status === "suspended" || subscription.status === "bloqueada" || subscription.status === "expirada" || isTrialExpired;
 
-  // Admin vê o painel de billing completo (exceto se vier bloqueado ou se precisar ativar)
-  if (session.roleCodes.includes("admin") && !isBlockedUrl && isActive) {
+  // Super Admin vê o painel de billing completo (exceto se vier bloqueado ou se precisar ativar)
+  if (session.roleCodes.includes("super-admin") && !isBlockedUrl && isActive) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-ink-500 text-sm">Administradores gerenciam assinaturas em</p>

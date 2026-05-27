@@ -18,7 +18,11 @@ export default async function UsuariosPage() {
         </p>
       </div>
 
-      <UserManager currentUserId={actor.userId} />
+      <UserManager
+        currentUserId={actor.userId}
+        roleCodes={actor.roleCodes}
+        restaurantId={actor.restaurantId}
+      />
     </div>
   );
 }

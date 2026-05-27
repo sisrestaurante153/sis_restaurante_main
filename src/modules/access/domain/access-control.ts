@@ -1,4 +1,4 @@
-export type RoleCode = "admin" | "engenharia" | "consulta";
+export type RoleCode = "super-admin" | "admin" | "engenharia" | "consulta";
 
 export type PermissionCode =
   | "item.read"
@@ -9,7 +9,8 @@ export type PermissionCode =
   | "import.read"
   | "import.run"
   | "cost.recalculate"
-  | "billing.manage";
+  | "billing.manage"
+  | "platform.manage";
 
 export interface RoutePolicy {
   pattern: RegExp;
@@ -17,6 +18,18 @@ export interface RoutePolicy {
 }
 
 const rolePermissions: Record<RoleCode, PermissionCode[]> = {
+  "super-admin": [
+    "item.read",
+    "item.write",
+    "ficha.read",
+    "ficha.write",
+    "impact.read",
+    "import.read",
+    "import.run",
+    "cost.recalculate",
+    "billing.manage",
+    "platform.manage"
+  ],
   admin: [
     "item.read",
     "item.write",
@@ -62,12 +75,14 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/importacao$/, permission: "import.read" },
   { pattern: /^\/importacao\/itens$/, permission: "import.run" },
   { pattern: /^\/importacao\/pendencias$/, permission: "import.read" },
-  { pattern: /^\/auditoria$/, permission: "item.read" },
-  { pattern: /^\/billing$/, permission: "billing.manage" },
-  { pattern: /^\/billing\/.*$/, permission: "billing.manage" },
+  { pattern: /^\/auditoria$/, permission: "platform.manage" },
+  { pattern: /^\/billing$/, permission: "platform.manage" },
+  { pattern: /^\/billing\/.*$/, permission: "platform.manage" },
   { pattern: /^\/usuarios$/, permission: "billing.manage" },
   { pattern: /^\/planos$/, permission: "billing.manage" },
-  { pattern: /^\/restaurantes$/, permission: "billing.manage" }
+  { pattern: /^\/restaurantes$/, permission: "platform.manage" },
+  { pattern: /^\/admin$/, permission: "platform.manage" },
+  { pattern: /^\/admin\/.*$/, permission: "platform.manage" }
 ];
 
 const publicPaths = ["/", "/login", "/registro", "/bem-vindo", "/forbidden", "/api/health"];

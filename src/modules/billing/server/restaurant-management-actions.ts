@@ -203,6 +203,27 @@ export async function updateRestaurantAction(input: z.infer<typeof updateRestaur
           ts_atualizacao: new Date()
         }
       });
+
+      // Se o status mudou para bloqueada/suspended/expirada, envia e-mail de bloqueio
+      const isBlocked = ["bloqueada", "suspended", "expirada", "cancelled"].includes(status);
+      if (isBlocked) {
+        try {
+          const user = await tx.user.findFirst({
+            where: { cd_restaurante: id },
+            orderBy: { ts_criacao: "asc" }
+          });
+          if (user) {
+            const { sendBlockedEmail } = await import("@/modules/platform/email-service");
+            sendBlockedEmail({
+              email: user.ds_email,
+              name: user.nm_usuario,
+              restaurantName: name
+            }).catch(e => console.error("Erro ao disparar e-mail de bloqueio manual:", e));
+          }
+        } catch (e) {
+          console.error("Erro ao buscar usuário do restaurante para bloqueio:", e);
+        }
+      }
     });
 
     return { ok: true as const };
