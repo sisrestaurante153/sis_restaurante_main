@@ -36,8 +36,6 @@ export default withSentryConfig(nextConfig, {
   org: "sis-restaurante",
   project: "sis-restaurante",
   widenClientFileUpload: true,
-  transpileClientSDK: false,
-  hideSourceMaps: true,
   disableLogger: true,
   automaticVercelMonitors: true,
 });
