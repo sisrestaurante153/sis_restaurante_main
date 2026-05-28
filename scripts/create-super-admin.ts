@@ -30,6 +30,42 @@ async function main() {
   try {
     console.log(`Iniciando criação do super-admin: ${email} (${nome})...`);
 
+    // 0. Garantir restaurante de testes "Plataforma — Testes Internos" com assinatura ativa
+    console.log("Garantindo restaurante de testes 'Plataforma — Testes Internos'...");
+    const restId = "rest_plataforma_testes";
+    await prisma.restaurante.upsert({
+      where: { cd_restaurante: restId },
+      update: {
+        nm_restaurante: "Plataforma — Testes Internos",
+        sn_ativo: true
+      },
+      create: {
+        cd_restaurante: restId,
+        nm_restaurante: "Plataforma — Testes Internos",
+        sn_ativo: true
+      }
+    });
+
+    const farFuture = new Date("2099-12-31T23:59:59Z");
+    await prisma.assinatura.upsert({
+      where: { cd_restaurante: restId },
+      update: {
+        tp_plano: "enterprise",
+        tp_status: "active",
+        vl_mensal: 0,
+        ts_proximo_vencimento: farFuture,
+        ts_trial_fim: null
+      },
+      create: {
+        cd_restaurante: restId,
+        tp_plano: "enterprise",
+        tp_status: "active",
+        vl_mensal: 0,
+        ts_proximo_vencimento: farFuture,
+        ts_trial_fim: null
+      }
+    });
+
     // 1. Garantir que o perfil 'super-admin' existe no Prisma
     let roleRecord = await prisma.role.findUnique({
       where: { ds_codigo: "super-admin" }
@@ -92,14 +128,14 @@ async function main() {
         nm_usuario: nome.trim(),
         ds_email: email.toLowerCase().trim(),
         sn_ativo: true,
-        cd_restaurante: null // super-admin não possui restaurante associado
+        cd_restaurante: restId
       },
       create: {
         cd_usuario: userId,
         nm_usuario: nome.trim(),
         ds_email: email.toLowerCase().trim(),
         sn_ativo: true,
-        cd_restaurante: null
+        cd_restaurante: restId
       }
     });
 

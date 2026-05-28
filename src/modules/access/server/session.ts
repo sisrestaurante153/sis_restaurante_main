@@ -125,5 +125,9 @@ export async function readSignedSessionToken(
     return null;
   }
 
+  if (payload.roleCodes.includes("super-admin") && !payload.restaurantId) {
+    payload.restaurantId = "rest_plataforma_testes";
+  }
+
   return payload;
 }

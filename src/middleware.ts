@@ -65,14 +65,18 @@ export async function middleware(request: NextRequest) {
     return redirectToLogin(request);
   }
 
-  if (!isSubscriptionExempt(pathname)) {
-    if (isSubscriptionBlocked(session.subscriptionStatus, session.trialEndsAt, session.nextBillingDate)) {
-      return NextResponse.redirect(new URL("/assinatura?blocked=1", request.url));
-    }
-  }
+  const isSuperAdmin = session.roleCodes.includes("super-admin");
 
-  if (!canAccessRoute(pathname, session.roleCodes)) {
-    return NextResponse.redirect(new URL("/forbidden", request.url));
+  if (!isSuperAdmin) {
+    if (!isSubscriptionExempt(pathname)) {
+      if (isSubscriptionBlocked(session.subscriptionStatus, session.trialEndsAt, session.nextBillingDate)) {
+        return NextResponse.redirect(new URL("/assinatura?blocked=1", request.url));
+      }
+    }
+
+    if (!canAccessRoute(pathname, session.roleCodes)) {
+      return NextResponse.redirect(new URL("/forbidden", request.url));
+    }
   }
 
   return NextResponse.next();

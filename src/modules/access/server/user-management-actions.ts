@@ -6,7 +6,8 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 
 export async function listUsersAction() {
   const actor = await requirePermission("billing.manage");
-  return getUserManagementRepository().listUsers(actor.restaurantId);
+  const isSuperAdmin = actor.roleCodes.includes("super-admin");
+  return getUserManagementRepository().listUsers(isSuperAdmin ? null : actor.restaurantId);
 }
 
 export async function listRestaurantsAction() {
@@ -147,6 +148,14 @@ export async function deleteUserAction(userId: string) {
   }
 
   const repo = getUserManagementRepository();
+  const isSuperAdmin = actor.roleCodes.includes("super-admin");
+  if (!isSuperAdmin) {
+    const targetRestaurantId = await repo.checkUserRestaurant(userId);
+    if (targetRestaurantId !== actor.restaurantId) {
+      return { ok: false as const, message: "Não autorizado: o usuário alvo pertence a outro restaurante." };
+    }
+  }
+
   const email = await repo.findUserEmailById(userId);
   if (!email) {
     return { ok: false as const, message: "Usuário não encontrado." };
@@ -171,5 +180,49 @@ export async function deleteUserAction(userId: string) {
     return { ok: true as const };
   } catch (err) {
     return { ok: false as const, message: err instanceof Error ? err.message : "Erro ao excluir usuário." };
+  }
+}
+
+export async function resetUserPasswordAction(input: {
+  userId: string;
+  password?: string;
+  newPassword?: string;
+}) {
+  const actor = await requirePermission("billing.manage");
+  const isSuperAdmin = actor.roleCodes.includes("super-admin");
+
+  if (!input.userId) {
+    return { ok: false as const, message: "ID do usuário não fornecido." };
+  }
+
+  const password = input.newPassword || input.password;
+  if (!password || password.length < 6) {
+    return { ok: false as const, message: "A nova senha deve ter no mínimo 6 caracteres." };
+  }
+
+  if (actor.userId === input.userId) {
+    return { ok: false as const, message: "Você não pode resetar sua própria senha por aqui." };
+  }
+
+  const repo = getUserManagementRepository();
+  const targetRestaurantId = await repo.checkUserRestaurant(input.userId);
+
+  if (!isSuperAdmin && targetRestaurantId !== actor.restaurantId) {
+    return { ok: false as const, message: "Não autorizado: o usuário alvo pertence a outro restaurante." };
+  }
+
+  try {
+    const supabase = createServerSupabaseClient();
+    const { error } = await supabase.auth.admin.updateUserById(input.userId, {
+      password: password
+    });
+
+    if (error) {
+      return { ok: false as const, message: error.message };
+    }
+
+    return { ok: true as const };
+  } catch (err) {
+    return { ok: false as const, message: err instanceof Error ? err.message : "Erro ao resetar senha." };
   }
 }

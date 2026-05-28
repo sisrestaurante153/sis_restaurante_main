@@ -34,6 +34,12 @@ export async function listRestaurantsAction() {
     orderBy: { ts_criacao: "desc" },
     include: {
       assinatura: true,
+      usuarios: {
+        select: {
+          ds_email: true
+        },
+        take: 1
+      },
       _count: {
         select: { usuarios: true }
       }
@@ -48,7 +54,8 @@ export async function listRestaurantsAction() {
     userCount: r._count.usuarios,
     createdAt: r.ts_criacao.toISOString(),
     nextBillingDate: r.assinatura?.ts_proximo_vencimento?.toISOString() ?? null,
-    trialEndsAt: r.assinatura?.ts_trial_fim?.toISOString() ?? null
+    trialEndsAt: r.assinatura?.ts_trial_fim?.toISOString() ?? null,
+    adminEmail: r.usuarios[0]?.ds_email ?? null
   }));
 }
 
@@ -316,6 +323,73 @@ export async function deleteRestaurantAction(restaurantId: string) {
     return {
       ok: false as const,
       message: err instanceof Error ? err.message : "Erro ao excluir restaurante."
+    };
+  }
+}
+
+export async function extendSubscriptionAction(input: {
+  restaurantId: string;
+  days: number;
+}) {
+  await requirePermission("platform.manage");
+
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) {
+    return { ok: false as const, message: "Não foi possível conectar ao banco de dados." };
+  }
+
+  if (!input.restaurantId || !input.days || input.days <= 0) {
+    return { ok: false as const, message: "Parâmetros inválidos." };
+  }
+
+  try {
+    const subscription = await prisma.assinatura.findUnique({
+      where: { cd_restaurante: input.restaurantId }
+    });
+
+    if (!subscription) {
+      return { ok: false as const, message: "Assinatura não encontrada para este restaurante." };
+    }
+
+    const now = new Date();
+    let baseDate = now;
+
+    if (subscription.tp_status === "trial") {
+      const currentTrialEnd = subscription.ts_trial_fim ? new Date(subscription.ts_trial_fim) : now;
+      baseDate = currentTrialEnd > now ? currentTrialEnd : now;
+      
+      const newTrialEnd = new Date(baseDate.getTime() + input.days * 24 * 60 * 60 * 1000);
+      
+      await prisma.assinatura.update({
+        where: { cd_restaurante: input.restaurantId },
+        data: {
+          ts_trial_fim: newTrialEnd,
+          tp_status: "trial",
+          ts_atualizacao: now
+        }
+      });
+    } else {
+      const currentBilling = subscription.ts_proximo_vencimento ? new Date(subscription.ts_proximo_vencimento) : now;
+      baseDate = currentBilling > now ? currentBilling : now;
+      
+      const newBilling = new Date(baseDate.getTime() + input.days * 24 * 60 * 60 * 1000);
+      
+      await prisma.assinatura.update({
+        where: { cd_restaurante: input.restaurantId },
+        data: {
+          ts_proximo_vencimento: newBilling,
+          tp_status: "active",
+          ts_atualizacao: now
+        }
+      });
+    }
+
+    return { ok: true as const };
+  } catch (err) {
+    return {
+      ok: false as const,
+      message: err instanceof Error ? err.message : "Erro ao estender assinatura."
     };
   }
 }

@@ -6,7 +6,8 @@ import {
   createUserAction,
   updateUserAction,
   deleteUserAction,
-  listRestaurantsAction
+  listRestaurantsAction,
+  resetUserPasswordAction
 } from "@/modules/access/server/user-management-actions";
 import type { UserRecord } from "@/modules/access/server/user-management-repository";
 import {
@@ -41,6 +42,8 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import { PageFeedbackSnackbar } from "@/components/ui/PageFeedbackSnackbar";
  
 const ROLES = [
   { value: "super-admin", label: "Super Administrador" },
@@ -102,6 +105,17 @@ export function UserManager({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingUser, setDeletingUser] = useState<UserRecord | null>(null);
  
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resettingUser, setResettingUser] = useState<UserRecord | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ message: string | null; severity: "success" | "error" }>({
+    message: null,
+    severity: "success"
+  });
+
   const isSuperAdmin = roleCodes.includes("super-admin");
   const visibleRoles = ROLES.filter((r) => r.value !== "super-admin" || isSuperAdmin);
  
@@ -209,6 +223,63 @@ export function UserManager({
     }
   }
  
+  function openResetPassword(user: UserRecord) {
+    setResettingUser(user);
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowResetPassword(false);
+    setResetError(null);
+    setResetDialogOpen(true);
+  }
+
+  async function handleResetPassword() {
+    if (!resettingUser) return;
+
+    if (newPassword.length < 6) {
+      setResetError("A nova senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError("As senhas não coincidem.");
+      return;
+    }
+
+    setSaving(true);
+    setResetError(null);
+    try {
+      const result = await resetUserPasswordAction({
+        userId: resettingUser.id,
+        newPassword: newPassword
+      });
+
+      if (!result.ok) {
+        setResetError(result.message ?? "Erro ao resetar senha.");
+        setFeedback({
+          message: result.message ?? "Erro ao resetar senha.",
+          severity: "error"
+        });
+        return;
+      }
+
+      setFeedback({
+        message: "Senha resetada com sucesso. O usuário precisará usar a nova senha no próximo login.",
+        severity: "success"
+      });
+      setResetDialogOpen(false);
+      setResettingUser(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao resetar senha.";
+      setResetError(msg);
+      setFeedback({
+        message: msg,
+        severity: "error"
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+ 
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
@@ -298,6 +369,13 @@ export function UserManager({
                           <EditRoundedIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+                      {((roleCodes.includes("admin") || roleCodes.includes("super-admin")) && user.id !== currentUserId) && (
+                        <Tooltip title="Resetar Senha">
+                          <IconButton size="small" onClick={() => openResetPassword(user)}>
+                            <LockRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                       <Tooltip title={user.id === currentUserId ? "Não é possível excluir sua própria conta" : "Excluir"}>
                         <span>
                           <IconButton
@@ -411,6 +489,12 @@ export function UserManager({
                 ))}
               </Select>
             </FormControl>
+
+            {form.roleCode === "super-admin" && (
+              <Alert severity="warning" variant="outlined">
+                Atenção: este usuário terá acesso total à plataforma, incluindo dados de todos os restaurantes.
+              </Alert>
+            )}
  
             {isEditing && (
               <FormControl fullWidth size="small">
@@ -461,6 +545,70 @@ export function UserManager({
           </Button>
         </DialogActions>
       </Dialog>
+ 
+      {/* Dialog resetar senha */}
+      <Dialog open={resetDialogOpen} onClose={() => !saving && setResetDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Resetar Senha</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2.5} mt={1}>
+            <DialogContentText>
+              Deseja resetar a senha de <strong>{resettingUser?.name}</strong>?
+            </DialogContentText>
+
+            {resetError && <Alert severity="error" onClose={() => setResetError(null)}>{resetError}</Alert>}
+
+            <TextField
+              label="Nova Senha"
+              type={showResetPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              fullWidth
+              size="small"
+              required
+              helperText="Mínimo 6 caracteres."
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowResetPassword((v) => !v)}
+                        edge="end"
+                        aria-label={showResetPassword ? "Ocultar senha" : "Mostrar senha"}
+                      >
+                        {showResetPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }
+              }}
+            />
+
+            <TextField
+              label="Confirmar Nova Senha"
+              type={showResetPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              fullWidth
+              size="small"
+              required
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button onClick={() => setResetDialogOpen(false)} disabled={saving}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={handleResetPassword}
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={14} /> : undefined}
+          >
+            {saving ? "Resetando…" : "Resetar senha"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <PageFeedbackSnackbar message={feedback.message} severity={feedback.severity} />
     </Box>
   );
 }

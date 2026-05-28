@@ -5,7 +5,8 @@ import {
   listRestaurantsAction,
   createRestaurantAction,
   updateRestaurantAction,
-  deleteRestaurantAction
+  deleteRestaurantAction,
+  extendSubscriptionAction
 } from "@/modules/billing/server/restaurant-management-actions";
 import {
   Alert,
@@ -56,6 +57,7 @@ type RestaurantRecord = {
   createdAt: string;
   nextBillingDate: string | null;
   trialEndsAt: string | null;
+  adminEmail: string | null;
 };
 
 type FormState = {
@@ -97,6 +99,23 @@ function isExpired(restaurant: RestaurantRecord): boolean {
   }
   if (restaurant.nextBillingDate) {
     return now > new Date(restaurant.nextBillingDate);
+  }
+  return false;
+}
+
+function isExpiredOrExpiringSoon(restaurant: RestaurantRecord): boolean {
+  if (isExpired(restaurant)) return true;
+  const status = restaurant.status.toLowerCase();
+  const now = new Date();
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  if (status === "active" && restaurant.nextBillingDate) {
+    const limit = new Date(restaurant.nextBillingDate);
+    return limit > now && limit <= sevenDaysFromNow;
+  }
+  if (status === "trial" && restaurant.trialEndsAt) {
+    const limit = new Date(restaurant.trialEndsAt);
+    return limit > now && limit <= sevenDaysFromNow;
   }
   return false;
 }
@@ -144,6 +163,11 @@ export function RestaurantManager() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRestaurant, setDeletingRestaurant] = useState<RestaurantRecord | null>(null);
+
+  const [extendDialogOpen, setExtendDialogOpen] = useState(false);
+  const [extendingRestaurant, setExtendingRestaurant] = useState<RestaurantRecord | null>(null);
+  const [daysToExtend, setDaysToExtend] = useState(30);
+  const [extendError, setExtendError] = useState<string | null>(null);
 
   const fetchRestaurants = useCallback(async () => {
     setLoading(true);
@@ -234,8 +258,178 @@ export function RestaurantManager() {
     }
   }
 
+  async function handleExtendSubscription() {
+    if (!extendingRestaurant) return;
+    setSaving(true);
+    setExtendError(null);
+    try {
+      const result = await extendSubscriptionAction({
+        restaurantId: extendingRestaurant.id,
+        days: daysToExtend
+      });
+      if (!result.ok) {
+        setExtendError(result.message ?? "Erro ao estender assinatura.");
+        return;
+      }
+      setExtendDialogOpen(false);
+      setExtendingRestaurant(null);
+      fetchRestaurants();
+    } catch (err) {
+      setExtendError(err instanceof Error ? err.message : "Erro ao estender assinatura.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Seções críticas calculadas
+  const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const threeDaysFromNow = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+  const now = new Date();
+
+  const expiringSoon = restaurants.filter((r) => {
+    if (r.status.toLowerCase() !== "active") return false;
+    if (!r.nextBillingDate) return false;
+    const limit = new Date(r.nextBillingDate);
+    return limit > now && limit <= sevenDaysFromNow;
+  });
+
+  const alreadyExpired = restaurants.filter((r) => {
+    if (r.status.toLowerCase() === "trial") return false;
+    return isExpired(r);
+  });
+
+  const trialExpiring = restaurants.filter((r) => {
+    if (r.status.toLowerCase() !== "trial") return false;
+    if (!r.trialEndsAt) return false;
+    const limit = new Date(r.trialEndsAt);
+    return limit <= threeDaysFromNow;
+  });
+
+  function getDaysOverdue(r: RestaurantRecord): number {
+    if (!r.nextBillingDate) return 0;
+    const limit = new Date(r.nextBillingDate);
+    if (now <= limit) return 0;
+    const diff = now.getTime() - limit.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }
+
   return (
     <Box>
+      {/* Seção de Resumo/Alertas de Faturamento */}
+      {(expiringSoon.length > 0 || alreadyExpired.length > 0 || trialExpiring.length > 0) && (
+        <Stack spacing={2} mb={4}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary" }}>
+            Atenção Exigida (Faturamento & Trials)
+          </Typography>
+          
+          <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr 1fr" }} gap={3}>
+            {/* 1. Vencem nos próximos 7 dias */}
+            <Box sx={{ border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: 2, p: 2, bgcolor: "rgba(239, 68, 68, 0.02)" }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: "error.main", textTransform: "uppercase" }}>
+                Vence em até 7 dias ({expiringSoon.length})
+              </Typography>
+              {expiringSoon.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Nenhum restaurante.</Typography>
+              ) : (
+                <Stack spacing={1.5} mt={1.5}>
+                  {expiringSoon.map(r => (
+                    <Box key={r.id} display="flex" justifyContent="space-between" alignItems="center">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{r.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">Vence em {formatDate(r.nextBillingDate)}</Typography>
+                      </Box>
+                      {r.adminEmail && (
+                        <Button 
+                          size="small" 
+                          variant="outlined" 
+                          href={`mailto:${r.adminEmail}?subject=Sua Assinatura está perto do vencimento`}
+                          sx={{ textTransform: "none", py: 0.25, px: 1, fontSize: 11 }}
+                        >
+                          Contato
+                        </Button>
+                      )}
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </Box>
+
+            {/* 2. Assinaturas já vencidas */}
+            <Box sx={{ border: "1px solid rgba(239, 68, 68, 0.4)", borderRadius: 2, p: 2, bgcolor: "rgba(239, 68, 68, 0.04)" }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: "error.dark", textTransform: "uppercase" }}>
+                Assinaturas Vencidas ({alreadyExpired.length})
+              </Typography>
+              {alreadyExpired.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Nenhum restaurante.</Typography>
+              ) : (
+                <Stack spacing={1.5} mt={1.5}>
+                  {alreadyExpired.map(r => {
+                    const days = getDaysOverdue(r);
+                    return (
+                      <Box key={r.id} display="flex" justifyContent="space-between" alignItems="center">
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{r.name}</Typography>
+                          <Typography variant="caption" color="error.main">Atraso de {days} {days === 1 ? "dia" : "dias"}</Typography>
+                        </Box>
+                        <Button 
+                          size="small" 
+                          variant="contained" 
+                          color="error"
+                          onClick={() => {
+                            setExtendingRestaurant(r);
+                            setDaysToExtend(30);
+                            setExtendError(null);
+                            setExtendDialogOpen(true);
+                          }}
+                          sx={{ textTransform: "none", py: 0.25, px: 1, fontSize: 11 }}
+                        >
+                          Estender
+                        </Button>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              )}
+            </Box>
+
+            {/* 3. Trials expirando em até 3 dias */}
+            <Box sx={{ border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 2, p: 2, bgcolor: "rgba(245, 158, 11, 0.02)" }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: "warning.main", textTransform: "uppercase" }}>
+                Trials Expirando (≤ 3 dias) ({trialExpiring.length})
+              </Typography>
+              {trialExpiring.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Nenhum restaurante.</Typography>
+              ) : (
+                <Stack spacing={1.5} mt={1.5}>
+                  {trialExpiring.map(r => (
+                    <Box key={r.id} display="flex" justifyContent="space-between" alignItems="center">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{r.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">Termina em {formatDate(r.trialEndsAt)}</Typography>
+                      </Box>
+                      <Button 
+                        size="small" 
+                        variant="contained" 
+                        color="warning"
+                        onClick={() => {
+                          setExtendingRestaurant(r);
+                          setDaysToExtend(30);
+                          setExtendError(null);
+                          setExtendDialogOpen(true);
+                        }}
+                        sx={{ textTransform: "none", py: 0.25, px: 1, fontSize: 11, color: "common.white" }}
+                      >
+                        Estender
+                      </Button>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </Box>
+          </Box>
+        </Stack>
+      )}
+
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="body2" color="text.secondary">
           {restaurants.length} restaurante{restaurants.length !== 1 ? "s" : ""} cadastrado{restaurants.length !== 1 ? "s" : ""}
@@ -288,15 +482,31 @@ export function RestaurantManager() {
                     color: "default" as const
                   };
                   const expired = isExpired(restaurant);
+                  const expiredOrExpiringSoon = isExpiredOrExpiringSoon(restaurant);
+                  const isTrial = restaurant.status.toLowerCase() === "trial";
+
+                  let cellColor = "inherit";
+                  let cellWeight = "normal";
+                  let cellIndicator = "";
+                  
+                  if (expired) {
+                    cellColor = "error.main";
+                    cellWeight = "bold";
+                    cellIndicator = " 🔴 (Vencida)";
+                  } else if (expiredOrExpiringSoon) {
+                    cellColor = "warning.main";
+                    cellWeight = "bold";
+                    cellIndicator = " 🟡 (Urgente)";
+                  }
 
                   return (
                     <TableRow
                       key={restaurant.id}
                       hover
                       sx={{
-                        backgroundColor: expired ? "rgba(239, 68, 68, 0.04)" : "inherit",
+                        backgroundColor: expiredOrExpiringSoon ? "rgba(239, 68, 68, 0.04)" : "inherit",
                         "&:hover": {
-                          backgroundColor: expired ? "rgba(239, 68, 68, 0.08) !important" : undefined
+                          backgroundColor: expiredOrExpiringSoon ? "rgba(239, 68, 68, 0.08) !important" : undefined
                         }
                       }}
                     >
@@ -319,8 +529,9 @@ export function RestaurantManager() {
                       <TableCell>
                         {getStatusBadge(restaurant)}
                       </TableCell>
-                      <TableCell sx={{ fontSize: 13 }}>
-                        {formatDate(restaurant.status.toLowerCase() === "trial" ? restaurant.trialEndsAt : restaurant.nextBillingDate)}
+                      <TableCell sx={{ fontSize: 13, color: cellColor, fontWeight: cellWeight }}>
+                        {formatDate(isTrial ? restaurant.trialEndsAt : restaurant.nextBillingDate)}
+                        {cellIndicator}
                       </TableCell>
                       <TableCell sx={{ fontSize: 13 }}>
                         {restaurant.userCount}
@@ -485,6 +696,39 @@ export function RestaurantManager() {
             startIcon={saving ? <CircularProgress size={14} /> : undefined}
           >
             {saving ? "Excluindo…" : "Excluir"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog estender assinatura */}
+      <Dialog open={extendDialogOpen} onClose={() => !saving && setExtendDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Estender Acesso</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2.5} mt={1}>
+            {extendError && <Alert severity="error" onClose={() => setExtendError(null)}>{extendError}</Alert>}
+            <DialogContentText>
+              Estendendo o acesso para o restaurante <strong>{extendingRestaurant?.name}</strong>.
+            </DialogContentText>
+            <TextField
+              label="Dias a Adicionar"
+              type="number"
+              value={daysToExtend}
+              onChange={(e) => setDaysToExtend(parseInt(e.target.value) || 0)}
+              fullWidth
+              size="small"
+              required
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button onClick={() => setExtendDialogOpen(false)} disabled={saving}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={handleExtendSubscription}
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={14} /> : undefined}
+          >
+            {saving ? "Estendendo…" : "Estender"}
           </Button>
         </DialogActions>
       </Dialog>
