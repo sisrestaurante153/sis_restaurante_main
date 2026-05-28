@@ -10,6 +10,7 @@ import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 
 export interface NavigationItem {
   href: string;
@@ -73,6 +74,7 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
     }
   ];
 
+
   if (isSuperAdmin) {
     sections.push({
       label: "Administracao",
@@ -80,6 +82,8 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
       items: [
         { href: "/restaurantes", label: "Restaurantes", icon: StorefrontRoundedIcon },
         { href: "/admin/planos", label: "Planos", icon: SellRoundedIcon },
+        { href: "/admin/clonar-dados", label: "Clonar Dados", icon: ContentCopyRoundedIcon },
+        { href: "/usuarios", label: "Usuários", icon: PeopleAltRoundedIcon },
         { href: "/auditoria", label: "Auditoria global", icon: HistoryRoundedIcon }
       ]
     });
@@ -89,8 +93,7 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
       adminOnly: true,
       items: [
         { href: "/assinatura", label: "Assinaturas", icon: CreditCardRoundedIcon },
-        { href: "/planos", label: "Planos", icon: SellRoundedIcon },
-        { href: "/usuarios", label: "Usuários", icon: PeopleAltRoundedIcon }
+        { href: "/planos", label: "Planos", icon: SellRoundedIcon }
       ]
     });
   }

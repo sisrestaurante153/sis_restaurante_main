@@ -58,7 +58,7 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     restaurantId,
     email: result.user.email,
     name: result.user.nome,
-    roleCodes: result.user.roleCodes,
+    roleCodes: localUser?.roleCodes ?? result.user.roleCodes,
     subscriptionStatus: localUser?.subscriptionStatus,
     trialEndsAt: localUser?.trialEndsAt,
     nextBillingDate: localUser?.nextBillingDate
