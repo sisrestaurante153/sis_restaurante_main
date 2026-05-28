@@ -8,8 +8,6 @@ import CreditCardRoundedIcon from "@mui/icons-material/CreditCardRounded";
 import SellRoundedIcon from "@mui/icons-material/SellRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
-
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 
 export interface NavigationItem {
@@ -76,24 +74,36 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
 
 
   if (isSuperAdmin) {
+    // 1. Minha Conta
     sections.push({
-      label: "Administracao",
+      label: "Minha Conta",
+      adminOnly: true,
+      items: [
+        { href: "/assinatura", label: "Assinatura", icon: CreditCardRoundedIcon },
+        { href: "/planos", label: "Plano", icon: SellRoundedIcon },
+        { href: "/usuarios", label: "Usuários", icon: PeopleAltRoundedIcon }
+      ]
+    });
+    // 2. Administração da Plataforma
+    sections.push({
+      label: "Administração da Plataforma",
       adminOnly: true,
       items: [
         { href: "/restaurantes", label: "Restaurantes", icon: StorefrontRoundedIcon },
-        { href: "/admin/planos", label: "Planos", icon: SellRoundedIcon },
+        { href: "/admin/planos", label: "Planos globais", icon: SellRoundedIcon },
+        { href: "/usuarios", label: "Usuários globais", icon: PeopleAltRoundedIcon },
         { href: "/admin/clonar-dados", label: "Clonar Dados", icon: ContentCopyRoundedIcon },
-        { href: "/usuarios", label: "Usuários", icon: PeopleAltRoundedIcon },
-        { href: "/auditoria", label: "Auditoria global", icon: HistoryRoundedIcon }
+        { href: "/billing", label: "Admin Dashboard", icon: SpaceDashboardRoundedIcon }
       ]
     });
   } else if (isAdmin) {
     sections.push({
-      label: "Administracao",
+      label: "Minha Conta",
       adminOnly: true,
       items: [
-        { href: "/assinatura", label: "Assinaturas", icon: CreditCardRoundedIcon },
-        { href: "/planos", label: "Planos", icon: SellRoundedIcon }
+        { href: "/assinatura", label: "Assinatura", icon: CreditCardRoundedIcon },
+        { href: "/planos", label: "Plano", icon: SellRoundedIcon },
+        { href: "/usuarios", label: "Usuários", icon: PeopleAltRoundedIcon }
       ]
     });
   }

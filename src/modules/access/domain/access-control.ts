@@ -80,6 +80,8 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/billing\/.*$/, permission: "platform.manage" },
   { pattern: /^\/usuarios$/, permission: "billing.manage" },
   { pattern: /^\/planos$/, permission: "billing.manage" },
+  { pattern: /^\/assinatura$/, permission: "billing.manage" },
+  { pattern: /^\/assinaturas$/, permission: "billing.manage" },
   { pattern: /^\/restaurantes$/, permission: "platform.manage" },
   { pattern: /^\/admin$/, permission: "platform.manage" },
   { pattern: /^\/admin\/.*$/, permission: "platform.manage" }
