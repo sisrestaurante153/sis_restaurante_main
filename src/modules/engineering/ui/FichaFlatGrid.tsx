@@ -228,7 +228,8 @@ function ItemAutocomplete({
   itemOptions,
   duplicateItemIds,
   onUpdateRow,
-  showRowErrors
+  showRowErrors,
+  onSelectNext
 }: {
   row: ComponentEditorRow;
   index: number;
@@ -236,6 +237,7 @@ function ItemAutocomplete({
   duplicateItemIds?: ReadonlySet<string>;
   onUpdateRow: (index: number, patch: Partial<ComponentEditorRow>) => void;
   showRowErrors?: boolean;
+  onSelectNext?: () => void;
 }) {
   const highlightedRef = useRef<ComponentOption | null>(null);
 
@@ -248,6 +250,9 @@ function ItemAutocomplete({
         : item.type === "apoio" ? "apoio"
         : "ingrediente"
     });
+    setTimeout(() => {
+      onSelectNext?.();
+    }, 50);
   };
 
   const option = itemOptions.find((item) => item.id === row.itemId) ?? null;
@@ -279,6 +284,14 @@ function ItemAutocomplete({
               // (o Tab ainda move o foco para o próximo campo)
               if (event.key === "Tab" && highlightedRef.current) {
                 handleSelect(highlightedRef.current);
+              } else if (event.key === "Enter") {
+                if (highlightedRef.current) {
+                  handleSelect(highlightedRef.current);
+                  event.preventDefault();
+                } else if (option) {
+                  event.preventDefault();
+                  onSelectNext?.();
+                }
               }
             }}
           />
@@ -357,6 +370,7 @@ export function FichaFlatGrid({
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const qtyRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   useEffect(() => {
     if (!showRowErrors) return;
@@ -545,6 +559,10 @@ export function FichaFlatGrid({
                 duplicateItemIds={duplicateItemIds}
                 onUpdateRow={onUpdateRow}
                 showRowErrors={showRowErrors}
+                onSelectNext={() => {
+                  qtyRefs.current[index]?.focus();
+                  qtyRefs.current[index]?.select();
+                }}
               />
 
               {/* Ajuste 3: DecimalTextField para quantidade (vírgula, 3 casas) */}
@@ -555,6 +573,9 @@ export function FichaFlatGrid({
                 value={row.quantityUsed}
                 inputStyle={{ paddingRight: 8 }}
                 onChange={(value) => onUpdateRow(index, { quantityUsed: value })}
+                inputRef={(el: HTMLInputElement | null) => {
+                  qtyRefs.current[index] = el;
+                }}
               />
 
               {/* Quick 20260424 item 3: Unidade vira select; Ajuste 2: conversão kg↔g */}

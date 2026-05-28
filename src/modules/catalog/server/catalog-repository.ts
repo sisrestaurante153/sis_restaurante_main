@@ -393,11 +393,11 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
     ]
   };
 
-  const itemInclude = {
+  const itemInclude: Prisma.ItemInclude = {
     unidadeEstoque: true,
     unidadeUsoPadrao: true,
     compras: {
-      orderBy: [{ sn_principal: "desc" as const }, { ts_atualizacao_preco: "desc" as const }, { ts_criacao: "desc" as const }],
+      orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
       include: {
         fornecedor: { select: { nm_fornecedor: true } },
         unidadeCompra: true,
@@ -405,17 +405,17 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
       }
     },
     fichasResultantes: {
-      where: { tp_status: { in: ["ativa", "rascunho", "inativa"] as ["ativa", "rascunho", "inativa"] } },
-      orderBy: [{ tp_status: "asc" as const }],
+      where: { tp_status: { in: ["ativa", "rascunho", "inativa"] } },
+      orderBy: [{ tp_status: "asc" }],
       take: 1
     },
-    custosSnapshot: { orderBy: { ts_calculo: "desc" as const }, take: 1 },
+    custosSnapshot: { orderBy: { ts_calculo: "desc" }, take: 1 },
     execucoesCalculo: {
-      orderBy: { ts_criacao: "desc" as const },
+      orderBy: { ts_criacao: "desc" },
       take: 1,
       select: { ts_criacao: true, js_metadados: true }
     }
-  } as const;
+  };
 
   const needsInMemorySort = input.sort && (COMPLEX_ITEM_SORT_FIELDS as readonly string[]).includes(input.sort);
 

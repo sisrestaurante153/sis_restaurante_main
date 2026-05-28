@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any
 
@@ -27,6 +28,34 @@ def as_iso_date(value: Any) -> str | None:
     return str(value) if value is not None else None
 
 
+def clean_decimal(value: Any) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    val_str = str(value).strip()
+    if not val_str:
+        return None
+    val_str = val_str.replace("R$", "").strip()
+    if "," in val_str:
+        if "." in val_str:
+            val_str = val_str.replace(".", "")
+        val_str = val_str.replace(",", ".")
+    try:
+        return float(val_str)
+    except ValueError:
+        return None
+
+
+def clean_display_name(name: Any) -> str:
+    if name is None:
+        return ""
+    name_str = str(name).strip()
+    # Remove prefixo numérico seguido de hífen no início do nome, ex: "43-Coração" ou "123 - Batata"
+    name_str = re.sub(r"^\d+\s*-\s*", "", name_str)
+    return name_str.strip()
+
+
 def parse_vmarket_sheet(worksheet) -> list[dict[str, Any]]:
     _, columns = find_header_row(
         worksheet,
@@ -39,20 +68,24 @@ def parse_vmarket_sheet(worksheet) -> list[dict[str, Any]]:
         if row_index <= 1 or material is None:
             continue
 
+        cleaned_material = clean_display_name(material)
+        if not cleaned_material:
+            continue
+
         rows.append(
             {
                 "sheet_name": worksheet.title,
                 "row_number": row_index,
                 "source_kind": "vmarket",
                 "code": row[columns.get("codigo")],
-                "display_name": str(material).strip(),
-                "canonical_name": normalize_name(material),
+                "display_name": cleaned_material,
+                "canonical_name": normalize_name(cleaned_material),
                 "purchase_unit": normalize_unit(row[columns.get("unidade")]),
                 "section": row[columns.get("secao")],
-                "purchase_weight": row[columns.get("peso")],
-                "purchase_cost": row[columns.get("custo")],
-                "unit_cost_reference": row[columns.get("kg")],
-                "loss_index": row[columns.get("perda")],
+                "package_units": clean_decimal(row[columns.get("peso")]),
+                "purchase_cost": clean_decimal(row[columns.get("custo")]),
+                "unit_cost_reference": clean_decimal(row[columns.get("kg")]),
+                "loss_index": clean_decimal(row[columns.get("perda")]),
                 "updated_at": as_iso_date(row[columns.get("data atualizacao")]),
             }
         )
@@ -72,19 +105,23 @@ def parse_embalagens_sheet(worksheet) -> list[dict[str, Any]]:
         if row_index <= 1 or embalagem is None:
             continue
 
+        cleaned_embalagem = clean_display_name(embalagem)
+        if not cleaned_embalagem:
+            continue
+
         rows.append(
             {
                 "sheet_name": worksheet.title,
                 "row_number": row_index,
                 "source_kind": "embalagem",
                 "code": row[columns.get("codigo")],
-                "display_name": str(embalagem).strip(),
-                "canonical_name": normalize_name(embalagem),
+                "display_name": cleaned_embalagem,
+                "canonical_name": normalize_name(cleaned_embalagem),
                 "purchase_unit": "un",
                 "section": row[columns.get("secao")],
-                "package_units": row[columns.get("unidades")],
-                "purchase_cost": row[columns.get("custo")],
-                "unit_cost_reference": row[columns.get("ct unit")],
+                "package_units": clean_decimal(row[columns.get("unidades")]),
+                "purchase_cost": clean_decimal(row[columns.get("custo")]),
+                "unit_cost_reference": clean_decimal(row[columns.get("ct unit")]),
                 "updated_at": as_iso_date(row[columns.get("data atualizacao")]),
             }
         )

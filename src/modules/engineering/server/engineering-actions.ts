@@ -79,11 +79,7 @@ export async function saveFichaAction(
     // Falha no audit não deve bloquear o salvamento da ficha
   }
 
-  if (before) {
-    redirect(`/fichas/${ficha.id}?saved=1`);
-  } else {
-    redirect("/fichas");
-  }
+  redirect("/fichas");
 }
 
 export interface AutoSaveResult {

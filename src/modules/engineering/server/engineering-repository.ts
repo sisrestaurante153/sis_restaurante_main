@@ -494,14 +494,15 @@ async function resolveCanonicalFichaItem(
       });
 
       if (targetItem) {
-        if (input.code && targetItem.ds_codigo_interno !== input.code.trim()) {
-          return tx.item.update({
-            where: { cd_item: targetItem.cd_item },
-            data: { ds_codigo_interno: input.code.trim() },
-            include: { unidadeUsoPadrao: true }
-          });
-        }
-        return targetItem;
+        return tx.item.update({
+          where: { cd_item: targetItem.cd_item },
+          data: {
+            nm_categoria_operacional: input.groupOperational,
+            tp_item: input.itemType,
+            ds_codigo_interno: targetItem.ds_codigo_interno ? undefined : (input.code?.trim() || null)
+          },
+          include: { unidadeUsoPadrao: true }
+        });
       }
 
       // Nenhum item com o novo nome existe — renomeia o item atual in-place para
@@ -511,9 +512,9 @@ async function resolveCanonicalFichaItem(
         data: {
           nm_item: input.displayName.trim(),
           nm_normalizado: normalizedName,
-          ds_codigo_interno: input.code?.trim() || null,
           nm_categoria_operacional: input.groupOperational,
-          tp_item: input.itemType
+          tp_item: input.itemType,
+          ds_codigo_interno: existing.ds_codigo_interno ? undefined : (input.code?.trim() || null)
         },
         include: {
           unidadeUsoPadrao: true
@@ -521,15 +522,18 @@ async function resolveCanonicalFichaItem(
       });
     }
 
-    if (input.code && existing.ds_codigo_interno !== input.code.trim()) {
-      return tx.item.update({
-        where: { cd_item: input.itemId },
-        data: { ds_codigo_interno: input.code.trim() },
-        include: { unidadeUsoPadrao: true }
-      });
-    }
-
-    return existing;
+    // Se o nome não mudou, apenas atualiza grupo operacional, tipo de item e o ds_codigo_interno se for nulo
+    return tx.item.update({
+      where: { cd_item: input.itemId },
+      data: {
+        nm_categoria_operacional: input.groupOperational,
+        tp_item: input.itemType,
+        ds_codigo_interno: existing.ds_codigo_interno ? undefined : (input.code?.trim() || null)
+      },
+      include: {
+        unidadeUsoPadrao: true
+      }
+    });
   }
 
   const existing = await tx.item.findUnique({
@@ -1027,8 +1031,9 @@ function buildFichasOrderBy(
       return [{ tp_status: dir }, { ts_atualizacao: "desc" }];
     // fc, ic, totalCost, margem são derivados — handled via in-memory sort
     case "updatedAt":
-    default:
       return [{ ts_atualizacao: dir }, { nr_versao: "desc" }];
+    default:
+      return [{ itemResultante: { nm_item: "asc" } }, { nr_versao: "desc" }];
   }
 }
 

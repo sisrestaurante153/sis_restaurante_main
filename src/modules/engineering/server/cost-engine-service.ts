@@ -53,7 +53,7 @@ function serializeCalculatedItem(result: CalculatedItemCost) {
 }
 
 async function loadItemNode(tx: TransactionClient, itemId: string) {
-  return tx.item.findUnique({
+  const item = await tx.item.findUnique({
     where: { cd_item: itemId },
     include: {
       unidadeUsoPadrao: true,
@@ -64,22 +64,34 @@ async function loadItemNode(tx: TransactionClient, itemId: string) {
       compras: {
         orderBy: [{ ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
         take: 1
-      },
-      fichasResultantes: {
-        where: { tp_status: "ativa" },
-        orderBy: { nr_versao: "desc" },
-        take: 1,
+      }
+    }
+  });
+
+  if (!item) {
+    return null;
+  }
+
+  const activeFicha = await tx.fichaTecnica.findFirst({
+    where: {
+      cd_item_resultante: itemId,
+      tp_status: "ativa"
+    },
+    orderBy: { nr_versao: "desc" },
+    include: {
+      componentes: {
+        orderBy: { nr_ordem: "asc" },
         include: {
-          componentes: {
-            orderBy: { nr_ordem: "asc" },
-            include: {
-              unidadeUso: true
-            }
-          }
+          unidadeUso: true
         }
       }
     }
   });
+
+  return {
+    ...item,
+    fichasResultantes: activeFicha ? [activeFicha] : []
+  };
 }
 
 function buildNodeFromItem(item: NonNullable<Awaited<ReturnType<typeof loadItemNode>>>) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -31,8 +31,39 @@ export function RegistroForm({ plans }: { plans?: Plan[] }) {
   const [state, action] = useActionState(registrarRestauranteAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
   
+  // Campos controlados
+  const [nmRestaurante, setNmRestaurante] = useState("");
+  const [nmResponsavel, setNmResponsavel] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Referências para foco e scroll
+  const restauranteRef = useRef<HTMLInputElement>(null);
+  const responsavelRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
   const planList = plans && plans.length > 0 ? plans : PLAN_LIST;
   const [selectedPlan, setSelectedPlan] = useState(planList[1]?.code || planList[0]?.code || "pro");
+
+  // Rola até o primeiro campo com erro e foca nele
+  useEffect(() => {
+    if (state.status === "error" && state.errors) {
+      if (state.errors.nm_restaurante) {
+        restauranteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        restauranteRef.current?.focus();
+      } else if (state.errors.nm_responsavel) {
+        responsavelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        responsavelRef.current?.focus();
+      } else if (state.errors.email) {
+        emailRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        emailRef.current?.focus();
+      } else if (state.errors.password) {
+        passwordRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        passwordRef.current?.focus();
+      }
+    }
+  }, [state]);
 
   if (state.status === "success") {
     return (
@@ -54,6 +85,9 @@ export function RegistroForm({ plans }: { plans?: Plan[] }) {
       <TextField
         label="Nome do restaurante"
         name="nm_restaurante"
+        value={nmRestaurante}
+        onChange={(e) => setNmRestaurante(e.target.value)}
+        inputRef={restauranteRef}
         required
         fullWidth
         size="small"
@@ -64,6 +98,9 @@ export function RegistroForm({ plans }: { plans?: Plan[] }) {
       <TextField
         label="Nome do responsável"
         name="nm_responsavel"
+        value={nmResponsavel}
+        onChange={(e) => setNmResponsavel(e.target.value)}
+        inputRef={responsavelRef}
         required
         fullWidth
         size="small"
@@ -75,6 +112,9 @@ export function RegistroForm({ plans }: { plans?: Plan[] }) {
         label="Email"
         name="email"
         type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        inputRef={emailRef}
         required
         fullWidth
         size="small"
@@ -86,6 +126,9 @@ export function RegistroForm({ plans }: { plans?: Plan[] }) {
         label="Senha"
         name="password"
         type={showPassword ? "text" : "password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        inputRef={passwordRef}
         required
         fullWidth
         size="small"

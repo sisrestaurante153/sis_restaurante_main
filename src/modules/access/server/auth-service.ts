@@ -42,16 +42,35 @@ export async function signInWithPassword(email: string, password: string) {
 
 export async function signUp(email: string, password: string, nome: string) {
   const supabase = createServerSupabaseClient();
-  const { data, error } = await supabase.auth.signUp({
+  
+  if (!supabase) {
+    throw new Error("Erro de configuração: Chaves do Supabase não encontradas no ambiente.");
+  }
+
+  // 1. Cria o usuário usando privilégios de Admin do Supabase
+  const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: { nome }
-    }
+    email_confirm: true,
+    user_metadata: { nome }
   });
 
   if (error) {
     return { ok: false as const, message: error.message };
+  }
+
+  if (!data.user) {
+    return { ok: false as const, message: "Erro ao criar usuário no Supabase." };
+  }
+
+  // 2. Garante a confirmação do e-mail programaticamente
+  const { error: updateError } = await supabase.auth.admin.updateUserById(
+    data.user.id,
+    { email_confirm: true }
+  );
+
+  if (updateError) {
+    console.warn(`[signUp] erro ao atualizar email_confirm para true: ${updateError.message}`);
   }
 
   return { ok: true as const, user: data.user };

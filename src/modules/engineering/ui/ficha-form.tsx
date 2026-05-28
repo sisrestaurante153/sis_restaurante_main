@@ -497,6 +497,14 @@ export function FichaForm({
       <input type="hidden" name="yieldMode" value={initialValues?.yieldMode ?? "peso_final"} />
       <input type="hidden" name="percentLoss" value={initialValues?.percentLoss ?? ""} />
 
+      {isDirty && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1, bgcolor: "#FFFBEB", borderRadius: 1, border: "1px solid #FEF3C7", mb: 2 }}>
+          <Typography sx={{ fontSize: 12, color: "#D97706", fontWeight: 500 }}>
+            ⚠️ Alterações não salvas
+          </Typography>
+        </Box>
+      )}
+
       {state.message ? <Alert ref={errorAlertRef} severity="error">{state.message}</Alert> : null}
 
       <input type="hidden" name="portions" value={portions} />
