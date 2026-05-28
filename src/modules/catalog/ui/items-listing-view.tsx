@@ -85,7 +85,7 @@ const statusOptions = [
   { value: "inativos", label: "Inativos" }
 ];
 
-type SortableField = "name" | "baseUnitCost" | "usagePrice" | "updatedAt";
+type SortableField = "code" | "name" | "type" | "category" | "purchaseQuantity" | "stockUnit" | "baseUnitCost" | "conversionFactor" | "usageQuantity" | "usageUnit" | "usagePrice" | "supplierName" | "active" | "updatedAt";
 
 interface ColumnDef {
   field: string;
@@ -97,21 +97,21 @@ interface ColumnDef {
 }
 
 const COLUMNS: ColumnDef[] = [
-  { field: "code", header: "Codigo", className: "c-cod", width: 72 },
-  { field: "name", header: "Nome do Item", className: "c-nome", width: 200, sortable: "name" },
-  { field: "type", header: "Tipo", className: "c-tipo", width: 92 },
-  { field: "category", header: "Categoria", className: "c-cat", width: 102 },
-  { field: "purchaseQuantity", header: "Qtde Compra", className: "c-qtdc", width: 72, align: "right" },
-  { field: "stockUnit", header: "Un. Compra", className: "c-unc", width: 54 },
-  { field: "baseUnitCost", header: "Preco Compra", className: "c-precc", width: 90, align: "right", sortable: "baseUnitCost" },
-  { field: "conversionFactor", header: "Fator Conv.", className: "c-fator", width: 62, align: "right" },
-  { field: "usageQuantity", header: "Qtde Uso", className: "c-qtdu", width: 64, align: "right" },
-  { field: "usageUnit", header: "Un. Uso", className: "c-unu", width: 50 },
-  { field: "usagePrice", header: "Preco Uso", className: "c-precu", width: 74, align: "right", sortable: "usagePrice" },
-  { field: "supplierName", header: "Fornecedor", className: "c-forn", width: 114 },
-  { field: "active", header: "Status", className: "c-sta", width: 64, align: "center" },
-  { field: "updatedAt", header: "Ult. Atualizacao", className: "c-data", width: 92, sortable: "updatedAt" },
-  { field: "description", header: "Obs", className: "c-obs", width: 40, align: "center" }
+  { field: "code",             header: "Codigo",           className: "c-cod",   width: 72,  sortable: "code" },
+  { field: "name",             header: "Nome do Item",     className: "c-nome",  width: 200, sortable: "name" },
+  { field: "type",             header: "Tipo",             className: "c-tipo",  width: 92,  sortable: "type" },
+  { field: "category",         header: "Categoria",        className: "c-cat",   width: 102, sortable: "category" },
+  { field: "purchaseQuantity", header: "Qtde Compra",      className: "c-qtdc",  width: 72,  align: "right", sortable: "purchaseQuantity" },
+  { field: "stockUnit",        header: "Un. Compra",       className: "c-unc",   width: 54,  sortable: "stockUnit" },
+  { field: "baseUnitCost",     header: "Preco Compra",     className: "c-precc", width: 90,  align: "right", sortable: "baseUnitCost" },
+  { field: "conversionFactor", header: "Fator Conv.",      className: "c-fator", width: 62,  align: "right", sortable: "conversionFactor" },
+  { field: "usageQuantity",    header: "Qtde Uso",         className: "c-qtdu",  width: 64,  align: "right", sortable: "usageQuantity" },
+  { field: "usageUnit",        header: "Un. Uso",          className: "c-unu",   width: 50,  sortable: "usageUnit" },
+  { field: "usagePrice",       header: "Preco Uso",        className: "c-precu", width: 74,  align: "right", sortable: "usagePrice" },
+  { field: "supplierName",     header: "Fornecedor",       className: "c-forn",  width: 114, sortable: "supplierName" },
+  { field: "active",           header: "Status",           className: "c-sta",   width: 64,  align: "center", sortable: "active" },
+  { field: "updatedAt",        header: "Ult. Atualizacao", className: "c-data",  width: 92,  sortable: "updatedAt" },
+  { field: "description",      header: "Obs",              className: "c-obs",   width: 40,  align: "center" }
 ];
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -318,10 +318,11 @@ interface InlineEditCellProps {
   onSave: (next: string) => Promise<void>;
   align?: "left" | "right";
   inputStyle?: CSSProperties;
+  formatForEdit?: (v: string) => string;
   children: ReactNode;
 }
 
-function InlineEditCell({ value, onSave, align = "left", inputStyle, children }: InlineEditCellProps) {
+function InlineEditCell({ value, onSave, align = "left", inputStyle, formatForEdit, children }: InlineEditCellProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -337,14 +338,15 @@ function InlineEditCell({ value, onSave, align = "left", inputStyle, children }:
   const startEdit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setDraft(value);
+    setDraft(formatForEdit ? formatForEdit(value) : value);
     setSaveStatus("idle");
     setEditing(true);
-  }, [value]);
+  }, [value, formatForEdit]);
 
   const commitEdit = useCallback(async () => {
     const trimmed = draft.trim();
-    if (trimmed === value.trim()) {
+    const baseline = formatForEdit ? formatForEdit(value).trim() : value.trim();
+    if (trimmed === baseline) {
       setEditing(false);
       return;
     }
@@ -688,6 +690,7 @@ interface ItemsTableProps {
 }
 
 function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryLabel }: ItemsTableProps) {
+  const [hoveredCol, setHoveredCol] = useState<string | null>(null);
   const thBase: CSSProperties = {
     padding: "8px 7px",
     fontSize: 10,
@@ -734,6 +737,12 @@ function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryL
                 }}
               >
                 {col.header}
+                {col.sortable && (
+                  <svg width="8" height="10" viewBox="0 0 8 10" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginLeft: 3, verticalAlign: "middle" }}>
+                    <path d="M4 1L1.5 4H6.5L4 1Z" fill="#C8C6BE" />
+                    <path d="M4 9L6.5 6H1.5L4 9Z" fill="#C8C6BE" />
+                  </svg>
+                )}
               </th>
             ))}
           </tr>
@@ -772,17 +781,21 @@ function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryL
         <tr>
           {COLUMNS.map((col) => {
             const isActive = col.sortable && sortField === col.sortable;
+            const isHovered = hoveredCol === col.field && !!col.sortable;
             const headerStyle: CSSProperties = {
               ...thBase,
               textAlign: col.align ?? "left",
               cursor: col.sortable ? "pointer" : "default",
-              color: isActive ? "#185FA5" : thBase.color
+              color: isActive ? "#185FA5" : thBase.color,
+              background: isHovered ? "#EAEAE8" : "#F4F4F2"
             };
             return (
               <th
                 key={col.field}
                 style={headerStyle}
                 onClick={() => col.sortable && onSort(col.sortable)}
+                onMouseEnter={() => col.sortable && setHoveredCol(col.field)}
+                onMouseLeave={() => setHoveredCol(null)}
                 aria-sort={isActive ? (sortOrder === "desc" ? "descending" : "ascending") : "none"}
               >
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 3, justifyContent: col.align === "right" ? "flex-end" : col.align === "center" ? "center" : "flex-start" }}>
@@ -909,6 +922,12 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
         displayValue={localCost}
         onSave={handleSaveCost}
         align="right"
+        formatForEdit={(v) => {
+          const n = Number(v);
+          return Number.isFinite(n) && v !== ""
+            ? n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : v;
+        }}
       >
         <span style={{ fontSize: 12, color: "#2C2C2A", textAlign: "right", display: "block", width: "100%" }}>
           {formatCurrency(localCost)}

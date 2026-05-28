@@ -35,7 +35,7 @@ interface FichaListRow {
   notes?: string;
 }
 
-type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "sellingPrice" | "updatedAt" | "status";
+type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "fc" | "ic" | "totalCost" | "sellingPrice" | "margem" | "updatedAt" | "status";
 
 interface FichasListingViewProps {
   items: FichaListRow[];
@@ -95,7 +95,9 @@ const STATUS_OPTIONS = [
 function formatCurrency(value: string) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
-    currency: "BRL"
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(Number(value));
 }
 
@@ -399,13 +401,16 @@ export function FichasListingView({
     label: string;
     align?: "left" | "right" | "center";
   }) {
+    const [hovered, setHovered] = useState(false);
     const isActive = sortBy === col;
     const activeColor = AZUL;
     const inactiveColor = "#C8C6BE";
     return (
       <th
-        style={{ ...headerCellStyle, textAlign: align, cursor: "pointer" }}
+        style={{ ...headerCellStyle, textAlign: align, cursor: "pointer", color: isActive ? AZUL : TEXT_3, background: hovered ? "#EAEAE8" : BG }}
         onClick={() => handleSortClick(col)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         aria-sort={isActive ? (sortDir === "desc" ? "descending" : "ascending") : "none"}
       >
         <span style={{ display: "inline-flex", alignItems: "center", gap: 3, justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start" }}>
@@ -558,11 +563,11 @@ export function FichasListingView({
                 <SortableHeader col="modalidade" label="Modalidade" />
                 <SortableHeader col="grupo" label="Grupo Operacional" />
                 <th style={{ ...headerCellStyle, textAlign: "center" }}>Componentes</th>
-                <th style={{ ...headerCellStyle, textAlign: "right" }}>FC</th>
-                <th style={{ ...headerCellStyle, textAlign: "right" }}>IC</th>
-                <th style={{ ...headerCellStyle, textAlign: "right" }}>Custo Total</th>
+                <SortableHeader col="fc" label="FC" align="right" />
+                <SortableHeader col="ic" label="IC" align="right" />
+                <SortableHeader col="totalCost" label="Custo Total" align="right" />
                 <SortableHeader col="sellingPrice" label="Preco de Venda" align="right" />
-                <th style={{ ...headerCellStyle, textAlign: "right" }}>Margem</th>
+                <SortableHeader col="margem" label="Margem" align="right" />
                 <SortableHeader col="updatedAt" label="Ult. Atualizacao" />
                 <SortableHeader col="status" label="Status" align="center" />
                 <th style={{ ...headerCellStyle, textAlign: "center" }}>Obs</th>

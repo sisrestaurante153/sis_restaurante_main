@@ -30,7 +30,7 @@ import {
 } from "@/modules/platform/server/demo-data";
 import { recalculateDemoStoreCosts } from "@/modules/platform/server/demo-costing";
 
-export type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "sellingPrice" | "updatedAt" | "status";
+export type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "fc" | "ic" | "totalCost" | "sellingPrice" | "margem" | "updatedAt" | "status";
 
 export interface ListFichasInput {
   page: number;
@@ -1005,6 +1005,8 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   };
 }
 
+const COMPLEX_FICHA_SORT_FIELDS = ["fc", "ic", "totalCost", "margem"] as const;
+
 function buildFichasOrderBy(
   sortBy: FichaSortBy | undefined,
   sortDir: "asc" | "desc" | undefined
@@ -1023,6 +1025,7 @@ function buildFichasOrderBy(
       return [{ vl_preco_venda: dir }, { ts_atualizacao: "desc" }];
     case "status":
       return [{ tp_status: dir }, { ts_atualizacao: "desc" }];
+    // fc, ic, totalCost, margem são derivados — handled via in-memory sort
     case "updatedAt":
     default:
       return [{ ts_atualizacao: dir }, { nr_versao: "desc" }];
@@ -1084,7 +1087,54 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
     ]
   };
 
+  const fichaInclude = {
+    itemResultante: {
+      include: {
+        custosSnapshot: { orderBy: { ts_calculo: "desc" as const }, take: 1 }
+      }
+    },
+    modalidade: true,
+    componentes: { select: { vl_qtd_bruta: true, vl_qtd_limpa: true } },
+    execucoesCalculo: {
+      orderBy: { ts_criacao: "desc" as const },
+      take: 1,
+      select: { ts_criacao: true, js_metadados: true }
+    }
+  } as const;
+
+  const needsInMemorySort = input.sortBy && (COMPLEX_FICHA_SORT_FIELDS as readonly string[]).includes(input.sortBy);
+
   try {
+    if (needsInMemorySort) {
+      const [totalCount, allFichas] = await Promise.all([
+        prisma.fichaTecnica.count({ where }),
+        prisma.fichaTecnica.findMany({ where, orderBy: { ts_atualizacao: "desc" }, include: fichaInclude })
+      ]);
+      const allMapped = allFichas.map((f) => mapFichaListRow(f as unknown as NonNullable<FichaRecord>));
+      const dir = input.sortDir === "desc" ? -1 : 1;
+      const safeNum = (v: string | null | undefined, fallback = -Infinity) => {
+        const n = Number(v ?? "");
+        return Number.isFinite(n) ? n : fallback;
+      };
+      allMapped.sort((a, b) => {
+        switch (input.sortBy) {
+          case "fc":        return dir * (safeNum(a.correctionFactor) - safeNum(b.correctionFactor));
+          case "ic":        return dir * (safeNum(a.cookingIndex) - safeNum(b.cookingIndex));
+          case "totalCost": return dir * (Number(a.totalCost) - Number(b.totalCost));
+          case "margem":    return dir * (safeNum(a.contributionMarginPercent, -999) - safeNum(b.contributionMarginPercent, -999));
+          default: return 0;
+        }
+      });
+      const safePage = Math.max(input.page, 1);
+      const offset = (safePage - 1) * input.pageSize;
+      return {
+        items: allMapped.slice(offset, offset + input.pageSize),
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
+        page: safePage
+      };
+    }
+
     const [totalCount, fichas] = await Promise.all([
       prisma.fichaTecnica.count({ where }),
       prisma.fichaTecnica.findMany({
@@ -1092,31 +1142,7 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
         orderBy: buildFichasOrderBy(input.sortBy, input.sortDir),
         skip: (Math.max(input.page, 1) - 1) * input.pageSize,
         take: input.pageSize,
-        include: {
-          itemResultante: {
-            include: {
-              custosSnapshot: {
-                orderBy: { ts_calculo: "desc" },
-                take: 1
-              }
-            }
-          },
-          modalidade: true,
-          componentes: {
-            select: {
-              vl_qtd_bruta: true,
-              vl_qtd_limpa: true
-            }
-          },
-          execucoesCalculo: {
-            orderBy: { ts_criacao: "desc" },
-            take: 1,
-            select: {
-              ts_criacao: true,
-              js_metadados: true
-            }
-          }
-        }
+        include: fichaInclude
       })
     ]);
 
@@ -1945,6 +1971,37 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
             const aGrp = store.items.find((i) => i.id === a.itemId)?.operationalCategory ?? "";
             const bGrp = store.items.find((i) => i.id === b.itemId)?.operationalCategory ?? "";
             return dir * aGrp.localeCompare(bGrp, "pt-BR", { sensitivity: "base" });
+          }
+          case "fc": {
+            const getFC = (f: DemoFichaRecord) => {
+              const gross = f.components.reduce((s, c) => s + Number(c.quantityGross || "0"), 0);
+              const net = f.components.reduce((s, c) => s + Number(c.quantityNet || c.quantityGross || "0"), 0);
+              return gross > 0 ? net / gross : 0;
+            };
+            return dir * (getFC(a) - getFC(b));
+          }
+          case "ic": {
+            const getIC = (f: DemoFichaRecord) => {
+              const net = f.components.reduce((s, c) => s + Number(c.quantityNet || c.quantityGross || "0"), 0);
+              const out = Number(f.costs.finalOutput) || 0;
+              return net > 0 ? out / net : 0;
+            };
+            return dir * (getIC(a) - getIC(b));
+          }
+          case "totalCost":
+            return dir * (Number(a.costs.total) - Number(b.costs.total));
+          case "margem": {
+            const getMargem = (f: DemoFichaRecord) => {
+              const sp = f.salePrice ? Number(f.salePrice) : 0;
+              if (!sp) return -999;
+              const tc = Number(f.costs.total) || 0;
+              const vep = f.variableExpensePercent ? Number(f.variableExpensePercent) : 0;
+              const vepN = vep > 1 ? vep / 100 : vep;
+              const out = Number(f.costs.finalOutput) || 0;
+              const costCalc = out > 0 ? tc / out : tc;
+              return (sp - costCalc - sp * vepN) / sp;
+            };
+            return dir * (getMargem(a) - getMargem(b));
           }
           case "sellingPrice":
             return dir * (Number(a.salePrice ?? "0") - Number(b.salePrice ?? "0"));

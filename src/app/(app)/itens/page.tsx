@@ -18,7 +18,7 @@ export default async function ItemsPage({ searchParams }: { searchParams: Search
   const category = getSingle(resolvedSearchParams.category, "all");
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "100"));
-  const sort = getSingle(resolvedSearchParams.sort) as "name" | "baseUnitCost" | "usagePrice" | "updatedAt" | "";
+  const sort = getSingle(resolvedSearchParams.sort) as "code" | "name" | "type" | "category" | "purchaseQuantity" | "stockUnit" | "baseUnitCost" | "conversionFactor" | "usageQuantity" | "usageUnit" | "usagePrice" | "supplierName" | "active" | "updatedAt" | "";
   const order = getSingle(resolvedSearchParams.order) as "asc" | "desc" | "";
   const repository = getCatalogRepository(session.restaurantId);
   const masterData = getMasterDataRepository();

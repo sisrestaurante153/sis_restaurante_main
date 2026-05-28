@@ -33,7 +33,7 @@ export interface ListItemsInput {
   type?: DemoItemType | "all";
   status?: "ativos" | "inativos" | "all";
   category?: string;
-  sort?: "name" | "baseUnitCost" | "usagePrice" | "updatedAt";
+  sort?: "code" | "name" | "type" | "category" | "purchaseQuantity" | "stockUnit" | "baseUnitCost" | "conversionFactor" | "usageQuantity" | "usageUnit" | "usagePrice" | "supplierName" | "active" | "updatedAt";
   order?: "asc" | "desc";
 }
 
@@ -309,6 +309,49 @@ async function queryItem(
   }) as Promise<CatalogItemRecord | null>;
 }
 
+const COMPLEX_ITEM_SORT_FIELDS = ["code", "baseUnitCost", "usagePrice", "purchaseQuantity", "conversionFactor", "usageQuantity", "supplierName"] as const;
+
+function buildItemsOrderBy(sort: ListItemsInput["sort"], order: "asc" | "desc" | undefined): Prisma.ItemOrderByWithRelationInput {
+  const dir = order ?? "asc";
+  switch (sort) {
+    case "name":     return { nm_item: dir };
+    case "type":     return { tp_item: dir };
+    case "category": return { nm_categoria_operacional: dir };
+    case "active":   return { sn_ativo: dir };
+    case "updatedAt": return { ts_atualizacao: dir };
+    case "stockUnit": return { unidadeEstoque: { ds_codigo: dir } };
+    case "usageUnit": return { unidadeUsoPadrao: { ds_codigo: dir } };
+    default:          return { nm_item: "asc" };
+  }
+}
+
+function sortMappedItems(mapped: ReturnType<typeof mapItemListRow>[], sort: ListItemsInput["sort"], order: "asc" | "desc" | undefined) {
+  const dir = (order ?? "asc") === "asc" ? 1 : -1;
+  const locale = "pt-BR";
+  const localeOpts: Intl.CollatorOptions = { sensitivity: "base" };
+  const num = (v: string) => (v === "--" ? -Infinity : Number(v));
+  mapped.sort((a, b) => {
+    switch (sort) {
+      case "code": {
+        const aN = Number(a.code), bN = Number(b.code);
+        if (!isNaN(aN) && !isNaN(bN)) return dir * (aN - bN);
+        return dir * a.code.localeCompare(b.code, locale, localeOpts);
+      }
+      case "baseUnitCost":     return dir * (num(a.baseUnitCost) - num(b.baseUnitCost));
+      case "usagePrice":       return dir * (num(a.usagePrice) - num(b.usagePrice));
+      case "purchaseQuantity": return dir * (num(a.purchaseQuantity) - num(b.purchaseQuantity));
+      case "conversionFactor": return dir * (num(a.conversionFactor) - num(b.conversionFactor));
+      case "usageQuantity":    return dir * (num(a.usageQuantity) - num(b.usageQuantity));
+      case "supplierName": {
+        const aV = a.supplierName === "--" ? "" : a.supplierName;
+        const bV = b.supplierName === "--" ? "" : b.supplierName;
+        return dir * aV.localeCompare(bV, locale, localeOpts);
+      }
+      default: return 0;
+    }
+  });
+}
+
 async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: string }) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
@@ -350,54 +393,58 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
     ]
   };
 
+  const itemInclude = {
+    unidadeEstoque: true,
+    unidadeUsoPadrao: true,
+    compras: {
+      orderBy: [{ sn_principal: "desc" as const }, { ts_atualizacao_preco: "desc" as const }, { ts_criacao: "desc" as const }],
+      include: {
+        fornecedor: { select: { nm_fornecedor: true } },
+        unidadeCompra: true,
+        unidadeUso: true
+      }
+    },
+    fichasResultantes: {
+      where: { tp_status: { in: ["ativa", "rascunho", "inativa"] as ["ativa", "rascunho", "inativa"] } },
+      orderBy: [{ tp_status: "asc" as const }],
+      take: 1
+    },
+    custosSnapshot: { orderBy: { ts_calculo: "desc" as const }, take: 1 },
+    execucoesCalculo: {
+      orderBy: { ts_criacao: "desc" as const },
+      take: 1,
+      select: { ts_criacao: true, js_metadados: true }
+    }
+  } as const;
+
+  const needsInMemorySort = input.sort && (COMPLEX_ITEM_SORT_FIELDS as readonly string[]).includes(input.sort);
+
   try {
+    if (needsInMemorySort) {
+      const [totalCount, allItems] = await Promise.all([
+        prisma.item.count({ where }),
+        prisma.item.findMany({ where, orderBy: { nm_item: "asc" }, include: itemInclude })
+      ]);
+      const mapped = (allItems as unknown as CatalogItemRecord[]).map(mapItemListRow);
+      sortMappedItems(mapped, input.sort, input.order);
+      const safePage = Math.max(input.page, 1);
+      const offset = (safePage - 1) * input.pageSize;
+      return {
+        items: mapped.slice(offset, offset + input.pageSize),
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
+        page: safePage
+      };
+    }
+
     const [totalCount, items] = await Promise.all([
       prisma.item.count({ where }),
       prisma.item.findMany({
         where,
-        orderBy: input.sort === "updatedAt"
-          ? { ts_atualizacao: input.order ?? "asc" }
-          : input.sort === "name"
-            ? { nm_item: input.order ?? "asc" }
-            : { nm_item: "asc" },
+        orderBy: buildItemsOrderBy(input.sort, input.order),
         skip: (Math.max(input.page, 1) - 1) * input.pageSize,
         take: input.pageSize,
-        include: {
-          unidadeEstoque: true,
-          unidadeUsoPadrao: true,
-          // aliases e conversoes nao sao usados em mapItemListRow; omitir para reduzir payload
-          compras: {
-            orderBy: [{ sn_principal: "desc" }, { ts_atualizacao_preco: "desc" }, { ts_criacao: "desc" }],
-            include: {
-              fornecedor: {
-                select: { nm_fornecedor: true }
-              },
-              unidadeCompra: true,
-              unidadeUso: true
-            }
-          },
-          fichasResultantes: {
-            where: {
-              tp_status: {
-                in: ["ativa", "rascunho", "inativa"]
-              }
-            },
-            orderBy: [{ tp_status: "asc" }],
-            take: 1
-          },
-          custosSnapshot: {
-            orderBy: { ts_calculo: "desc" },
-            take: 1
-          },
-          execucoesCalculo: {
-            orderBy: { ts_criacao: "desc" },
-            take: 1,
-            select: {
-              ts_criacao: true,
-              js_metadados: true
-            }
-          }
-        }
+        include: itemInclude
       })
     ]);
 
@@ -792,8 +839,8 @@ async function deleteItemWithPrisma(itemId: string, restaurantId: string): Promi
 
 export function getCatalogRepository(restaurantId = "rest_padrao") {
   return {
-    async listItems({ page, pageSize, query, type = "all", status = "all", category = "all" }: ListItemsInput) {
-      const prismaResult = await listItemsWithPrisma({ page, pageSize, query, type, status, category, restaurantId });
+    async listItems({ page, pageSize, query, type = "all", status = "all", category = "all", sort, order }: ListItemsInput) {
+      const prismaResult = await listItemsWithPrisma({ page, pageSize, query, type, status, category, sort, order, restaurantId });
       if (prismaResult) {
         return prismaResult;
       }
@@ -817,7 +864,38 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
         return matchesQuery && matchesType && matchesStatus && matchesCategory;
       });
 
-      const sorted = [...filtered].sort((left, right) => left.name.localeCompare(right.name));
+      const locale = "pt-BR";
+      const localeOpts: Intl.CollatorOptions = { sensitivity: "base" };
+      const dir = order === "desc" ? -1 : 1;
+      const sorted = [...filtered].sort((l, r) => {
+        switch (sort) {
+          case "code": {
+            const lN = Number(l.code), rN = Number(r.code);
+            if (!isNaN(lN) && !isNaN(rN)) return dir * (lN - rN);
+            return dir * l.code.localeCompare(r.code, locale, localeOpts);
+          }
+          case "name":     return dir * l.name.localeCompare(r.name, locale, localeOpts);
+          case "type":     return dir * l.type.localeCompare(r.type, locale, localeOpts);
+          case "category": return dir * l.operationalCategory.localeCompare(r.operationalCategory, locale, localeOpts);
+          case "purchaseQuantity": return dir * (Number(l.purchaseQuantity) - Number(r.purchaseQuantity));
+          case "stockUnit": return dir * l.stockUnit.localeCompare(r.stockUnit, locale, localeOpts);
+          case "baseUnitCost": return dir * (Number(l.purchaseCost) - Number(r.purchaseCost));
+          case "conversionFactor": return dir * (Number(l.conversionFactor) - Number(r.conversionFactor));
+          case "usageQuantity": {
+            const cf = (v: string) => Math.max(Number(v), 0.0001);
+            return dir * (Number(l.purchaseQuantity) / cf(l.conversionFactor) - Number(r.purchaseQuantity) / cf(r.conversionFactor));
+          }
+          case "usageUnit": return dir * l.usageUnit.localeCompare(r.usageUnit, locale, localeOpts);
+          case "usagePrice": {
+            const cf = (v: string) => Math.max(Number(v), 0.0001);
+            return dir * (Number(l.purchaseCost) / cf(l.conversionFactor) - Number(r.purchaseCost) / cf(r.conversionFactor));
+          }
+          case "supplierName": return dir * l.supplier.localeCompare(r.supplier, locale, localeOpts);
+          case "active":   return dir * ((l.active ? 1 : 0) - (r.active ? 1 : 0));
+          case "updatedAt": return dir * l.lastCalculationAt.localeCompare(r.lastCalculationAt);
+          default: return l.name.localeCompare(r.name);
+        }
+      });
       const paginated = paginate(sorted, page, pageSize);
 
       return {

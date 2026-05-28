@@ -8,7 +8,7 @@ import { PageHeader } from "@/modules/platform/ui/page-header";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-const VALID_SORT_BY: FichaSortBy[] = ["code", "produto", "modalidade", "grupo", "sellingPrice", "updatedAt", "status"];
+const VALID_SORT_BY: FichaSortBy[] = ["code", "produto", "modalidade", "grupo", "fc", "ic", "totalCost", "sellingPrice", "margem", "updatedAt", "status"];
 
 function getSingle(searchParam: string | string[] | undefined, fallback = "") {
   return Array.isArray(searchParam) ? searchParam[0] ?? fallback : searchParam ?? fallback;

@@ -40,7 +40,9 @@ const TOKENS = {
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
-  currency: "BRL"
+  currency: "BRL",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
 });
 
 function parseFiniteMetric(value: string | null | undefined) {
@@ -364,10 +366,12 @@ function resolveCmvStyle(status: ComponentsEditorSummary["cmvHealthStatus"]) {
 // linguagem clara para qualquer pessoa — sem jargao tecnico.
 function CmvHealthBar({
   status,
-  cmvHealthPercent
+  cmvHealthPercent,
+  hideHeader
 }: {
   status: ComponentsEditorSummary["cmvHealthStatus"];
   cmvHealthPercent?: string | null;
+  hideHeader?: boolean;
 }) {
   const SCALE_MAX = 60;
   const ZONES = [
@@ -389,31 +393,32 @@ function CmvHealthBar({
 
   return (
     <Box sx={{ padding: "14px 20px 16px" }}>
-      {/* Cabeçalho: título + badge */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: "12px", gap: 1 }}>
-        <Typography
-          component="span"
-          sx={{ fontSize: 13, fontWeight: 700, color: TOKENS.text, lineHeight: 1.3 }}
-        >
-          Como está o CMV da sua ficha?
-        </Typography>
-        {cmvPct !== null ? (
-          <Box
+      {!hideHeader && (
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: "12px", gap: 1 }}>
+          <Typography
             component="span"
-            sx={{
-              fontSize: 11, fontWeight: 700, padding: "3px 10px",
-              borderRadius: "20px", letterSpacing: "0.03em", flexShrink: 0,
-              background: activeStyle.bg, color: activeStyle.fg, border: `1px solid ${activeStyle.border}`
-            }}
+            sx={{ fontSize: 13, fontWeight: 700, color: TOKENS.text, lineHeight: 1.3 }}
           >
-            {activeStyle.label} · {cmvPct.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
-          </Box>
-        ) : (
-          <Typography component="span" sx={{ fontSize: 11, color: TOKENS.text3, flexShrink: 0 }}>
-            Informe o preço de venda
+            Como está o CMV da sua ficha?
           </Typography>
-        )}
-      </Box>
+          {cmvPct !== null ? (
+            <Box
+              component="span"
+              sx={{
+                fontSize: 11, fontWeight: 700, padding: "3px 10px",
+                borderRadius: "20px", letterSpacing: "0.03em", flexShrink: 0,
+                background: activeStyle.bg, color: activeStyle.fg, border: `1px solid ${activeStyle.border}`
+              }}
+            >
+              {activeStyle.label} · {cmvPct.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+            </Box>
+          ) : (
+            <Typography component="span" sx={{ fontSize: 11, color: TOKENS.text3, flexShrink: 0 }}>
+              Informe o preço de venda
+            </Typography>
+          )}
+        </Box>
+      )}
 
       {/* Faixas coloridas + agulha */}
       <Box sx={{ position: "relative", height: 14, display: "flex", gap: "3px", overflow: "visible", mb: "4px" }}>
@@ -747,19 +752,6 @@ export function TotaisIndicadores({
         </Box>
       </Box>
 
-      {/* CMV HEALTH BAR — único indicador de CMV, posicionado acima dos cards */}
-      <Box
-        sx={{
-          background: TOKENS.surface,
-          border: `0.5px solid ${TOKENS.border}`,
-          borderRadius: TOKENS.radius,
-          overflow: "hidden",
-          mb: 2
-        }}
-      >
-        <CmvHealthBar status={summary.cmvHealthStatus} cmvHealthPercent={summary.cmvHealthPercent} />
-      </Box>
-
       {/* QF COLS: Custos e CMV + Venda e Margem */}
       <Box
         sx={{
@@ -991,16 +983,11 @@ export function TotaisIndicadores({
             highlight
             highlightColor="verde"
           />
-          <MargemBar mcPercent={mcPercent} />
-          <Box
-            sx={{
-              fontSize: 10,
-              color: TOKENS.text3,
-              padding: "4px 18px 10px"
-            }}
-          >
-            Simulador em tempo real — altere o preco ou % de despesa acima
-          </Box>
+          <CmvHealthBar
+            status={summary.cmvHealthStatus}
+            cmvHealthPercent={summary.cmvHealthPercent}
+            hideHeader
+          />
         </QfCard>
       </Box>
 
