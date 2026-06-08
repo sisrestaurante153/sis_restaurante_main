@@ -248,6 +248,7 @@ function resolveDemoFichaItem(store: ReturnType<typeof getDemoStore>, input: Sav
     if (input.code) {
       existing.code = input.code.trim();
     }
+    existing.type = input.itemType;
     return existing;
   }
 
@@ -549,6 +550,13 @@ async function resolveCanonicalFichaItem(
   });
 
   if (existing) {
+    if (existing.tp_item !== input.itemType) {
+      return tx.item.update({
+        where: { cd_item: existing.cd_item },
+        data: { tp_item: input.itemType },
+        include: { unidadeUsoPadrao: true }
+      });
+    }
     return existing;
   }
 
@@ -894,7 +902,7 @@ function mapFichaListRow(record: NonNullable<FichaRecord>) {
   return {
     id: record.cd_ficha_tecnica,
     itemId: record.cd_item_resultante,
-    code: record.itemResultante.ds_codigo_interno ?? "--",
+    code: record.itemResultante.ds_codigo_interno ? `${record.itemResultante.ds_codigo_interno}-V${record.nr_versao}` : "--",
     itemName: displayName,
     itemType: record.itemResultante.tp_item,
     version: record.nr_versao,
@@ -947,7 +955,7 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
 
   return {
     id: record.cd_ficha_tecnica,
-    code: record.itemResultante.ds_codigo_interno ?? "",
+    code: record.itemResultante.ds_codigo_interno ? `${record.itemResultante.ds_codigo_interno}-V${record.nr_versao}` : "",
     itemId: record.cd_item_resultante,
     itemName: displayName,
     canonicalItemName: record.itemResultante.nm_item,
@@ -1190,6 +1198,12 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
   try {
     const ficha = await prisma.$transaction(async (tx) => {
       const modality = await ensureModality(tx, input.modalityId);
+      const isBuffet =
+        modality.ds_codigo?.toLowerCase().includes("buffet") ||
+        modality.nm_modalidade?.toLowerCase().includes("buffet");
+      if (isBuffet) {
+        input.itemType = "prato";
+      }
       const item = await resolveCanonicalFichaItem(tx, input, restaurantId);
       const yieldUnit = await ensureUnit(tx, input.yieldUnitCode);
 
@@ -1768,7 +1782,10 @@ function toFichaListRow(ficha: DemoFichaRecord) {
   return {
     id: ficha.id,
     itemId: ficha.itemId,
-    code: getDemoStore().items.find((item) => item.id === ficha.itemId)?.code ?? "--",
+    code: (() => {
+      const itemCode = getDemoStore().items.find((item) => item.id === ficha.itemId)?.code;
+      return itemCode ? `${itemCode}-V${ficha.version}` : "--";
+    })(),
     itemName: ficha.displayName,
     itemType: ficha.itemType,
     version: ficha.version,
@@ -1807,7 +1824,10 @@ function toFichaDetail(ficha: DemoFichaRecord) {
 
   return cloneDemoStore({
     id: ficha.id,
-    code: getDemoStore().items.find((item) => item.id === ficha.itemId)?.code ?? "",
+    code: (() => {
+      const itemCode = getDemoStore().items.find((item) => item.id === ficha.itemId)?.code;
+      return itemCode ? `${itemCode}-V${ficha.version}` : "";
+    })(),
     itemId: ficha.itemId,
     itemName: ficha.displayName,
     canonicalItemName: ficha.itemName,
@@ -1896,6 +1916,31 @@ function toFichaDetail(ficha: DemoFichaRecord) {
 
 export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
   return {
+    async checkDuplicateName(name: string, excludeFichaId?: string) {
+      const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
+      if (prisma) {
+        try {
+          const count = await prisma.fichaTecnica.count({
+            where: {
+              cd_restaurante: restaurantId,
+              nm_exibicao: { equals: name.trim(), mode: "insensitive" },
+              cd_ficha_tecnica: excludeFichaId ? { not: excludeFichaId } : undefined
+            }
+          });
+          return count > 0;
+        } catch {
+          // fallback
+        }
+      }
+
+      const store = getDemoStore();
+      return store.fichas.some(
+        (ficha) =>
+          ficha.displayName.trim().toLowerCase() === name.trim().toLowerCase() &&
+          ficha.id !== excludeFichaId
+      );
+    },
+
     async listModalities() {
       const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
 
@@ -1922,7 +1967,53 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         .map((entry) => ({
           id: entry.id,
           label: entry.label
-        }));
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+    },
+
+    async listOperationalGroups() {
+      const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
+
+      if (prisma) {
+        try {
+          const rows = await prisma.item.findMany({
+            where: {
+              cd_restaurante: restaurantId,
+              sn_ativo: true,
+              nm_categoria_operacional: { not: "" }
+            },
+            select: { nm_categoria_operacional: true },
+            distinct: ["nm_categoria_operacional"],
+            orderBy: { nm_categoria_operacional: "asc" }
+          });
+
+          if (rows.length > 0) {
+            return rows
+              .map((row) => row.nm_categoria_operacional!)
+              .filter(Boolean)
+              .map((val) => ({
+                id: val,
+                label: val
+              }));
+          }
+        } catch {
+          // fall back to demo defaults
+        }
+      }
+
+      const store = getDemoStore();
+      const groups = Array.from(
+        new Set(
+          store.items
+            .map((item) => item.operationalCategory)
+            .filter(Boolean)
+        )
+      ).sort();
+
+      return groups.map((g) => ({
+        id: g,
+        label: g
+      }));
     },
 
     async listFichas({ page, pageSize, query, status = "all", modalidade, grupo, sortBy, sortDir }: ListFichasInput) {
@@ -2038,14 +2129,7 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
     },
 
     async saveFicha(input: SaveFichaInput) {
-      const prismaResult = await saveFichaWithPrisma(input, restaurantId);
-      if (prismaResult) {
-        return prismaResult;
-      }
-
       const store = getDemoStore();
-      const existing = input.id ? store.fichas.find((entry) => entry.id === input.id) : undefined;
-      const linkedItem = resolveDemoFichaItem(store, input);
       const selectedModality =
         store.modalities.find((entry) => entry.id === input.modalityId) ??
         {
@@ -2054,6 +2138,21 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
           label: input.modalityId.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase()),
           active: true
         };
+      const isBuffet =
+        selectedModality.id.toLowerCase().includes("buffet") ||
+        selectedModality.code?.toLowerCase().includes("buffet") ||
+        selectedModality.label?.toLowerCase().includes("buffet");
+      if (isBuffet) {
+        input.itemType = "prato";
+      }
+
+      const prismaResult = await saveFichaWithPrisma(input, restaurantId);
+      if (prismaResult) {
+        return prismaResult;
+      }
+
+      const existing = input.id ? store.fichas.find((entry) => entry.id === input.id) : undefined;
+      const linkedItem = resolveDemoFichaItem(store, input);
       if (!store.modalities.some((entry) => entry.id === selectedModality.id)) {
         store.modalities.unshift(selectedModality);
       }

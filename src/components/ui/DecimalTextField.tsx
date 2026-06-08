@@ -64,16 +64,15 @@ export function DecimalTextField({
       }}
       onFocus={(event) => {
         focused.current = true;
-        const target = event.target;
+        const target = event.target as HTMLInputElement;
         // Remove zeros à direita para facilitar a edição: "1,200" → "1,2"
         const num = parseDecimalValue(value);
         if (num !== null) {
           setLocalValue(String(num).replace(".", ","));
-          // setLocalValue agenda re-render; seleciona após ele para não perder a seleção
-          requestAnimationFrame(() => target.select());
-        } else {
-          target.select();
         }
+        setTimeout(() => {
+          target.select();
+        }, 0);
         rest.onFocus?.(event);
       }}
       onBlur={(event) => {

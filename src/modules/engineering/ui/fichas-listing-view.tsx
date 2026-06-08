@@ -48,6 +48,8 @@ interface FichasListingViewProps {
   grupo?: string;
   sortBy?: FichaSortBy;
   sortDir?: "asc" | "desc";
+  modalidadeOptions?: { id: string; label: string }[];
+  grupoOptions?: { id: string; label: string }[];
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -67,21 +69,6 @@ const INATIVA_BG = "#F1EFE8";
 const INATIVA_TEXT = "#444441";
 const VERM = "#A32D2D";
 const AMBAR = "#854F0B";
-
-const MODALIDADE_OPTIONS = [
-  { value: "all", label: "Todas as modalidades" },
-  { value: "Delivery", label: "Delivery" },
-  { value: "Presencial", label: "Presencial" },
-  { value: "__none__", label: "Sem modalidade" }
-];
-
-const GRUPO_OPTIONS = [
-  { value: "all", label: "Todos os grupos" },
-  { value: "Marmitas", label: "Marmitas" },
-  { value: "Pratos", label: "Pratos" },
-  { value: "Bases", label: "Bases" },
-  { value: "__none__", label: "Sem grupo" }
-];
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Todos os status" },
@@ -118,7 +105,7 @@ function formatPercent(value?: string | null): { text: string; color: string } {
     return { text: "—", color: TEXT_3 };
   }
   const percent = Math.round(parsed * 100);
-  const color = percent >= 100 ? VERDE : VERM;
+  const color = percent >= 50 ? VERDE : VERM;
   return { text: `${percent}%`, color };
 }
 
@@ -298,7 +285,9 @@ export function FichasListingView({
   modalidade = "all",
   grupo = "all",
   sortBy,
-  sortDir
+  sortDir,
+  modalidadeOptions,
+  grupoOptions
 }: FichasListingViewProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -308,12 +297,94 @@ export function FichasListingView({
   const [modalidadeValue, setModalidadeValue] = useState(modalidade);
   const [grupoValue, setGrupoValue] = useState(grupo);
 
+  const resolvedModalidades = useMemo(() => {
+    const base = [{ value: "all", label: "Todas as modalidades" }];
+    if (modalidadeOptions && modalidadeOptions.length > 0) {
+      const sorted = [...modalidadeOptions].sort((a, b) => a.label.localeCompare(b.label));
+      base.push(...sorted.map(m => ({ value: m.label, label: m.label })));
+    } else {
+      base.push(
+        { value: "Delivery", label: "Delivery" },
+        { value: "Presencial", label: "Presencial" }
+      );
+    }
+    base.push({ value: "__none__", label: "Sem modalidade" });
+    return base;
+  }, [modalidadeOptions]);
+
+  const resolvedGrupos = useMemo(() => {
+    const base = [{ value: "all", label: "Todos os grupos" }];
+    if (grupoOptions && grupoOptions.length > 0) {
+      const sorted = [...grupoOptions].sort((a, b) => a.label.localeCompare(b.label));
+      base.push(...sorted.map(g => ({ value: g.label, label: g.label })));
+    } else {
+      base.push(
+        { value: "Marmitas", label: "Marmitas" },
+        { value: "Pratos", label: "Pratos" },
+        { value: "Bases", label: "Bases" }
+      );
+    }
+    base.push({ value: "__none__", label: "Sem grupo" });
+    return base;
+  }, [grupoOptions]);
+
   useEffect(() => {
     setQueryValue(query);
     setStatusValue(status);
     setModalidadeValue(modalidade);
     setGrupoValue(grupo);
   }, [query, status, modalidade, grupo]);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function navigateImmediate(overrides: Parameters<typeof buildHref>[0]) {
+    router.push(buildHref({ ...overrides, page: 1 }) as never);
+  }
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      if (queryValue !== query) {
+        navigateImmediate({ query: queryValue });
+      }
+    }, 300);
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryValue]);
+
+  // Save search parameters to sessionStorage
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (queryValue.trim()) params.set("query", queryValue.trim());
+    if (statusValue !== "all") params.set("status", statusValue);
+    if (modalidadeValue !== "all") params.set("modalidade", modalidadeValue);
+    if (grupoValue !== "all") params.set("grupo", grupoValue);
+    if (page > 1) params.set("page", String(page));
+    if (pageSize !== 10) params.set("pageSize", String(pageSize));
+    if (sortBy) params.set("sortBy", sortBy);
+    if (sortDir) params.set("sortDir", sortDir);
+
+    sessionStorage.setItem("fichas_listing_filters", params.toString());
+  }, [queryValue, statusValue, modalidadeValue, grupoValue, page, pageSize, sortBy, sortDir]);
+
+  // Restore search parameters from sessionStorage if URL has no search params
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const currentSearch = window.location.search;
+      if (!currentSearch) {
+        const saved = sessionStorage.getItem("fichas_listing_filters");
+        if (saved) {
+          router.replace(`/fichas?${saved}` as never);
+        }
+      }
+    }
+  }, [router]);
 
   // items já vêm filtrados do servidor; useMemo mantido apenas como identidade
   const visibleItems = useMemo(() => items, [items]);
@@ -472,9 +543,9 @@ export function FichasListingView({
           value={modalidadeValue}
           onChange={(next) => {
             setModalidadeValue(next);
-            router.push(buildHref({ modalidade: next, page: 1 }) as never);
+            navigateImmediate({ modalidade: next });
           }}
-          options={MODALIDADE_OPTIONS}
+          options={resolvedModalidades}
           ariaLabel="Modalidade"
           name="modalidade"
         />
@@ -483,9 +554,9 @@ export function FichasListingView({
           value={grupoValue}
           onChange={(next) => {
             setGrupoValue(next);
-            router.push(buildHref({ grupo: next, page: 1 }) as never);
+            navigateImmediate({ grupo: next });
           }}
-          options={GRUPO_OPTIONS}
+          options={resolvedGrupos}
           ariaLabel="Grupo"
           name="grupo"
         />
@@ -494,7 +565,7 @@ export function FichasListingView({
           value={statusValue}
           onChange={(next) => {
             setStatusValue(next);
-            router.push(buildHref({ status: next, page: 1 }) as never);
+            navigateImmediate({ status: next });
           }}
           options={STATUS_OPTIONS}
           ariaLabel="Status"
@@ -632,13 +703,33 @@ export function FichasListingView({
   );
 }
 
+function CellLink({ href, children, style }: { href: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <Link
+      href={href as never}
+      style={{
+        display: "block",
+        textDecoration: "none",
+        color: "inherit",
+        width: "100%",
+        height: "100%",
+        padding: "8px 7px",
+        boxSizing: "border-box",
+        ...style
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
+
 interface FichaRowViewProps {
   row: FichaListRow;
   cellStyle: React.CSSProperties;
-  onNavigate: () => void;
+  onNavigate?: () => void;
 }
 
-function FichaRowView({ row, cellStyle, onNavigate }: FichaRowViewProps) {
+function FichaRowView({ row, cellStyle }: FichaRowViewProps) {
   const [hover, setHover] = useState(false);
   const [localName, setLocalName] = useState(row.itemName);
   const [localPrice, setLocalPrice] = useState(row.sellingPrice ?? "");
@@ -671,21 +762,23 @@ function FichaRowView({ row, cellStyle, onNavigate }: FichaRowViewProps) {
     setLocalPrice(next === "" ? "" : String(num));
   }, [row.id]);
 
+  const linkCellStyle: React.CSSProperties = { ...cellStyle, padding: 0 };
+
   return (
     <tr
       style={{
         borderBottom: `0.5px solid ${BORDER}`,
-        cursor: "pointer",
         background: hover ? "#F7F7F5" : "transparent"
       }}
-      onClick={onNavigate}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <td style={cellStyle}>
-        <span style={{ fontSize: 11, color: TEXT_3 }}>
-          {row.code && row.code.trim() !== "" ? row.code : "--"}
-        </span>
+      <td style={linkCellStyle}>
+        <CellLink href={`/fichas/${row.id}`}>
+          <span style={{ fontSize: 11, color: TEXT_3 }}>
+            {row.code && row.code.trim() !== "" ? row.code : "--"}
+          </span>
+        </CellLink>
       </td>
       <InlineEditCell value={localName} onSave={handleSaveName} style={cellStyle}>
         <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -730,42 +823,54 @@ function FichaRowView({ row, cellStyle, onNavigate }: FichaRowViewProps) {
           </div>
         </div>
       </InlineEditCell>
-      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }} title={modalityLabel}>
-        {modalityLabel}
+      <td style={{ ...linkCellStyle }} title={modalityLabel}>
+        <CellLink href={`/fichas/${row.id}`} style={{ color: TEXT_3, fontSize: 11 }}>
+          {modalityLabel}
+        </CellLink>
       </td>
-      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }} title={groupLabel}>
-        {groupLabel}
+      <td style={{ ...linkCellStyle }} title={groupLabel}>
+        <CellLink href={`/fichas/${row.id}`} style={{ color: TEXT_3, fontSize: 11 }}>
+          {groupLabel}
+        </CellLink>
       </td>
-      <td style={{ ...cellStyle, textAlign: "center" }}>
-        <span
-          style={{
-            display: "inline-block",
-            fontSize: 11,
-            padding: "2px 8px",
-            borderRadius: 4,
-            fontWeight: 500,
-            background: BG,
-            border: `0.5px solid ${BORDER}`,
-            color: TEXT_2
-          }}
-        >
-          {`${row.componentCount} ${row.componentCount === 1 ? "item" : "itens"}`}
-        </span>
-      </td>
-      <td style={{ ...cellStyle, textAlign: "right" }}>
-        <span style={{ color: fc.color, fontWeight: 500 }}>{fc.text}</span>
-      </td>
-      <td style={{ ...cellStyle, textAlign: "right" }}>
-        <span style={{ color: ic.color, fontWeight: 500 }}>{ic.text}</span>
-      </td>
-      <td style={{ ...cellStyle, textAlign: "right" }}>
-        {hasCusto ? (
-          <span style={{ color: VERDE, fontWeight: 500 }}>
-            {formatCurrency(row.totalCost)}
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ textAlign: "center" }}>
+          <span
+            style={{
+              display: "inline-block",
+              fontSize: 11,
+              padding: "2px 8px",
+              borderRadius: 4,
+              fontWeight: 500,
+              background: BG,
+              border: `0.5px solid ${BORDER}`,
+              color: TEXT_2
+            }}
+          >
+            {`${row.componentCount} ${row.componentCount === 1 ? "item" : "itens"}`}
           </span>
-        ) : (
-          <span style={{ color: TEXT_3 }}>R$ 0,00</span>
-        )}
+        </CellLink>
+      </td>
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ textAlign: "right" }}>
+          <span style={{ color: fc.color, fontWeight: 500 }}>{fc.text}</span>
+        </CellLink>
+      </td>
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ textAlign: "right" }}>
+          <span style={{ color: ic.color, fontWeight: 500 }}>{ic.text}</span>
+        </CellLink>
+      </td>
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ textAlign: "right" }}>
+          {hasCusto ? (
+            <span style={{ color: VERDE, fontWeight: 500 }}>
+              {formatCurrency(row.totalCost)}
+            </span>
+          ) : (
+            <span style={{ color: TEXT_3 }}>R$ 0,00</span>
+          )}
+        </CellLink>
       </td>
       <InlineEditCell
         value={localPrice}
@@ -779,56 +884,64 @@ function FichaRowView({ row, cellStyle, onNavigate }: FichaRowViewProps) {
           <span style={{ color: TEXT_3 }}>—</span>
         )}
       </InlineEditCell>
-      <td style={{ ...cellStyle }}>
-        <MarginPill value={row.contributionMarginPercent} />
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`}>
+          <MarginPill value={row.contributionMarginPercent} />
+        </CellLink>
       </td>
-      <td style={{ ...cellStyle, color: TEXT_3, fontSize: 11 }}>
-        {formatDateShort(row.updatedAt)}
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ color: TEXT_3, fontSize: 11 }}>
+          {formatDateShort(row.updatedAt)}
+        </CellLink>
       </td>
-      <td style={{ ...cellStyle, textAlign: "center" }}>
-        <span
-          style={{
-            display: "inline-block",
-            fontSize: 10,
-            padding: "2px 7px",
-            borderRadius: 4,
-            fontWeight: 500,
-            background: isAtiva ? VERDE_L : INATIVA_BG,
-            color: isAtiva ? VERDE_TEXT : INATIVA_TEXT
-          }}
-        >
-          {statusLabel}
-        </span>
-      </td>
-      <td style={{ ...cellStyle, textAlign: "center" }}>
-        {row.notes ? (
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ textAlign: "center" }}>
           <span
-            title={row.notes}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: AZUL
+              display: "inline-block",
+              fontSize: 10,
+              padding: "2px 7px",
+              borderRadius: 4,
+              fontWeight: 500,
+              background: isAtiva ? VERDE_L : INATIVA_BG,
+              color: isAtiva ? VERDE_TEXT : INATIVA_TEXT
             }}
-            aria-label="Ver observacao"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.5" />
-              <line x1="8" y1="7" x2="8" y2="11" />
-              <circle cx="8" cy="5" r="0.5" fill="currentColor" />
-            </svg>
+            {statusLabel}
           </span>
-        ) : (
-          <span style={{ color: TEXT_3 }}>—</span>
-        )}
+        </CellLink>
+      </td>
+      <td style={{ ...linkCellStyle }}>
+        <CellLink href={`/fichas/${row.id}`} style={{ textAlign: "center" }}>
+          {row.notes ? (
+            <span
+              title={row.notes}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: AZUL
+              }}
+              aria-label="Ver observacao"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              >
+                <circle cx="8" cy="8" r="6.5" />
+                <line x1="8" y1="7" x2="8" y2="11" />
+                <circle cx="8" cy="5" r="0.5" fill="currentColor" />
+              </svg>
+            </span>
+          ) : (
+            <span style={{ color: TEXT_3 }}>—</span>
+          )}
+        </CellLink>
       </td>
     </tr>
   );

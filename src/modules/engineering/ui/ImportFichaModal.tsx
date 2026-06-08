@@ -84,6 +84,23 @@ const SUMMARY_MARKERS = new Set([
   "fator coccao da receita limpo",
 ]);
 
+function isCoccaoFinalRow(name: string): boolean {
+  const n = name.trim();
+  return (
+    n === "coccao" ||
+    n === "cocção" ||
+    n === "coccão" ||
+    n.includes("pos coccao") ||
+    n.includes("pós cocção") ||
+    n.includes("coccao final") ||
+    n.includes("cocção final") ||
+    n.includes("coccão final") ||
+    n.includes("preparo final") ||
+    n.includes("coccao/preparo final") ||
+    n.includes("cocção/preparo final")
+  );
+}
+
 function extractLabelValue(rows: unknown[][], label: string): unknown {
   const wanted = normalizeHeader(label);
   for (const row of rows) {
@@ -192,9 +209,10 @@ function parseIngredientRows(
   rows: unknown[][],
   headerIndex: number,
   columns: Record<string, number>
-): { ingredients: ExcelIngredient[]; packaging: ExcelPackaging[] } {
+): { ingredients: ExcelIngredient[]; packaging: ExcelPackaging[]; coccaoFinalRowData: { outputWeight: string; unit: string } | null } {
   const ingredients: ExcelIngredient[] = [];
   const packaging: ExcelPackaging[] = [];
+  let coccaoFinalRowData: { outputWeight: string; unit: string } | null = null;
   let inPackagingSection = false;
   let packagingColumns: Record<string, number> | null = null;
   let consecutiveEmpty = 0;
@@ -208,7 +226,8 @@ function parseIngredientRows(
 
     // FIX: skip summary/total rows instead of breaking — a mid-table total row
     // would previously stop all processing of subsequent ingredients.
-    if (SUMMARY_MARKERS.has(normalizedName)) {
+    // Also skip rows with "rendimento" to avoid adding it as an unmatched ingredient.
+    if (SUMMARY_MARKERS.has(normalizedName) || normalizedName.includes("rendimento")) {
       continue;
     }
 
@@ -255,9 +274,9 @@ function parseIngredientRows(
 
     if (!ingredientNameVal) {
       consecutiveEmpty++;
-      // FIX: 5 consecutive empty rows signal end-of-table without relying on
+      // FIX: 100 consecutive empty rows signal end-of-table without relying on
       // SUMMARY_MARKERS (which may appear in the middle of the spreadsheet).
-      if (consecutiveEmpty >= 5) break;
+      if (consecutiveEmpty >= 100) break;
       continue;
     }
     consecutiveEmpty = 0;
@@ -267,6 +286,18 @@ function parseIngredientRows(
     const unit = columns["un"] !== undefined ? row[columns["un"]] : null;
     const fc = columns["fc"] !== undefined ? row[columns["fc"]] : null;
     const ic = columns["ic"] !== undefined ? row[columns["ic"]] : null;
+
+    if (isCoccaoFinalRow(normalizedName)) {
+      const weightVal = netWeight || grossWeight || "";
+      const weightNum = parseFloat(String(weightVal).replace(",", "."));
+      if (!isNaN(weightNum) && weightNum > 0) {
+        coccaoFinalRowData = {
+          outputWeight: weightNum.toFixed(4),
+          unit: normalizeUnit(unit) || "kg"
+        };
+      }
+      continue;
+    }
 
     ingredients.push({
       rawName: String(ingredientNameVal).trim(),
@@ -279,7 +310,7 @@ function parseIngredientRows(
     });
   }
 
-  return { ingredients, packaging };
+  return { ingredients, packaging, coccaoFinalRowData };
 }
 
 // ---------------------------------------------------------------------------
@@ -447,10 +478,10 @@ export function ImportFichaModal({ open, onClose, onImport, itemOptions }: Impor
         }
       }
 
-      const coccaoFinal = extractPostCookingData(rows);
-
       const { index: headerIndex, columns } = findIngredientHeader(rows);
-      const { ingredients, packaging } = parseIngredientRows(rows, headerIndex, columns);
+      const { ingredients, packaging, coccaoFinalRowData } = parseIngredientRows(rows, headerIndex, columns);
+
+      const coccaoFinal = extractPostCookingData(rows) || coccaoFinalRowData;
 
       const total = ingredients.length + packaging.length || 1;
 

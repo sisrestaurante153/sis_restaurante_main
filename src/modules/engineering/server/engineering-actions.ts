@@ -189,3 +189,9 @@ export async function inactivateFichaAction(formData: FormData) {
 
   redirect(`/fichas/${fichaId}?inactivated=1`);
 }
+
+export async function checkDuplicateFichaNameAction(name: string, excludeFichaId?: string): Promise<boolean> {
+  const actor = await resolveEngineeringActor();
+  const repository = getEngineeringRepository(actor.restaurantId);
+  return repository.checkDuplicateName(name, excludeFichaId);
+}

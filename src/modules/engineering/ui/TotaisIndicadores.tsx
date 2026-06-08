@@ -78,7 +78,7 @@ function resolveFactorColor(value: string | null | undefined) {
   if (!value) return TOKENS.text3;
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return TOKENS.text3;
-  return parsed * 100 >= 100 ? TOKENS.verde : TOKENS.verm;
+  return parsed * 100 >= 50 ? TOKENS.verde : TOKENS.verm;
 }
 
 // HS strip item: label overline + value + optional note.

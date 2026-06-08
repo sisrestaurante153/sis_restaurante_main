@@ -16,6 +16,7 @@ import type { MatchedImportData } from "./ImportFichaModal";
 import {
   saveFichaAction,
   autoSaveFichaAction,
+  checkDuplicateFichaNameAction,
   type EngineeringFormState
 } from "@/modules/engineering/server/engineering-actions";
 import {
@@ -28,9 +29,9 @@ import { TotaisIndicadores } from "@/modules/engineering/ui/TotaisIndicadores";
 
 // Bug 1: useFormStatus desativa o botão enquanto a action está pendente (evita duplo clique).
 // Bug 2: isDirty desativa o botão enquanto não há alterações no formulário.
-function SubmitButton({ isDirty }: { isDirty: boolean }) {
+function SubmitButton({ isDirty, nameDuplicate }: { isDirty: boolean; nameDuplicate: boolean }) {
   const { pending } = useFormStatus();
-  const disabled = pending || !isDirty;
+  const disabled = pending || !isDirty || nameDuplicate;
   return (
     <Button
       type="submit"
@@ -286,6 +287,24 @@ export function FichaForm({
   const [displayName, setDisplayName] = useState(
     initialValues?.displayName ?? initialValues?.itemName ?? linkedItem?.name ?? ""
   );
+
+  const [nameDuplicate, setNameDuplicate] = useState(false);
+
+  useEffect(() => {
+    if (!displayName.trim()) {
+      setNameDuplicate(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const isDup = await checkDuplicateFichaNameAction(displayName, initialValues?.id);
+        setNameDuplicate(isDup);
+      } catch (err) {
+        console.error("Erro ao verificar nome duplicado:", err);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [displayName, initialValues?.id]);
   const [groupOperational, setGroupOperational] = useState(
     initialValues?.groupOperational ?? linkedItem?.operationalCategory ?? "Sem grupo"
   );
@@ -579,8 +598,8 @@ export function FichaForm({
             name="displayName"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            error={Boolean(getFieldError("displayName"))}
-            helperText={getFieldError("displayName") ?? " "}
+            error={Boolean(getFieldError("displayName")) || nameDuplicate}
+            helperText={nameDuplicate ? "Aviso: Já existe uma ficha técnica com este nome." : (getFieldError("displayName") ?? " ")}
           />
           <ReadonlyTextField label="Data de criacao" value={createdAtLabel} />
           <ReadonlyTextField label="Data e hora da ultima alteracao" value={updatedAtLabel} />
@@ -764,7 +783,7 @@ export function FichaForm({
             Rascunho salvo às {lastAutosaveAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           </Typography>
         ) : null}
-        <SubmitButton isDirty={isDirty} />
+        <SubmitButton isDirty={isDirty} nameDuplicate={nameDuplicate} />
       </Box>
 
       <ImportFichaModal

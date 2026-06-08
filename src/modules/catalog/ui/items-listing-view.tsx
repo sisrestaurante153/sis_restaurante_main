@@ -61,6 +61,7 @@ const TYPE_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   porcao:        { bg: "#EEEDFE", text: "#3C3489" },
   pre_preparo:   { bg: "#E6F1FB", text: "#0C447C" },
   apoio:         { bg: "#F1EFE8", text: "#444441" },
+  produto_pronto:{ bg: "#EEEDFE", text: "#3C3489" }
 };
 
 const STATUS_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -76,7 +77,8 @@ const typeOptions = [
   { value: "prato", label: "Prato" },
   { value: "porcao", label: "Porcao" },
   { value: "pre_preparo", label: "Pre-preparo" },
-  { value: "apoio", label: "Apoio" }
+  { value: "apoio", label: "Apoio" },
+  { value: "produto_pronto", label: "Produto pronto" }
 ];
 
 const statusOptions = [
@@ -455,6 +457,34 @@ export function ItemsListingView({
     setCategoryValue(category);
   }, [query, type, status, category]);
 
+  // Save search parameters to sessionStorage
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (queryValue.trim()) params.set("query", queryValue.trim());
+    if (typeValue !== "all") params.set("type", typeValue);
+    if (statusValue !== "all") params.set("status", statusValue);
+    if (categoryValue !== "all") params.set("category", categoryValue);
+    if (page > 1) params.set("page", String(page));
+    if (pageSize !== 100) params.set("pageSize", String(pageSize));
+    if (sort) params.set("sort", sort);
+    if (order) params.set("order", order);
+
+    sessionStorage.setItem("items_listing_filters", params.toString());
+  }, [queryValue, typeValue, statusValue, categoryValue, page, pageSize, sort, order]);
+
+  // Restore search parameters from sessionStorage if URL has no search params
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const currentSearch = window.location.search;
+      if (!currentSearch) {
+        const saved = sessionStorage.getItem("items_listing_filters");
+        if (saved) {
+          router.replace(`/itens?${saved}` as never);
+        }
+      }
+    }
+  }, [router]);
+
   function buildHref(next: {
     query?: string;
     type?: string;
@@ -640,7 +670,6 @@ export function ItemsListingView({
             sortField={sort as SortableField | undefined}
             sortOrder={order as "asc" | "desc" | undefined}
             onSort={handleSortClick}
-            onRowClick={(row) => router.push(`/itens/${row.id}` as never)}
             categoryLabel={categoryLabel}
           />
         </Box>
@@ -680,16 +709,35 @@ export function ItemsListingView({
   );
 }
 
+function CellLink({ href, children, style }: { href: string; children: ReactNode; style?: CSSProperties }) {
+  return (
+    <Link
+      href={href as never}
+      style={{
+        display: "block",
+        textDecoration: "none",
+        color: "inherit",
+        width: "100%",
+        height: "100%",
+        padding: "8px 7px",
+        boxSizing: "border-box",
+        ...style
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
+
 interface ItemsTableProps {
   items: ItemRow[];
   sortField?: SortableField;
   sortOrder?: "asc" | "desc";
   onSort: (field: SortableField) => void;
-  onRowClick: (row: ItemRow) => void;
   categoryLabel: (value: string) => string;
 }
 
-function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryLabel }: ItemsTableProps) {
+function ItemsTable({ items, sortField, sortOrder, onSort, categoryLabel }: ItemsTableProps) {
   const [hoveredCol, setHoveredCol] = useState<string | null>(null);
   const thBase: CSSProperties = {
     padding: "8px 7px",
@@ -831,7 +879,6 @@ function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryL
             key={row.id}
             row={row}
             tdBase={tdBase}
-            onClick={() => onRowClick(row)}
             categoryLabel={categoryLabel}
           />
         ))}
@@ -843,11 +890,10 @@ function ItemsTable({ items, sortField, sortOrder, onSort, onRowClick, categoryL
 interface ItemRowViewProps {
   row: ItemRow;
   tdBase: CSSProperties;
-  onClick: () => void;
   categoryLabel: (value: string) => string;
 }
 
-function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) {
+function ItemRowView({ row, tdBase, categoryLabel }: ItemRowViewProps) {
   const [hover, setHover] = useState(false);
   const [localName, setLocalName] = useState(row.name);
   const [localCost, setLocalCost] = useState(row.baseUnitCost);
@@ -863,6 +909,12 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
   const rightStyle: CSSProperties = { ...tdBase, textAlign: "right" };
   const rightMuted: CSSProperties = { ...mutedStyle, textAlign: "right" };
   const centerStyle: CSSProperties = { ...tdBase, textAlign: "center" };
+
+  const linkTdBase: CSSProperties = { ...tdBase, padding: 0 };
+  const linkMutedStyle: CSSProperties = { ...mutedStyle, padding: 0 };
+  const linkRightStyle: CSSProperties = { ...rightStyle, padding: 0 };
+  const linkRightMuted: CSSProperties = { ...rightMuted, padding: 0 };
+  const linkCenterStyle: CSSProperties = { ...centerStyle, padding: 0 };
 
   const handleSaveName = useCallback(async (next: string) => {
     if (!next) throw new Error("Nome não pode estar vazio.");
@@ -883,12 +935,13 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
     <tr
       role="row"
       style={rowStyle}
-      onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <td role="gridcell" data-field="code" style={tdBase}>
-        <span style={{ fontSize: 11, color: "#185FA5" }}>{row.code}</span>
+      <td role="gridcell" data-field="code" style={linkTdBase}>
+        <CellLink href={`/itens/${row.id}`}>
+          <span style={{ fontSize: 11, color: "#185FA5" }}>{row.code}</span>
+        </CellLink>
       </td>
       <InlineEditCell
         value={localName}
@@ -905,17 +958,25 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
           {localName}
         </span>
       </InlineEditCell>
-      <td role="gridcell" data-field="type" style={tdBase}>
-        <TypeBadge type={row.type} />
+      <td role="gridcell" data-field="type" style={linkTdBase}>
+        <CellLink href={`/itens/${row.id}`}>
+          <TypeBadge type={row.type} />
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="category" style={mutedStyle} title={row.category}>
-        {categoryLabel(row.category)}
+      <td role="gridcell" data-field="category" style={linkMutedStyle} title={row.category}>
+        <CellLink href={`/itens/${row.id}`}>
+          {categoryLabel(row.category)}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="purchaseQuantity" style={rightStyle}>
-        {formatDecimal(row.purchaseQuantity)}
+      <td role="gridcell" data-field="purchaseQuantity" style={linkRightStyle}>
+        <CellLink href={`/itens/${row.id}`} style={{ textAlign: "right" }}>
+          {formatDecimal(row.purchaseQuantity)}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="stockUnit" style={mutedStyle}>
-        {row.stockUnit || "—"}
+      <td role="gridcell" data-field="stockUnit" style={linkMutedStyle}>
+        <CellLink href={`/itens/${row.id}`}>
+          {row.stockUnit || "—"}
+        </CellLink>
       </td>
       <InlineEditCell
         value={localCost === "—" || localCost === "--" ? "" : localCost}
@@ -933,29 +994,45 @@ function ItemRowView({ row, tdBase, onClick, categoryLabel }: ItemRowViewProps) 
           {formatCurrency(localCost)}
         </span>
       </InlineEditCell>
-      <td role="gridcell" data-field="conversionFactor" style={rightStyle}>
-        {formatDecimal(row.conversionFactor)}
+      <td role="gridcell" data-field="conversionFactor" style={linkRightStyle}>
+        <CellLink href={`/itens/${row.id}`} style={{ textAlign: "right" }}>
+          {formatDecimal(row.conversionFactor)}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="usageQuantity" style={rightStyle}>
-        {formatDecimal(row.usageQuantity)}
+      <td role="gridcell" data-field="usageQuantity" style={linkRightStyle}>
+        <CellLink href={`/itens/${row.id}`} style={{ textAlign: "right" }}>
+          {formatDecimal(row.usageQuantity)}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="usageUnit" style={mutedStyle}>
-        {row.usageUnit || "—"}
+      <td role="gridcell" data-field="usageUnit" style={linkMutedStyle}>
+        <CellLink href={`/itens/${row.id}`}>
+          {row.usageUnit || "—"}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="usagePrice" style={{ ...rightStyle, color: "#1B6B2C", fontWeight: 500 }}>
-        {formatCurrency(row.usagePrice)}
+      <td role="gridcell" data-field="usagePrice" style={linkRightStyle}>
+        <CellLink href={`/itens/${row.id}`} style={{ textAlign: "right", color: "#1B6B2C", fontWeight: 500 }}>
+          {formatCurrency(row.usagePrice)}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="supplierName" style={tdBase}>
-        <SupplierCell row={row} />
+      <td role="gridcell" data-field="supplierName" style={linkTdBase}>
+        <CellLink href={`/itens/${row.id}`}>
+          <SupplierCell row={row} />
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="active" style={centerStyle}>
-        <StatusBadge active={row.active} />
+      <td role="gridcell" data-field="active" style={linkCenterStyle}>
+        <CellLink href={`/itens/${row.id}`} style={{ textAlign: "center" }}>
+          <StatusBadge active={row.active} />
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="updatedAt" style={{ ...rightMuted, textAlign: "left" }}>
-        {formatDateShort(row.updatedAt)}
+      <td role="gridcell" data-field="updatedAt" style={linkRightMuted}>
+        <CellLink href={`/itens/${row.id}`}>
+          {formatDateShort(row.updatedAt)}
+        </CellLink>
       </td>
-      <td role="gridcell" data-field="description" style={centerStyle}>
-        <ObservationCell description={row.description} />
+      <td role="gridcell" data-field="description" style={linkCenterStyle}>
+        <CellLink href={`/itens/${row.id}`} style={{ textAlign: "center" }}>
+          <ObservationCell description={row.description} />
+        </CellLink>
       </td>
     </tr>
   );

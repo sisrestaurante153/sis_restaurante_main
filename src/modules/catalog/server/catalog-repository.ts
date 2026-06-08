@@ -363,7 +363,6 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
   const query = input.query.trim();
   const where: Prisma.ItemWhereInput = {
     cd_restaurante: input.restaurantId,
-    fichasResultantes: { none: {} },
     AND: [
       input.type && input.type !== "all" ? { tp_item: input.type } : {},
       input.status === "ativos" ? { sn_ativo: true } : {},

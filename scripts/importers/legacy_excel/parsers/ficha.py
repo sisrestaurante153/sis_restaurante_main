@@ -14,6 +14,23 @@ SUMMARY_MARKERS = {
 }
 
 
+def is_coccao_final_row(name: str | None) -> bool:
+    if not name:
+        return False
+    n = name.strip().lower()
+    return (
+        n in ("coccao", "cocção", "coccão")
+        or "pos coccao" in n
+        or "pós cocção" in n
+        or "coccao final" in n
+        or "cocção final" in n
+        or "coccão final" in n
+        or "preparo final" in n
+        or "coccao/preparo final" in n
+        or "cocção/preparo final" in n
+    )
+
+
 def _extract_label_value(rows: list[list[Any]], label: str) -> Any:
     wanted = normalize_header(label)
     for row in rows:
@@ -41,8 +58,8 @@ def _parse_ingredient_rows(rows: list[list[Any]], header_index: int, columns: di
         ingredient_name = row[columns.get("ingredientes", 0)] if columns else None
         normalized_name = normalize_name(ingredient_name)
 
-        if normalized_name in SUMMARY_MARKERS:
-            break
+        if normalized_name in SUMMARY_MARKERS or is_coccao_final_row(normalized_name):
+            continue
 
         if any(
             isinstance(value, str) and "embalagens somente restaurante delivery" in normalize_name(value)

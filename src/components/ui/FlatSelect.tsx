@@ -43,6 +43,10 @@ export function FlatSelect({
     onChange(event.target.value);
   };
 
+  const isActive = value !== "all" && value !== "";
+  const activeBorderColor = "#185FA5";
+  const defaultBorderColor = "#D3D1C7";
+
   return (
     <select
       name={name}
@@ -53,16 +57,18 @@ export function FlatSelect({
       style={{
         padding: "8px 28px 8px 10px",
         fontSize: 13,
-        border: "0.5px solid #D3D1C7",
+        border: isActive ? `1px solid ${activeBorderColor}` : `0.5px solid ${defaultBorderColor}`,
         borderRadius: 6,
-        background: "#fff",
-        color: "#2C2C2A",
+        background: isActive ? "#F4F8FC" : "#fff",
+        color: isActive ? activeBorderColor : "#2C2C2A",
+        fontWeight: isActive ? "600" : "inherit",
         fontFamily: "inherit",
         appearance: "none",
         WebkitAppearance: "none",
         MozAppearance: "none",
-        backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E\")",
+        backgroundImage: isActive
+          ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23185FA5'/%3E%3C/svg%3E\")"
+          : "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E\")",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 8px center",
         cursor: "pointer",
@@ -72,11 +78,11 @@ export function FlatSelect({
         ...rest.style
       }}
       onFocus={(event) => {
-        event.currentTarget.style.borderColor = "#185FA5";
+        event.currentTarget.style.borderColor = activeBorderColor;
         rest.onFocus?.(event);
       }}
       onBlur={(event) => {
-        event.currentTarget.style.borderColor = "#D3D1C7";
+        event.currentTarget.style.borderColor = isActive ? activeBorderColor : defaultBorderColor;
         rest.onBlur?.(event);
       }}
     >

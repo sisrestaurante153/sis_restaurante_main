@@ -34,16 +34,20 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
 
   const actor = await requirePermission("ficha.read");
   const repository = getEngineeringRepository(actor.restaurantId);
-  const result = await repository.listFichas({
-    query,
-    status,
-    modalidade,
-    grupo,
-    page,
-    pageSize,
-    sortBy,
-    sortDir
-  });
+  const [result, modalities, groups] = await Promise.all([
+    repository.listFichas({
+      query,
+      status,
+      modalidade,
+      grupo,
+      page,
+      pageSize,
+      sortBy,
+      sortDir
+    }),
+    repository.listModalities(),
+    repository.listOperationalGroups()
+  ]);
 
   return (
     <>
@@ -69,6 +73,8 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
         grupo={grupo}
         sortBy={sortBy}
         sortDir={sortDir}
+        modalidadeOptions={modalities}
+        grupoOptions={groups}
       />
     </>
   );

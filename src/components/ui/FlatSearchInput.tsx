@@ -35,6 +35,9 @@ export function FlatSearchInput({
     onChange(event.target.value);
   };
 
+  const isActive = value.trim() !== "";
+  const activeBorderColor = "#185FA5";
+  const defaultBorderColor = "#D3D1C7";
   const effectiveLabel = ariaLabel ?? placeholder;
 
   return (
@@ -60,7 +63,7 @@ export function FlatSearchInput({
           transform: "translateY(-50%)",
           width: 14,
           height: 14,
-          color: "#888780",
+          color: isActive ? "#185FA5" : "#888780",
           pointerEvents: "none"
         }}
       >
@@ -79,10 +82,11 @@ export function FlatSearchInput({
           width: "100%",
           padding: "8px 10px 8px 32px",
           fontSize: 13,
-          border: "0.5px solid #D3D1C7",
+          border: isActive ? `1px solid ${activeBorderColor}` : `0.5px solid ${defaultBorderColor}`,
           borderRadius: 6,
-          background: "#fff",
-          color: "#2C2C2A",
+          background: isActive ? "#F4F8FC" : "#fff",
+          color: isActive ? activeBorderColor : "#2C2C2A",
+          fontWeight: isActive ? "600" : "inherit",
           fontFamily: "inherit",
           outline: "none",
           boxSizing: "border-box",
@@ -90,12 +94,12 @@ export function FlatSearchInput({
           ...rest.style
         }}
         onFocus={(event) => {
-          event.currentTarget.style.borderColor = "#185FA5";
+          event.currentTarget.style.borderColor = activeBorderColor;
           event.currentTarget.style.boxShadow = "0 0 0 3px rgba(24,95,165,.08)";
           rest.onFocus?.(event);
         }}
         onBlur={(event) => {
-          event.currentTarget.style.borderColor = "#D3D1C7";
+          event.currentTarget.style.borderColor = isActive ? activeBorderColor : defaultBorderColor;
           event.currentTarget.style.boxShadow = "none";
           rest.onBlur?.(event);
         }}

@@ -28,6 +28,7 @@
     "ops:migrate-and-seed": "./scripts/ops/migrate-and-seed.sh",
     "ops:create-user": "tsx scripts/ops/create-user.ts",
     "ops:recalculate-costs": "tsx scripts/ops/recalculate-costs.ts",
+    "ops:cleanup-integration-items": "tsx scripts/ops/cleanup-integration-items.ts",
     "ops:import-worker": "node --import tsx scripts/import-worker.ts",
     "ops:reconcile-conflict": "tsx scripts/ops/reconcile-import-conflict.ts",
     "ops:capture-ficha-layout": "tsx scripts/ops/capture-ficha-layout.ts",

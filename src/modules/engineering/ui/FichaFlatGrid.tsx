@@ -240,6 +240,7 @@ function ItemAutocomplete({
   onSelectNext?: () => void;
 }) {
   const highlightedRef = useRef<ComponentOption | null>(null);
+  const filteredOptionsRef = useRef<ComponentOption[]>(itemOptions);
 
   const handleSelect = (item: ComponentOption) => {
     onUpdateRow(index, {
@@ -252,7 +253,7 @@ function ItemAutocomplete({
     });
     setTimeout(() => {
       onSelectNext?.();
-    }, 50);
+    }, 150);
   };
 
   const option = itemOptions.find((item) => item.id === row.itemId) ?? null;
@@ -266,6 +267,16 @@ function ItemAutocomplete({
         getOptionLabel={(opt) => opt.name}
         isOptionEqualToValue={(opt, val) => opt.id === val.id}
         value={option}
+        blurOnSelect
+        filterOptions={(options, state) => {
+          const query = state.inputValue.toLowerCase().trim();
+          const filtered = options.filter(opt =>
+            opt.name.toLowerCase().includes(query) ||
+            (opt.code ?? "").toLowerCase().includes(query)
+          );
+          filteredOptionsRef.current = filtered;
+          return filtered;
+        }}
         onChange={(_event, nextItem) => {
           if (!nextItem) return;
           handleSelect(nextItem);
@@ -287,6 +298,9 @@ function ItemAutocomplete({
               } else if (event.key === "Enter") {
                 if (highlightedRef.current) {
                   handleSelect(highlightedRef.current);
+                  event.preventDefault();
+                } else if (filteredOptionsRef.current.length === 1) {
+                  handleSelect(filteredOptionsRef.current[0]);
                   event.preventDefault();
                 } else if (option) {
                   event.preventDefault();
@@ -533,7 +547,7 @@ export function FichaFlatGrid({
               <CodeInput
                 itemOptions={itemOptions}
                 currentCode={option?.code ?? ""}
-                onMatch={(matched) =>
+                onMatch={(matched) => {
                   onUpdateRow(index, {
                     itemId: matched.id,
                     usageUnit: matched.usageUnit ?? row.usageUnit,
@@ -543,8 +557,12 @@ export function FichaFlatGrid({
                         : matched.type === "apoio"
                           ? "apoio"
                           : "ingrediente"
-                  })
-                }
+                  });
+                  setTimeout(() => {
+                    qtyRefs.current[index]?.focus();
+                    qtyRefs.current[index]?.select();
+                  }, 50);
+                }}
                 onNotFound={(query) => {
                   setNotFoundQuery(query);
                   setRefreshedAfterCreate(false);
@@ -592,6 +610,14 @@ export function FichaFlatGrid({
                     const num = parseFloat(row.quantityUsed.replace(",", "."));
                     if (!isNaN(num)) {
                       const converted = oldUnit === "kg" ? num * 1000 : num / 1000;
+                      onUpdateRow(index, { usageUnit: newUnit, quantityUsed: converted.toFixed(4) });
+                      return;
+                    }
+                  }
+                  if ((oldUnit === "l" && newUnit === "ml") || (oldUnit === "ml" && newUnit === "l")) {
+                    const num = parseFloat(row.quantityUsed.replace(",", "."));
+                    if (!isNaN(num)) {
+                      const converted = oldUnit === "l" ? num * 1000 : num / 1000;
                       onUpdateRow(index, { usageUnit: newUnit, quantityUsed: converted.toFixed(4) });
                       return;
                     }
@@ -723,7 +749,7 @@ export function FichaFlatGrid({
                   sx={
                     factor === null
                       ? { "& .MuiOutlinedInput-root": { bgcolor: "#F5F4F0", color: "#888780" } }
-                      : factor < 1
+                      : factor < 0.5
                         ? { "& .MuiOutlinedInput-root": { bgcolor: "#FDE7E9", color: "#8B1B2A" } }
                         : { "& .MuiOutlinedInput-root": { bgcolor: "#EAF3DE", color: "#1B6B2C" } }
                   }
@@ -824,7 +850,7 @@ export function FichaFlatGrid({
                 sx={
                   icFinal === null
                     ? { "& .MuiOutlinedInput-root": { bgcolor: "#F5F4F0", color: "#888780" } }
-                    : icFinal < 1
+                    : icFinal < 0.5
                       ? { "& .MuiOutlinedInput-root": { bgcolor: "#FDE7E9", color: "#8B1B2A" } }
                       : { "& .MuiOutlinedInput-root": { bgcolor: "#EAF3DE", color: "#1B6B2C" } }
                 }
