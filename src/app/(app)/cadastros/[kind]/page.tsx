@@ -17,6 +17,7 @@ const KIND_MAPPING: Record<string, { title: string, dbKind: string, desc: string
   "fornecedores": { title: "Fornecedores", dbKind: "supplier", desc: "Fornecedores usados nas referências de compra." },
   "unidades": { title: "Unidades", dbKind: "unit", desc: "Unidades de compra, estoque e uso." },
   "categorias": { title: "Categorias Operacionais", dbKind: "operational-category", desc: "Categorias de agrupamento de insumos." },
+  "grupos": { title: "Grupos Operacionais", dbKind: "operational-category", desc: "Grupos operacionais de fichas técnicas." },
   "modalidades": { title: "Modalidades", dbKind: "modality", desc: "Modalidades de fichas técnicas." },
   "tipos-item": { title: "Tipos de Item", dbKind: "item-type", desc: "Nomenclatura dos tipos canônicos." },
   "tipos-etapa": { title: "Tipos de Etapa", dbKind: "stage-type", desc: "Tipos de etapas de preparação e cálculo." }
@@ -43,7 +44,7 @@ export default async function MasterDataScreen({
   let data: any[] = [];
   if (p.kind === "fornecedores") data = await repository.listSuppliers();
   if (p.kind === "unidades") data = await repository.listUnits();
-  if (p.kind === "categorias") data = await repository.listOperationalCategories();
+  if (p.kind === "categorias" || p.kind === "grupos") data = await repository.listOperationalCategories();
   if (p.kind === "modalidades") data = await repository.listModalities();
   if (p.kind === "tipos-item") data = await repository.listItemTypes();
   if (p.kind === "tipos-etapa") data = await repository.listStageTypes();
@@ -96,6 +97,7 @@ export default async function MasterDataScreen({
         <form action={saveMasterDataAction} className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <input type="hidden" name="kind" value={kindInfo.dbKind} />
           <input type="hidden" name="active" value="true" />
+          <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
           
           {(p.kind === "unidades" || p.kind === "modalidades" || p.kind === "tipos-item" || p.kind === "tipos-etapa") && (
             <div className="w-full md:w-1/4">
@@ -147,6 +149,7 @@ export default async function MasterDataScreen({
             <form action={saveMasterDataAction} className="flex-1 w-full flex flex-col md:flex-row gap-4 items-center">
               <input type="hidden" name="kind" value={kindInfo.dbKind} />
               <input type="hidden" name="id" value={item.id} />
+              <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
               
               {item.code !== undefined && (
                 <div className="w-full md:w-1/4">
@@ -161,7 +164,7 @@ export default async function MasterDataScreen({
                       <option value="montagem">Montagem</option>
                     </select>
                   ) : (
-                    <input type="text" name="code" defaultValue={item.code} readOnly={p.kind === "categorias"} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900 read-only:bg-ink-50 read-only:text-ink-500 read-only:focus:border-ink-200" />
+                    <input type="text" name="code" defaultValue={item.code} readOnly={p.kind === "categorias" || p.kind === "grupos"} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900 read-only:bg-ink-50 read-only:text-ink-500 read-only:focus:border-ink-200" />
                   )}
                 </div>
               )}
@@ -195,6 +198,7 @@ export default async function MasterDataScreen({
             <form action={deleteMasterDataAction} className="w-full lg:w-auto">
               <input type="hidden" name="kind" value={kindInfo.dbKind} />
               <input type="hidden" name="id" value={item.id} />
+              <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
               <button type="submit" className="w-full h-10 px-4 text-ink-400 hover:text-error hover:bg-error/10 font-semibold rounded-lg transition-colors flex items-center justify-center">
                 <DeleteOutlineRoundedIcon fontSize="small" />
               </button>

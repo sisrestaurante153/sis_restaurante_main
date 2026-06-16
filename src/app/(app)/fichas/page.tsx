@@ -1,4 +1,4 @@
-import { getEngineeringRepository, type FichaSortBy } from "@/modules/engineering/server/engineering-repository";
+import { getEngineeringRepository, type FichaSortBy, type ListFichasInput } from "@/modules/engineering/server/engineering-repository";
 import { requirePermission } from "@/modules/access/server/authorization";
 import {
   DesktopNewFichaAction,
@@ -8,7 +8,7 @@ import { PageHeader } from "@/modules/platform/ui/page-header";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-const VALID_SORT_BY: FichaSortBy[] = ["code", "produto", "modalidade", "grupo", "fc", "ic", "totalCost", "sellingPrice", "margem", "updatedAt", "status"];
+const VALID_SORT_BY: FichaSortBy[] = ["code", "produto", "modalidade", "grupo", "fc", "ic", "totalCost", "sellingPrice", "margem", "updatedAt", "status", "componentes", "obs"];
 
 function getSingle(searchParam: string | string[] | undefined, fallback = "") {
   return Array.isArray(searchParam) ? searchParam[0] ?? fallback : searchParam ?? fallback;
@@ -16,15 +16,12 @@ function getSingle(searchParam: string | string[] | undefined, fallback = "") {
 
 export default async function FichasPage({ searchParams }: { searchParams: SearchParams }) {
   const resolvedSearchParams = await searchParams;
-  const query = getSingle(resolvedSearchParams.query);
-  const status = getSingle(resolvedSearchParams.status, "all") as
-    | "rascunho"
-    | "ativa"
-    | "inativa"
-    | "arquivada"
-    | "all";
-  const modalidade = getSingle(resolvedSearchParams.modalidade, "all");
-  const grupo = getSingle(resolvedSearchParams.grupo, "all");
+  const rawQuery = getSingle(resolvedSearchParams.query);
+  const query = rawQuery ? decodeURIComponent(rawQuery) : "";
+  const rawModalidade = getSingle(resolvedSearchParams.modalidade, "all");
+  const modalidade = rawModalidade ? decodeURIComponent(rawModalidade) : "all";
+  const rawGrupo = getSingle(resolvedSearchParams.grupo, "all");
+  const grupo = rawGrupo ? decodeURIComponent(rawGrupo) : "all";
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "10"));
   const rawSortBy = getSingle(resolvedSearchParams.sortBy);
@@ -37,7 +34,7 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
   const [result, modalities, groups] = await Promise.all([
     repository.listFichas({
       query,
-      status,
+      status: getSingle(resolvedSearchParams.status, "all") as ListFichasInput["status"],
       modalidade,
       grupo,
       page,
@@ -63,18 +60,19 @@ export default async function FichasPage({ searchParams }: { searchParams: Searc
       />
 
       <FichasListingView
-        items={result.items}
-        page={result.page}
+        items={result?.items ?? []}
+        page={result?.page ?? 1}
         pageSize={pageSize}
-        totalCount={result.totalCount}
+        totalCount={result?.totalCount ?? 0}
         query={query}
-        status={status}
+        status={getSingle(resolvedSearchParams.status, "all")}
         modalidade={modalidade}
         grupo={grupo}
         sortBy={sortBy}
         sortDir={sortDir}
         modalidadeOptions={modalities}
         grupoOptions={groups}
+        didYouMean={result?.didYouMean}
       />
     </>
   );

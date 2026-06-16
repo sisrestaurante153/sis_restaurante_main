@@ -12,10 +12,12 @@ function getSingle(searchParam: string | string[] | undefined, fallback = "") {
 
 export default async function ItemsPage({ searchParams }: { searchParams: SearchParams }) {
   const [session, resolvedSearchParams] = await Promise.all([requireSession(), searchParams]);
-  const query = getSingle(resolvedSearchParams.query);
+  const rawQuery = getSingle(resolvedSearchParams.query);
+  const query = rawQuery ? decodeURIComponent(rawQuery) : "";
   const type = getSingle(resolvedSearchParams.type, "all");
   const status = getSingle(resolvedSearchParams.status, "all") as "ativos" | "inativos" | "all";
-  const category = getSingle(resolvedSearchParams.category, "all");
+  const rawCategory = getSingle(resolvedSearchParams.category, "all");
+  const category = rawCategory ? decodeURIComponent(rawCategory) : "all";
   const page = Number(getSingle(resolvedSearchParams.page, "1"));
   const pageSize = Number(getSingle(resolvedSearchParams.pageSize, "100"));
   const sort = getSingle(resolvedSearchParams.sort) as "code" | "name" | "type" | "category" | "purchaseQuantity" | "stockUnit" | "baseUnitCost" | "conversionFactor" | "usageQuantity" | "usageUnit" | "usagePrice" | "supplierName" | "active" | "updatedAt" | "";
@@ -53,10 +55,10 @@ export default async function ItemsPage({ searchParams }: { searchParams: Search
       />
 
       <ItemsListingView
-        items={result.items}
-        page={result.page}
+        items={result?.items ?? []}
+        page={result?.page ?? 1}
         pageSize={pageSize}
-        totalCount={result.totalCount}
+        totalCount={result?.totalCount ?? 0}
         query={query}
         type={type}
         status={status}
@@ -64,6 +66,7 @@ export default async function ItemsPage({ searchParams }: { searchParams: Search
         categoryOptions={categoryOptions}
         sort={sort || undefined}
         order={order || undefined}
+        didYouMean={result?.didYouMean}
       />
     </>
   );

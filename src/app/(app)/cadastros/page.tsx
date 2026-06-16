@@ -27,9 +27,9 @@ export default function CadastrosHubPage() {
       border: "hover:border-orange-500"
     },
     {
-      title: "Categorias Operacionais",
-      description: "Categorias usadas no agrupamento de insumos.",
-      href: "/cadastros/categorias",
+      title: "Grupos Operacionais",
+      description: "Grupos usados no agrupamento de insumos e fichas.",
+      href: "/cadastros/grupos",
       icon: <CategoryRoundedIcon fontSize="large" />,
       color: "text-blue-700",
       bg: "bg-blue-100",

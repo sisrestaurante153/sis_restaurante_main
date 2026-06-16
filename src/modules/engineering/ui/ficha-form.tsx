@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -161,6 +162,7 @@ interface FichaFormProps {
   stageTypeOptions?: StageTypeOption[];
   // Quick 20260424 item 3: opcoes de unidade vindas de master-data listUnits().
   unitOptions?: string[];
+  groupOptions?: string[];
   children?: React.ReactNode;
 }
 
@@ -172,6 +174,7 @@ export function FichaForm({
   componentOptions,
   stageTypeOptions,
   unitOptions,
+  groupOptions,
   children
 }: FichaFormProps) {
   const [state, formAction] = useActionState(saveFichaAction, {
@@ -306,8 +309,19 @@ export function FichaForm({
     return () => clearTimeout(timer);
   }, [displayName, initialValues?.id]);
   const [groupOperational, setGroupOperational] = useState(
-    initialValues?.groupOperational ?? linkedItem?.operationalCategory ?? "Sem grupo"
+    initialValues?.groupOperational ?? linkedItem?.operationalCategory ?? ""
   );
+
+  const resolvedGroups = useMemo(() => {
+    const list = groupOptions ? [...groupOptions] : [];
+    if (groupOperational && !list.includes(groupOperational)) {
+      list.push(groupOperational);
+    }
+    if (list.length === 0) {
+      list.push("Sem grupo");
+    }
+    return Array.from(new Set(list)).sort();
+  }, [groupOptions, groupOperational]);
   const [statusValue, setStatusValue] = useState(initialValues?.status ?? "rascunho");
 
   // New controlled states for Excel import and full form synchronization
@@ -635,17 +649,36 @@ export function FichaForm({
             ))}
           </TextField>
 
-          <TextField
-            required
-            fullWidth
-            size="small"
-            label="Grupo operacional"
-            name="groupOperational"
-            value={groupOperational}
-            onChange={(e) => setGroupOperational(e.target.value)}
-            error={Boolean(getFieldError("groupOperational"))}
-            helperText={getFieldError("groupOperational") ?? " "}
-          />
+          <Box>
+            <TextField
+              required
+              fullWidth
+              size="small"
+              select
+              label="Grupo operacional"
+              name="groupOperational"
+              value={groupOperational || resolvedGroups[0]}
+              onChange={(e) => setGroupOperational(e.target.value)}
+              error={Boolean(getFieldError("groupOperational"))}
+              helperText={getFieldError("groupOperational") ?? " "}
+            >
+              {resolvedGroups.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Box sx={{ mt: -1.5, pl: 0.5 }}>
+              <Link
+                href="/cadastros/grupos"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 11, color: "#185FA5", textDecoration: "underline", fontWeight: 500 }}
+              >
+                + Cadastrar novo grupo operacional
+              </Link>
+            </Box>
+          </Box>
 
           <TextField
             required

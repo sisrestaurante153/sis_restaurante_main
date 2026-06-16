@@ -234,6 +234,9 @@ async function listPendingConflictsWithPrisma(input?: { executionId?: string }) 
     const conflicts = await prisma.importacaoConflito.findMany({
       where: {
         sn_resolvido: false,
+        execucao: {
+          tp_status: "concluida_com_conflitos"
+        },
         ...(input?.executionId ? { cd_importacao_execucao: input.executionId } : {})
       },
       orderBy: [{ ts_criacao: "desc" }, { nr_linha: "asc" }],

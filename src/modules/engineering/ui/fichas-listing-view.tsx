@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { patchFichaQuickAction } from "@/modules/engineering/server/engineering-actions";
+import { getFichaSearchSuggestionsAction } from "@/modules/platform/server/search-actions";
 import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -34,8 +35,8 @@ interface FichaListRow {
   componentCount: number;
   notes?: string;
 }
+import type { FichaSortBy } from "@/modules/engineering/server/engineering-repository";
 
-type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "fc" | "ic" | "totalCost" | "sellingPrice" | "margem" | "updatedAt" | "status";
 
 interface FichasListingViewProps {
   items: FichaListRow[];
@@ -50,6 +51,7 @@ interface FichasListingViewProps {
   sortDir?: "asc" | "desc";
   modalidadeOptions?: { id: string; label: string }[];
   grupoOptions?: { id: string; label: string }[];
+  didYouMean?: string | null;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -287,15 +289,16 @@ export function FichasListingView({
   sortBy,
   sortDir,
   modalidadeOptions,
-  grupoOptions
+  grupoOptions,
+  didYouMean
 }: FichasListingViewProps) {
   const router = useRouter();
   const theme = useTheme();
   const smUp = useMediaQuery(theme.breakpoints.up("sm"));
   const [queryValue, setQueryValue] = useState(query);
   const [statusValue, setStatusValue] = useState(status);
-  const [modalidadeValue, setModalidadeValue] = useState(modalidade);
-  const [grupoValue, setGrupoValue] = useState(grupo);
+  const [modalidadeValue, setModalidadeValue] = useState(modalidade ? decodeURIComponent(modalidade) : "all");
+  const [grupoValue, setGrupoValue] = useState(grupo ? decodeURIComponent(grupo) : "all");
 
   const resolvedModalidades = useMemo(() => {
     const base = [{ value: "all", label: "Todas as modalidades" }];
@@ -331,8 +334,8 @@ export function FichasListingView({
   useEffect(() => {
     setQueryValue(query);
     setStatusValue(status);
-    setModalidadeValue(modalidade);
-    setGrupoValue(grupo);
+    setModalidadeValue(modalidade ? decodeURIComponent(modalidade) : "all");
+    setGrupoValue(grupo ? decodeURIComponent(grupo) : "all");
   }, [query, status, modalidade, grupo]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -537,6 +540,11 @@ export function FichasListingView({
           placeholder="Buscar ficha..."
           ariaLabel="Buscar ficha"
           name="query"
+          fetchSuggestions={getFichaSearchSuggestionsAction}
+          onSuggestionSelect={(val) => {
+            setQueryValue(val);
+            navigateImmediate({ query: val });
+          }}
         />
 
         <FlatSelect
@@ -572,6 +580,22 @@ export function FichasListingView({
           name="status"
         />
       </Stack>
+
+      {didYouMean && (
+        <div style={{ fontSize: 13, color: TEXT_2, marginTop: -8 }}>
+          Você quis dizer:{" "}
+          <Link
+            href={buildHref({ query: didYouMean, page: 1 }) as never}
+            onClick={() => {
+              setQueryValue(didYouMean);
+            }}
+            style={{ color: AZUL, textDecoration: "underline", fontWeight: 500 }}
+          >
+            {didYouMean}
+          </Link>
+          ?
+        </div>
+      )}
 
       <Box
         sx={{
@@ -614,10 +638,10 @@ export function FichasListingView({
           >
             <colgroup>
               <col style={{ width: 60 }} />
-              <col style={{ width: 170 }} />
+              <col />
               <col style={{ width: 100 }} />
               <col style={{ width: 100 }} />
-              <col style={{ width: 82 }} />
+              <col style={{ width: 110 }} />
               <col style={{ width: 60 }} />
               <col style={{ width: 60 }} />
               <col style={{ width: 82 }} />
@@ -625,7 +649,7 @@ export function FichasListingView({
               <col style={{ width: 100 }} />
               <col style={{ width: 110 }} />
               <col style={{ width: 64 }} />
-              <col style={{ width: 38 }} />
+              <col style={{ width: 60 }} />
             </colgroup>
             <thead>
               <tr style={{ background: BG, borderBottom: `0.5px solid ${BORDER}` }}>
@@ -633,7 +657,7 @@ export function FichasListingView({
                 <SortableHeader col="produto" label="Produto" />
                 <SortableHeader col="modalidade" label="Modalidade" />
                 <SortableHeader col="grupo" label="Grupo Operacional" />
-                <th style={{ ...headerCellStyle, textAlign: "center" }}>Componentes</th>
+                <SortableHeader col="componentes" label="Componentes" align="center" />
                 <SortableHeader col="fc" label="FC" align="right" />
                 <SortableHeader col="ic" label="IC" align="right" />
                 <SortableHeader col="totalCost" label="Custo Total" align="right" />
@@ -641,7 +665,7 @@ export function FichasListingView({
                 <SortableHeader col="margem" label="Margem" align="right" />
                 <SortableHeader col="updatedAt" label="Ult. Atualizacao" />
                 <SortableHeader col="status" label="Status" align="center" />
-                <th style={{ ...headerCellStyle, textAlign: "center" }}>Obs</th>
+                <SortableHeader col="obs" label="Obs" align="center" />
               </tr>
             </thead>
             <tbody>
@@ -780,7 +804,7 @@ function FichaRowView({ row, cellStyle }: FichaRowViewProps) {
           </span>
         </CellLink>
       </td>
-      <InlineEditCell value={localName} onSave={handleSaveName} style={cellStyle}>
+      <InlineEditCell value={localName} onSave={handleSaveName} style={{ ...cellStyle, whiteSpace: "normal", overflow: "visible", textOverflow: "clip" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <div
             style={{
@@ -796,9 +820,8 @@ function FichaRowView({ row, cellStyle }: FichaRowViewProps) {
             <span
               title={localName}
               style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap"
+                wordBreak: "break-word",
+                whiteSpace: "normal"
               }}
             >
               {localName}

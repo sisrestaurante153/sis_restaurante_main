@@ -30,7 +30,7 @@ import {
 } from "@/modules/platform/server/demo-data";
 import { recalculateDemoStoreCosts } from "@/modules/platform/server/demo-costing";
 
-export type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "fc" | "ic" | "totalCost" | "sellingPrice" | "margem" | "updatedAt" | "status";
+export type FichaSortBy = "code" | "produto" | "modalidade" | "grupo" | "fc" | "ic" | "totalCost" | "sellingPrice" | "margem" | "updatedAt" | "status" | "componentes" | "obs";
 
 export interface ListFichasInput {
   page: number;
@@ -457,7 +457,7 @@ async function ensureModality(tx: Prisma.TransactionClient, modalityId: string) 
   const label = modalityId.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
   return tx.modalidade.upsert({
     where: { ds_codigo: modalityId },
-    update: { nm_modalidade: label },
+    update: {},
     create: { ds_codigo: modalityId, nm_modalidade: label }
   });
 }
@@ -1017,7 +1017,7 @@ function mapFichaDetail(record: NonNullable<FichaRecord>) {
   };
 }
 
-const COMPLEX_FICHA_SORT_FIELDS = ["fc", "ic", "totalCost", "margem"] as const;
+const COMPLEX_FICHA_SORT_FIELDS = ["fc", "ic", "totalCost", "margem", "componentes", "obs"] as const;
 
 function buildFichasOrderBy(
   sortBy: FichaSortBy | undefined,
@@ -1118,11 +1118,26 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
   const needsInMemorySort = input.sortBy && (COMPLEX_FICHA_SORT_FIELDS as readonly string[]).includes(input.sortBy);
 
   try {
+    const totalCount = await prisma.fichaTecnica.count({ where });
+
+    let didYouMean: string | null = null;
+    if (totalCount === 0 && query) {
+      const allFichasForSimilarity = await prisma.fichaTecnica.findMany({
+        where: { cd_restaurante: restaurantId },
+        select: {
+          nm_exibicao: true,
+          itemResultante: {
+            select: { nm_item: true }
+          }
+        }
+      });
+      const terms = allFichasForSimilarity.flatMap(f => [f.nm_exibicao, f.itemResultante.nm_item].filter((v): v is string => Boolean(v)));
+      const { findClosestTerm } = await import("@/modules/platform/similarity");
+      didYouMean = findClosestTerm(query, terms);
+    }
+
     if (needsInMemorySort) {
-      const [totalCount, allFichas] = await Promise.all([
-        prisma.fichaTecnica.count({ where }),
-        prisma.fichaTecnica.findMany({ where, orderBy: { ts_atualizacao: "desc" }, include: fichaInclude })
-      ]);
+      const allFichas = await prisma.fichaTecnica.findMany({ where, orderBy: { ts_atualizacao: "desc" }, include: fichaInclude });
       const allMapped = allFichas.map((f) => mapFichaListRow(f as unknown as NonNullable<FichaRecord>));
       const dir = input.sortDir === "desc" ? -1 : 1;
       const safeNum = (v: string | null | undefined, fallback = -Infinity) => {
@@ -1135,6 +1150,8 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
           case "ic":        return dir * (safeNum(a.cookingIndex) - safeNum(b.cookingIndex));
           case "totalCost": return dir * (Number(a.totalCost) - Number(b.totalCost));
           case "margem":    return dir * (safeNum(a.contributionMarginPercent, -999) - safeNum(b.contributionMarginPercent, -999));
+          case "componentes": return dir * (a.componentCount - b.componentCount);
+          case "obs":       return dir * a.notes.localeCompare(b.notes, "pt-BR", { sensitivity: "base" });
           default: return 0;
         }
       });
@@ -1144,26 +1161,25 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
         items: allMapped.slice(offset, offset + input.pageSize),
         totalCount,
         totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
-        page: safePage
+        page: safePage,
+        didYouMean
       };
     }
 
-    const [totalCount, fichas] = await Promise.all([
-      prisma.fichaTecnica.count({ where }),
-      prisma.fichaTecnica.findMany({
-        where,
-        orderBy: buildFichasOrderBy(input.sortBy, input.sortDir),
-        skip: (Math.max(input.page, 1) - 1) * input.pageSize,
-        take: input.pageSize,
-        include: fichaInclude
-      })
-    ]);
+    const fichas = await prisma.fichaTecnica.findMany({
+      where,
+      orderBy: buildFichasOrderBy(input.sortBy, input.sortDir),
+      skip: (Math.max(input.page, 1) - 1) * input.pageSize,
+      take: input.pageSize,
+      include: fichaInclude
+    });
 
     return {
       items: fichas.map((ficha) => mapFichaListRow(ficha as unknown as NonNullable<FichaRecord>)),
       totalCount,
       totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
-      page: Math.max(input.page, 1)
+      page: Math.max(input.page, 1),
+      didYouMean
     };
   } catch {
     return null;
@@ -1184,6 +1200,43 @@ async function getFichaDetailWithPrisma(fichaId: string, restaurantId: string) {
   } catch (error) {
     console.error("[getFichaDetailWithPrisma] Erro ao carregar ficha", fichaId, error);
     return null;
+  }
+}
+
+async function deleteFichaWithPrisma(fichaId: string, restaurantId: string) {
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+
+  if (!prisma) {
+    return null;
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Update references in CalculoExecucao
+      await tx.calculoExecucao.updateMany({
+        where: { cd_ficha_tecnica: fichaId },
+        data: { cd_ficha_tecnica: null }
+      });
+
+      // 2. Update references in ImportacaoStaging
+      await tx.importacaoStaging.updateMany({
+        where: { cd_ficha_tecnica: fichaId },
+        data: { cd_ficha_tecnica: null }
+      });
+
+      // 3. Delete FichaTecnica
+      await tx.fichaTecnica.delete({
+        where: {
+          cd_ficha_tecnica: fichaId,
+          cd_restaurante: restaurantId
+        }
+      });
+    });
+    return true;
+  } catch (error) {
+    console.error("[deleteFichaWithPrisma] Erro ao deletar ficha", fichaId, error);
+    throw error;
   }
 }
 
@@ -2103,6 +2156,10 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
             return dir * (Number(a.salePrice ?? "0") - Number(b.salePrice ?? "0"));
           case "status":
             return dir * a.status.localeCompare(b.status, "pt-BR", { sensitivity: "base" });
+          case "componentes":
+            return dir * (a.components.length - b.components.length);
+          case "obs":
+            return dir * a.notes.localeCompare(b.notes, "pt-BR", { sensitivity: "base" });
           case "updatedAt":
             return dir * a.updatedAt.localeCompare(b.updatedAt) || dir * (a.version - b.version);
           default:
@@ -2112,9 +2169,17 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
 
       const paginated = paginate(sorted, page, pageSize);
 
+      let didYouMean: string | null = null;
+      if (filtered.length === 0 && query) {
+        const terms = getDemoStore().fichas.flatMap(f => [f.displayName, f.itemName].filter(Boolean));
+        const { findClosestTerm } = await import("@/modules/platform/similarity");
+        didYouMean = findClosestTerm(query, terms);
+      }
+
       return {
         ...paginated,
-        items: paginated.items.map(toFichaListRow)
+        items: paginated.items.map(toFichaListRow),
+        didYouMean
       };
     },
 
@@ -2314,6 +2379,71 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
         ficha.salePrice = input.sellingPrice === "" ? null : input.sellingPrice;
       }
       persistDemoStore(store);
+    },
+
+    async checkFichaDeletionAllowed(fichaId: string) {
+      const prisma = getPrismaClient(getServerEnv().DATABASE_URL);
+      if (prisma) {
+        try {
+          const targetFicha = await prisma.fichaTecnica.findUnique({
+            where: { cd_ficha_tecnica: fichaId, cd_restaurante: restaurantId },
+            select: { cd_item_resultante: true }
+          });
+          if (!targetFicha) return [];
+
+          const parentComponents = await prisma.fichaComponente.findMany({
+            where: {
+              cd_item_componente: targetFicha.cd_item_resultante,
+              fichaTecnica: {
+                cd_restaurante: restaurantId
+              }
+            },
+            include: {
+              fichaTecnica: {
+                include: {
+                  itemResultante: true
+                }
+              }
+            }
+          });
+
+          const uniqueParents = Array.from(
+            new Map(
+              parentComponents.map(pc => [pc.cd_ficha_tecnica, {
+                id: pc.cd_ficha_tecnica,
+                name: pc.fichaTecnica.nm_exibicao || pc.fichaTecnica.itemResultante.nm_item
+              }])
+            ).values()
+          );
+          return uniqueParents;
+        } catch {
+          // fallback
+        }
+      }
+
+      const store = getDemoStore();
+      const targetFicha = store.fichas.find(f => f.id === fichaId);
+      if (!targetFicha) return [];
+      const parentFichas = store.fichas.filter(f => 
+        f.id !== fichaId && 
+        f.components.some(c => c.itemId === targetFicha.itemId)
+      );
+      return parentFichas.map(f => ({ id: f.id, name: f.displayName || f.itemName }));
+    },
+
+    async deleteFicha(fichaId: string) {
+      const prismaResult = await deleteFichaWithPrisma(fichaId, restaurantId);
+      if (prismaResult) {
+        return;
+      }
+
+      const store = getDemoStore();
+      const index = store.fichas.findIndex((entry) => entry.id === fichaId);
+      if (index !== -1) {
+        store.fichas.splice(index, 1);
+        recalculateDemoStoreCosts(store);
+        persistDemoStore(store);
+      }
     },
 
     async inactivateFicha(fichaId: string) {

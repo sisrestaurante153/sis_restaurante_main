@@ -18,15 +18,17 @@ function getSingle(searchParam: string | string[] | undefined, fallback = "") {
 
 export default async function NewFichaPage({ searchParams }: { searchParams?: SearchParams }) {
   const session = await requireSession();
-  const [itemOptions, modalityOptions, stageTypes, units] = await Promise.all([
+  const [itemOptions, modalityOptions, stageTypes, units, groupOptionsData] = await Promise.all([
     getCatalogRepository(session.restaurantId).listItemOptions(),
     getEngineeringRepository(session.restaurantId).listModalities(),
     getMasterDataRepository().listStageTypes(),
-    getMasterDataRepository().listUnits()
+    getMasterDataRepository().listUnits(),
+    getEngineeringRepository(session.restaurantId).listOperationalGroups()
   ]);
 
   // Quick 20260424 item 3: deriva lista de codigos de unidade ativos para o select Unidade.
   const unitOptions = units.filter((u) => u.active).map((u) => u.code);
+  const groupOptions = groupOptionsData.map((g) => g.label);
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const scope = getSingle(resolvedSearchParams.scope);
   const filteredItemOptions =
@@ -75,6 +77,7 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
         componentOptions={itemOptions}
         modalityOptions={modalityOptions}
         unitOptions={unitOptions}
+        groupOptions={groupOptions}
         stageTypeOptions={stageTypes.map((stageType) => ({
           id: stageType.id,
           code: stageType.code,

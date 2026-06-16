@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getItemSearchSuggestionsAction } from "@/modules/platform/server/search-actions";
 import AddIcon from "@mui/icons-material/Add";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
@@ -51,6 +52,7 @@ interface ItemsListingViewProps {
   categoryOptions: Array<{ value: string; label: string }>;
   sort?: string;
   order?: string;
+  didYouMean?: string | null;
 }
 
 const TYPE_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -361,7 +363,7 @@ function InlineEditCell({ value, onSave, align = "left", inputStyle, formatForEd
     } catch {
       setSaveStatus("error");
     }
-  }, [draft, value, onSave]);
+  }, [draft, value, onSave, formatForEdit]);
 
   const cancelEdit = useCallback(() => {
     setEditing(false);
@@ -439,7 +441,8 @@ export function ItemsListingView({
   category,
   categoryOptions,
   sort,
-  order
+  order,
+  didYouMean
 }: ItemsListingViewProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -599,6 +602,11 @@ export function ItemsListingView({
           placeholder="Buscar por nome..."
           ariaLabel="Buscar por nome"
           name="query"
+          fetchSuggestions={getItemSearchSuggestionsAction}
+          onSuggestionSelect={(val) => {
+            setQueryValue(val);
+            navigateImmediate({ query: val });
+          }}
         />
 
         <FlatSelect
@@ -634,6 +642,22 @@ export function ItemsListingView({
           name="status"
         />
       </Stack>
+
+      {didYouMean && (
+        <div style={{ fontSize: 13, color: "#5F5E5A", marginTop: -8 }}>
+          Você quis dizer:{" "}
+          <Link
+            href={buildHref({ query: didYouMean, page: 1 }) as never}
+            onClick={() => {
+              setQueryValue(didYouMean);
+            }}
+            style={{ color: "#185FA5", textDecoration: "underline", fontWeight: 500 }}
+          >
+            {didYouMean}
+          </Link>
+          ?
+        </div>
+      )}
 
       <Box
         sx={{

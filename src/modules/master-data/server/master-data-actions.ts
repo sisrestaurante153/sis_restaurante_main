@@ -100,11 +100,11 @@ export async function saveMasterDataAction(formData: FormData) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
       throw error;
     }
-    const redirectPath = paths[kind] || "/cadastros";
+    const redirectPath = formData.get("redirectUri")?.toString() || paths[kind] || "/cadastros";
     redirect(`${redirectPath}?error=save_failed`);
   }
 
-  const redirectPath = paths[kind] || "/cadastros";
+  const redirectPath = formData.get("redirectUri")?.toString() || paths[kind] || "/cadastros";
   revalidatePath(redirectPath);
   redirect(`${redirectPath}?saved=${kind}`);
 }
@@ -140,7 +140,7 @@ export async function deleteMasterDataAction(formData: FormData) {
                 ? await repository.deleteStageType(id)
               : { success: false as const, reason: "Tipo de cadastro invalido." };
 
-  const redirectPath = paths[kind] || "/cadastros";
+  const redirectPath = formData.get("redirectUri")?.toString() || paths[kind] || "/cadastros";
 
   if (!result.success) {
     redirect(`${redirectPath}?error=${encodeURIComponent(result.reason)}`);

@@ -195,3 +195,36 @@ export async function checkDuplicateFichaNameAction(name: string, excludeFichaId
   const repository = getEngineeringRepository(actor.restaurantId);
   return repository.checkDuplicateName(name, excludeFichaId);
 }
+
+export async function checkFichaDeletionAllowedAction(fichaId: string): Promise<Array<{ id: string, name: string }>> {
+  const actor = await resolveEngineeringActor();
+  const repository = getEngineeringRepository(actor.restaurantId);
+  return repository.checkFichaDeletionAllowed(fichaId);
+}
+
+export async function deleteFichaAction(fichaId: string): Promise<void> {
+  const actor = await resolveEngineeringActor();
+  const repository = getEngineeringRepository(actor.restaurantId);
+  const before = await repository.getFichaDetail(fichaId);
+
+  await repository.deleteFicha(fichaId);
+
+  if (before) {
+    try {
+      await createAuditService().record({
+        actorId: actor.userId,
+        actorName: actor.name,
+        entity: "ficha_tecnica",
+        entityId: fichaId,
+        entityLabel: `${before.itemName} v${before.version}`,
+        action: "ficha.deleted",
+        before,
+        after: null
+      });
+    } catch {
+      // ignore audit failures
+    }
+  }
+
+  redirect("/fichas");
+}

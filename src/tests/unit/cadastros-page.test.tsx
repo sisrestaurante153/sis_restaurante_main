@@ -9,7 +9,7 @@ describe("CadastrosPage", () => {
     expect(screen.getByRole("heading", { name: /cadastros mestres/i })).toBeInTheDocument();
     expect(screen.getByText("Fornecedores")).toBeInTheDocument();
     expect(screen.getByText("Unidades")).toBeInTheDocument();
-    expect(screen.getByText("Categorias Operacionais")).toBeInTheDocument();
+    expect(screen.getByText("Grupos Operacionais")).toBeInTheDocument();
     expect(screen.getByText("Modalidades")).toBeInTheDocument();
     expect(screen.getByText("Tipos de Item")).toBeInTheDocument();
     expect(screen.getByText("Tipos de Etapa")).toBeInTheDocument();

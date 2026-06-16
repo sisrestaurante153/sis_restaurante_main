@@ -419,11 +419,21 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
   const needsInMemorySort = input.sort && (COMPLEX_ITEM_SORT_FIELDS as readonly string[]).includes(input.sort);
 
   try {
+    const totalCount = await prisma.item.count({ where });
+
+    let didYouMean: string | null = null;
+    if (totalCount === 0 && query) {
+      const allItemsForSimilarity = await prisma.item.findMany({
+        where: { cd_restaurante: input.restaurantId, sn_ativo: true },
+        select: { nm_item: true }
+      });
+      const terms = allItemsForSimilarity.map(i => i.nm_item);
+      const { findClosestTerm } = await import("@/modules/platform/similarity");
+      didYouMean = findClosestTerm(query, terms);
+    }
+
     if (needsInMemorySort) {
-      const [totalCount, allItems] = await Promise.all([
-        prisma.item.count({ where }),
-        prisma.item.findMany({ where, orderBy: { nm_item: "asc" }, include: itemInclude })
-      ]);
+      const allItems = await prisma.item.findMany({ where, orderBy: { nm_item: "asc" }, include: itemInclude });
       const mapped = (allItems as unknown as CatalogItemRecord[]).map(mapItemListRow);
       sortMappedItems(mapped, input.sort, input.order);
       const safePage = Math.max(input.page, 1);
@@ -432,26 +442,25 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
         items: mapped.slice(offset, offset + input.pageSize),
         totalCount,
         totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
-        page: safePage
+        page: safePage,
+        didYouMean
       };
     }
 
-    const [totalCount, items] = await Promise.all([
-      prisma.item.count({ where }),
-      prisma.item.findMany({
-        where,
-        orderBy: buildItemsOrderBy(input.sort, input.order),
-        skip: (Math.max(input.page, 1) - 1) * input.pageSize,
-        take: input.pageSize,
-        include: itemInclude
-      })
-    ]);
+    const items = await prisma.item.findMany({
+      where,
+      orderBy: buildItemsOrderBy(input.sort, input.order),
+      skip: (Math.max(input.page, 1) - 1) * input.pageSize,
+      take: input.pageSize,
+      include: itemInclude
+    });
 
     return {
       items: (items as unknown as CatalogItemRecord[]).map(mapItemListRow),
       totalCount,
       totalPages: Math.max(1, Math.ceil(totalCount / input.pageSize)),
-      page: Math.max(input.page, 1)
+      page: Math.max(input.page, 1),
+      didYouMean
     };
   } catch {
     return null;
@@ -897,9 +906,17 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
       });
       const paginated = paginate(sorted, page, pageSize);
 
+      let didYouMean: string | null = null;
+      if (filtered.length === 0 && query) {
+        const terms = store.items.filter(i => i.active).map(i => i.name);
+        const { findClosestTerm } = await import("@/modules/platform/similarity");
+        didYouMean = findClosestTerm(query, terms);
+      }
+
       return {
         ...paginated,
-        items: paginated.items.map(toItemListRow)
+        items: paginated.items.map(toItemListRow),
+        didYouMean
       };
     },
 

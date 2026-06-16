@@ -18,16 +18,18 @@ type Params = Promise<{ fichaId: string }>;
 
 export default async function FichaDetailPage({ params }: { params: Params }) {
   const [{ fichaId }, session] = await Promise.all([params, requireSession()]);
-  const [ficha, itemOptions, modalityOptions, stageTypes, units] = await Promise.all([
+  const [ficha, itemOptions, modalityOptions, stageTypes, units, groupOptionsData] = await Promise.all([
     getEngineeringRepository(session.restaurantId).getFichaDetail(fichaId),
     getCatalogRepository(session.restaurantId).listItemOptions(),
     getEngineeringRepository(session.restaurantId).listModalities(),
     getMasterDataRepository().listStageTypes(),
-    getMasterDataRepository().listUnits()
+    getMasterDataRepository().listUnits(),
+    getEngineeringRepository(session.restaurantId).listOperationalGroups()
   ]);
 
   // Quick 20260424 item 3: deriva lista de codigos de unidade ativos para o select Unidade.
   const unitOptions = units.filter((u) => u.active).map((u) => u.code);
+  const groupOptions = groupOptionsData.map((g) => g.label);
 
   if (!ficha) {
     notFound();
@@ -79,6 +81,7 @@ export default async function FichaDetailPage({ params }: { params: Params }) {
         itemOptions={itemOptions}
         modalityOptions={modalityOptions}
         unitOptions={unitOptions}
+        groupOptions={groupOptions}
         stageTypeOptions={stageTypes.map((stageType) => ({
           id: stageType.id,
           code: stageType.code,
