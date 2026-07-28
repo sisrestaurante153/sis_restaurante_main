@@ -71,14 +71,13 @@ const STATUS_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   inativo: { bg: "#F1EFE8", text: "#444441" },
 };
 
+// Pre-preparo e intermediario saíram deste filtro: têm tela própria em /pre-preparo.
 const typeOptions = [
   { value: "all", label: "Todos os tipos" },
   { value: "insumo", label: "Insumo" },
-  { value: "intermediario", label: "Intermediario" },
   { value: "embalagem", label: "Embalagem" },
   { value: "prato", label: "Prato" },
   { value: "porcao", label: "Porcao" },
-  { value: "pre_preparo", label: "Pre-preparo" },
   { value: "apoio", label: "Apoio" },
   { value: "produto_pronto", label: "Produto pronto" }
 ];

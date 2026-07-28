@@ -1,5 +1,5 @@
 import "server-only";
-import { type Prisma } from "@/generated/prisma/client";
+import { type Prisma, type item_type } from "@/generated/prisma/client";
 import {
   mapItemDetail,
   mapItemListRow,
@@ -361,10 +361,16 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
   }
 
   const query = input.query.trim();
+  // Pre-preparo e intermediario ganharam tela propria (/pre-preparo); a grade
+  // geral de itens so os exibe quando explicitamente filtrada por esse tipo.
+  const typeFilter =
+    input.type && input.type !== "all"
+      ? { tp_item: input.type }
+      : { tp_item: { notIn: ["pre_preparo", "intermediario"] satisfies item_type[] } };
   const where: Prisma.ItemWhereInput = {
     cd_restaurante: input.restaurantId,
     AND: [
-      input.type && input.type !== "all" ? { tp_item: input.type } : {},
+      typeFilter,
       input.status === "ativos" ? { sn_ativo: true } : {},
       input.status === "inativos" ? { sn_ativo: false } : {},
       input.category && input.category !== "all"
@@ -863,7 +869,10 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
             .join(" ")
             .toLowerCase()
             .includes(normalizedQuery);
-        const matchesType = type === "all" ? true : item.type === type;
+        const matchesType =
+          type === "all"
+            ? item.type !== "pre_preparo" && item.type !== "intermediario"
+            : item.type === type;
         const matchesStatus =
           status === "all" ? true : status === "ativos" ? item.active : !item.active;
         const matchesCategory =
