@@ -9,6 +9,10 @@ import SellRoundedIcon from "@mui/icons-material/SellRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import SoupKitchenRoundedIcon from "@mui/icons-material/SoupKitchenRounded";
+import RestaurantMenuRoundedIcon from "@mui/icons-material/RestaurantMenuRounded";
+import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 export interface NavigationItem {
   href: string;
@@ -65,9 +69,18 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
       label: "Cadastros",
       items: [
         { href: "/itens", label: "Itens", icon: Inventory2RoundedIcon },
+        { href: "/pre-preparo", label: "Pré-preparo", icon: SoupKitchenRoundedIcon },
         { href: "/fichas", label: "Fichas Tecnicas", icon: LibraryBooksRoundedIcon },
         { href: "/cadastros", label: "Cadastros", icon: HistoryEduRoundedIcon },
         { href: "/importacao", label: "Importacao", icon: CloudUploadRoundedIcon }
+      ]
+    },
+    {
+      label: "Operação",
+      items: [
+        { href: "/cardapios", label: "Cardápios", icon: RestaurantMenuRoundedIcon },
+        { href: "/vendas", label: "Vendas", icon: PointOfSaleRoundedIcon },
+        { href: "/retorno-financeiro", label: "Retorno Financeiro", icon: TrendingUpRoundedIcon }
       ]
     }
   ];

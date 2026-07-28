@@ -1,8 +1,7 @@
-// @ts-nocheck
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
-  ImportacaoLinhaStatus,
+  importacao_linha_status,
   PrismaClient
 } from "../../src/generated/prisma/client";
 import { normalizeAliasValue } from "../../src/modules/import/domain/reconciliation";
@@ -34,7 +33,7 @@ async function main() {
   });
 
   const conflict = await prisma.importacaoConflito.findUnique({
-    where: { id: conflictId }
+    where: { cd_conflito: conflictId }
   });
 
   if (!conflict) {
@@ -42,9 +41,9 @@ async function main() {
   }
 
   const item = itemId
-    ? await prisma.item.findUnique({ where: { id: itemId } })
-    : await prisma.item.findUnique({
-        where: { nomeNormalizado: itemNormalizedName! }
+    ? await prisma.item.findUnique({ where: { cd_item: itemId } })
+    : await prisma.item.findFirst({
+        where: { nm_normalizado: itemNormalizedName! }
       });
 
   if (!item) {
@@ -52,51 +51,51 @@ async function main() {
   }
 
   const aliasSource =
-    explicitAlias ?? conflict.rawName ?? conflict.normalizedName;
+    explicitAlias ?? conflict.ds_nome_bruto ?? conflict.nm_normalizado;
 
   if (aliasSource) {
     await prisma.itemAlias.upsert({
       where: {
-        itemId_aliasNormalizado: {
-          itemId: item.id,
-          aliasNormalizado: normalizeAliasValue(aliasSource)
+        cd_item_nm_alias_normalizado: {
+          cd_item: item.cd_item,
+          nm_alias_normalizado: normalizeAliasValue(aliasSource)
         }
       },
       update: {
-        alias: aliasSource,
-        origem: "reconciliacao_manual"
+        nm_alias: aliasSource,
+        ds_origem: "reconciliacao_manual"
       },
       create: {
-        itemId: item.id,
-        alias: aliasSource,
-        aliasNormalizado: normalizeAliasValue(aliasSource),
-        origem: "reconciliacao_manual"
+        cd_item: item.cd_item,
+        nm_alias: aliasSource,
+        nm_alias_normalizado: normalizeAliasValue(aliasSource),
+        ds_origem: "reconciliacao_manual"
       }
     });
   }
 
-  if (conflict.stagingId) {
+  if (conflict.cd_staging) {
     await prisma.importacaoStaging.update({
-      where: { id: conflict.stagingId },
+      where: { cd_staging: conflict.cd_staging },
       data: {
-        itemId: item.id,
-        status: ImportacaoLinhaStatus.imported
+        cd_item: item.cd_item,
+        tp_status: importacao_linha_status.imported
       }
     });
   }
 
   await prisma.importacaoConflito.update({
-    where: { id: conflict.id },
+    where: { cd_conflito: conflict.cd_conflito },
     data: {
-      resolvido: true,
-      detalhesJson: {
-        ...(typeof conflict.detalhesJson === "object" &&
-        conflict.detalhesJson !== null
-          ? (conflict.detalhesJson as Record<string, unknown>)
+      sn_resolvido: true,
+      js_detalhes: {
+        ...(typeof conflict.js_detalhes === "object" &&
+        conflict.js_detalhes !== null
+          ? (conflict.js_detalhes as Record<string, unknown>)
           : {}),
         resolucaoManual: {
-          itemId: item.id,
-          itemNome: item.nome,
+          itemId: item.cd_item,
+          itemNome: item.nm_item,
           aliasAplicado: aliasSource ?? null
         }
       }
@@ -105,12 +104,12 @@ async function main() {
 
   await prisma.auditoria.create({
     data: {
-      entidade: "importacao_conflito",
-      entidadeId: conflict.id,
-      acao: "import.conflict.reconciled.via_script",
-      depoisJson: {
-        itemId: item.id,
-        itemNome: item.nome,
+      nm_entidade: "importacao_conflito",
+      cd_entidade: conflict.cd_conflito,
+      ds_acao: "import.conflict.reconciled.via_script",
+      js_depois: {
+        itemId: item.cd_item,
+        itemNome: item.nm_item,
         alias: aliasSource ?? null
       }
     }
@@ -119,10 +118,10 @@ async function main() {
   console.log(
     JSON.stringify(
       {
-        conflictId: conflict.id,
+        conflictId: conflict.cd_conflito,
         resolved: true,
-        itemId: item.id,
-        itemName: item.nome,
+        itemId: item.cd_item,
+        itemName: item.nm_item,
         alias: aliasSource ?? null
       },
       null,

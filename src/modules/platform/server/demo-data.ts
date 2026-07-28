@@ -240,6 +240,36 @@ export interface DemoAssemblyScenario {
   finalOutput: string;
 }
 
+export interface DemoCardapioItemRecord {
+  id: string;
+  itemId: string;
+  salePrice: string;
+  weekdays: number[] | null;
+  active: boolean;
+}
+
+export interface DemoCardapioRecord {
+  id: string;
+  name: string;
+  channel: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  items: DemoCardapioItemRecord[];
+}
+
+export interface DemoVendaRecord {
+  id: string;
+  itemId: string;
+  date: string;
+  quantity: string;
+  unitPrice: string;
+  total: string;
+  channel: string | null;
+  origin: string;
+  createdAt: string;
+}
+
 export interface DemoStore {
   modalities: DemoModality[];
   suppliers: DemoSupplier[];
@@ -254,6 +284,8 @@ export interface DemoStore {
   importConflicts: DemoImportConflictRecord[];
   audits: DemoAuditRecord[];
   assemblyScenarios: DemoAssemblyScenario[];
+  cardapios: DemoCardapioRecord[];
+  vendas: DemoVendaRecord[];
 }
 
 function slugify(value: string) {
@@ -948,7 +980,9 @@ function createInitialDemoStore(): DemoStore {
         packagingCost: "2.2000",
         finalOutput: "1.0000"
       }
-    ]
+    ],
+    cardapios: [],
+    vendas: []
   };
 }
 
@@ -1005,7 +1039,9 @@ function syncDemoStoreFromDisk() {
       importExecutions: persistedStore.importExecutions ?? defaults.importExecutions,
       importConflicts: persistedStore.importConflicts ?? defaults.importConflicts,
       audits: persistedStore.audits ?? defaults.audits,
-      assemblyScenarios: persistedStore.assemblyScenarios ?? defaults.assemblyScenarios
+      assemblyScenarios: persistedStore.assemblyScenarios ?? defaults.assemblyScenarios,
+      cardapios: persistedStore.cardapios ?? defaults.cardapios,
+      vendas: persistedStore.vendas ?? defaults.vendas
     };
     return demoStore;
   }

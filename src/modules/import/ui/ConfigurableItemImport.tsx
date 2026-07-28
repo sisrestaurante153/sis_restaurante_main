@@ -42,7 +42,7 @@ const FIELD_ALIASES: Record<string, string[]> = {
   type: ["Tipo", "Categoria", "type"],
   operationalCategory: ["Seção", "Secao", "Categoria Operacional", "Grupo", "operationalCategory"],
   supplierName: ["Fornecedor", "Fornec.", "supplierName"],
-  purchaseUnit: ["Unidade de Compra", "Unid. Compra", "Unid Compra", "Un. Compra", "purchaseUnit"],
+  purchaseUnit: ["Unidade de Compra", "Unid. Compra", "Unid Compra", "Un. Compra", "Unidade", "Unid.", "Unid", "purchaseUnit"],
   purchaseQuantity: ["Quantidade de Compra", "Qtde Compra", "Qtd Compra", "Qtde Embalagem", "purchaseQuantity"],
   purchaseCost: ["Preço de Compra", "Preco de Compra", "Preço", "Preco", "Custo", "purchaseCost"],
   usageUnit: ["Unidade de Uso", "Unid. de Uso", "Unid Uso", "Un. Uso", "Unidade Uso", "usageUnit"],
@@ -52,12 +52,17 @@ const FIELD_ALIASES: Record<string, string[]> = {
 const TARGET_FIELDS: Omit<ColumnMapping, "mappedColumn">[] = [
   { systemField: "internalCode", label: "Código Interno", required: false },
   { systemField: "itemName", label: "Nome do Item", required: true },
-  { systemField: "type", label: "Tipo", required: true, defaultOptions: ITEM_TYPE_OPTIONS },
+  // Tipo nao e mais obrigatorio no mapeamento: sem coluna/valor padrao definido,
+  // o item importado assume "insumo" automaticamente (mesma regra do cadastro manual).
+  { systemField: "type", label: "Tipo", required: false, defaultOptions: ITEM_TYPE_OPTIONS },
   { systemField: "operationalCategory", label: "Seção", required: false },
   { systemField: "supplierName", label: "Fornecedor", required: false },
   { systemField: "purchaseUnit", label: "Unidade de Compra", required: true },
   { systemField: "purchaseQuantity", label: "Quantidade de Compra", required: true },
-  { systemField: "purchaseCost", label: "Preço de Compra", required: true },
+  // Preco de compra nao faz parte do modelo minimo solicitado (codigo, nome,
+  // secao, unidade, quantidade de compra); sem coluna mapeada, assume 0 e pode
+  // ser completado depois no cadastro do item.
+  { systemField: "purchaseCost", label: "Preço de Compra", required: false },
   { systemField: "usageUnit", label: "Unidade de Uso", required: false },
   { systemField: "usageQuantity", label: "Quantidade de Uso", required: false },
 ];
@@ -96,11 +101,12 @@ export function ConfigurableItemImport() {
     setIsProcessing(true);
     setAborted(false);
 
-    // Filtra linhas válidas (nome + tipo obrigatórios)
+    // Filtra linhas válidas. Tipo nao e mais obrigatorio aqui: sem coluna/valor
+    // padrao mapeado, o item assume "insumo" automaticamente (ver getValue(row, "type")
+    // || "insumo" mais abaixo), entao a linha nao pode ser descartada so por falta de Tipo.
     const validRows = allRows.filter((row) => {
       const name = getValue(row, "itemName");
-      const type = getValue(row, "type");
-      return name && type;
+      return Boolean(name);
     });
 
     const prog: ImportProgress = {

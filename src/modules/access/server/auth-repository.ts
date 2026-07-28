@@ -129,7 +129,8 @@ export function getAuthRepository() {
       }
 
       // Fallback para a base demo quando o banco ainda nao estiver disponivel.
-      const demoUser = getDemoStore().users.find((u) => u.email === email);
+      const normalizedEmail = email.toLowerCase().trim();
+      const demoUser = getDemoStore().users.find((u) => u.email.toLowerCase() === normalizedEmail);
       if (!demoUser) return null;
 
       const finalRoles = supabaseRoles.length > 0 ? supabaseRoles : demoUser.roleCodes;

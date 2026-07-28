@@ -40,7 +40,10 @@ const itemFormSchema = z.object({
   id: z.string().trim().optional(),
   code: z.string().trim().min(1, "Codigo obrigatorio."),
   name: z.string().trim().min(1, "Nome obrigatorio."),
-  type: itemTypeSchema,
+  // Tipo nao e mais obrigatorio no preenchimento: sem selecao explicita,
+  // o item assume "insumo" por padrao (pedido do cliente para simplificar
+  // o cadastro rapido de insumos).
+  type: z.preprocess((value) => (value === "" || value == null ? "insumo" : value), itemTypeSchema),
   operationalCategory: z.string().trim().min(1, "Categoria obrigatoria."),
   description: z.string().trim().default(""),
   active: z.enum(["true", "false"]).transform((value) => value === "true"),
@@ -49,10 +52,23 @@ const itemFormSchema = z.object({
     .min(1, "Ao menos uma compra e obrigatoria.")
     .transform((rows) => {
       const hasPrimary = rows.some((row) => row.purchaseIsPrimary);
-      return rows.map((row, index) => ({
-        ...row,
-        purchaseIsPrimary: hasPrimary ? row.purchaseIsPrimary : index === 0
-      }));
+      return rows.map((row, index) => {
+        const purchaseIsPrimary = hasPrimary ? row.purchaseIsPrimary : index === 0;
+        if (!purchaseIsPrimary) {
+          return { ...row, purchaseIsPrimary };
+        }
+
+        // "Quantidade de uso" nao e mais obrigatoria: quando ausente/invalida,
+        // o sistema assume uso = compra (fator de conversao 1) e deriva a
+        // unidade de uso da propria unidade de compra, automatizando o
+        // calculo de custo unitario em vez de bloquear o salvamento.
+        const qu = Number(row.usageQuantity);
+        const usageQuantity =
+          row.usageQuantity && Number.isFinite(qu) && qu > 0 ? row.usageQuantity : row.purchaseQuantity;
+        const usageUnit = row.usageUnit && row.usageUnit.trim().length > 0 ? row.usageUnit : row.purchaseUnit;
+
+        return { ...row, purchaseIsPrimary, usageUnit, usageQuantity };
+      });
     })
     .superRefine((rows, context) => {
       const primaryCount = rows.filter((row) => row.purchaseIsPrimary).length;
@@ -63,27 +79,6 @@ const itemFormSchema = z.object({
           message: "Selecione apenas um fornecedor principal.",
           path: []
         });
-      }
-
-      // D-08: principal precisa de usageUnit + usageQuantity > 0.
-      const primaryIdx = rows.findIndex((row) => row.purchaseIsPrimary);
-      if (primaryIdx >= 0) {
-        const primary = rows[primaryIdx];
-        if (!primary.usageUnit || primary.usageUnit.trim().length === 0) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Unidade de uso obrigatoria no fornecedor principal.",
-            path: [primaryIdx, "usageUnit"]
-          });
-        }
-        const qu = Number(primary.usageQuantity);
-        if (!primary.usageQuantity || !Number.isFinite(qu) || qu <= 0) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Quantidade de uso deve ser maior que zero no fornecedor principal.",
-            path: [primaryIdx, "usageQuantity"]
-          });
-        }
       }
     })
 });

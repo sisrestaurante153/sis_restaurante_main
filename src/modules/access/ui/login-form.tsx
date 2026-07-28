@@ -17,16 +17,23 @@ export function LoginForm() {
     setPending(true);
     setMessage(null);
 
-    const response = await fetch(withBasePath("/api/auth/login"), {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        email: formData.get("email")?.toString() ?? "",
-        password: formData.get("password")?.toString() ?? ""
-      })
-    });
+    let response: Response;
+    try {
+      response = await fetch(withBasePath("/api/auth/login"), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          email: formData.get("email")?.toString() ?? "",
+          password: formData.get("password")?.toString() ?? ""
+        })
+      });
+    } catch {
+      setMessage("Falha de conexão. Verifique sua internet e tente novamente.");
+      setPending(false);
+      return;
+    }
 
     if (!response.ok) {
       const payload = await response.json().catch(() => null);

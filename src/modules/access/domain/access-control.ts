@@ -9,6 +9,10 @@ export type PermissionCode =
   | "import.read"
   | "import.run"
   | "cost.recalculate"
+  | "menu.read"
+  | "menu.write"
+  | "sales.read"
+  | "sales.write"
   | "billing.manage"
   | "platform.manage";
 
@@ -27,6 +31,10 @@ const rolePermissions: Record<RoleCode, PermissionCode[]> = {
     "import.read",
     "import.run",
     "cost.recalculate",
+    "menu.read",
+    "menu.write",
+    "sales.read",
+    "sales.write",
     "billing.manage",
     "platform.manage"
   ],
@@ -39,6 +47,10 @@ const rolePermissions: Record<RoleCode, PermissionCode[]> = {
     "import.read",
     "import.run",
     "cost.recalculate",
+    "menu.read",
+    "menu.write",
+    "sales.read",
+    "sales.write",
     "billing.manage"
   ],
   engenharia: [
@@ -49,13 +61,19 @@ const rolePermissions: Record<RoleCode, PermissionCode[]> = {
     "impact.read",
     "import.read",
     "import.run",
-    "cost.recalculate"
+    "cost.recalculate",
+    "menu.read",
+    "menu.write",
+    "sales.read",
+    "sales.write"
   ],
   consulta: [
     "item.read",
     "ficha.read",
     "impact.read",
-    "import.read"
+    "import.read",
+    "menu.read",
+    "sales.read"
   ]
 };
 
@@ -75,6 +93,13 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/importacao$/, permission: "import.read" },
   { pattern: /^\/importacao\/itens$/, permission: "import.run" },
   { pattern: /^\/importacao\/pendencias$/, permission: "import.read" },
+  { pattern: /^\/pre-preparo$/, permission: "item.read" },
+  { pattern: /^\/cardapios\/novo$/, permission: "menu.write" },
+  { pattern: /^\/cardapios\/[^/]+$/, permission: "menu.read" },
+  { pattern: /^\/cardapios$/, permission: "menu.read" },
+  { pattern: /^\/vendas\/nova$/, permission: "sales.write" },
+  { pattern: /^\/vendas$/, permission: "sales.read" },
+  { pattern: /^\/retorno-financeiro$/, permission: "sales.read" },
   { pattern: /^\/auditoria$/, permission: "platform.manage" },
   { pattern: /^\/billing$/, permission: "platform.manage" },
   { pattern: /^\/billing\/.*$/, permission: "platform.manage" },

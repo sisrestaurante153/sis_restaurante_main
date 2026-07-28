@@ -331,7 +331,7 @@ describe.skipIf(!runIntegration)(
       expect(parsed.success).toBe(false);
     });
 
-    it("save rejeita principal sem usageUnit/usageQuantity via Zod superRefine (D-08)", async () => {
+    it("save aceita principal sem usageUnit/usageQuantity, derivando de purchaseUnit/purchaseQuantity automaticamente", async () => {
       const { parseItemFormData } = await import("@/modules/catalog/server/item-form-schema");
       const fd = new FormData();
       fd.set("id", "");
@@ -358,7 +358,11 @@ describe.skipIf(!runIntegration)(
         ])
       );
       const parsed = parseItemFormData(fd);
-      expect(parsed.success).toBe(false);
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.purchases[0].usageUnit).toBe(KG_CODE);
+        expect(parsed.data.purchases[0].usageQuantity).toBe("1");
+      }
     });
   }
 );

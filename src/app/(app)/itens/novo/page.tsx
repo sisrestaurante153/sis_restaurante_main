@@ -7,8 +7,15 @@ import { ItemForm } from "@/modules/catalog/ui/item-form";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { PageHeader } from "@/modules/platform/ui/page-header";
 
-export default async function NewItemPage() {
-  const formOptions = await getMasterDataRepository().getItemFormOptions();
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function NewItemPage({ searchParams }: { searchParams: SearchParams }) {
+  const [formOptions, resolvedSearchParams] = await Promise.all([
+    getMasterDataRepository().getItemFormOptions(),
+    searchParams
+  ]);
+  const rawType = resolvedSearchParams.type;
+  const defaultType = Array.isArray(rawType) ? rawType[0] : rawType;
   const formId = "new-item-form";
 
   return (
@@ -42,7 +49,7 @@ export default async function NewItemPage() {
         }
       />
 
-      <ItemForm key="new-item" formId={formId} {...formOptions}>
+      <ItemForm key="new-item" formId={formId} defaultType={defaultType} {...formOptions}>
         <StickyActionBar>
           <FormSubmitButton
             variant="contained"

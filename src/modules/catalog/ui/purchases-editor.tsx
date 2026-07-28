@@ -7,7 +7,6 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Alert from "@mui/material/Alert";
-import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -146,7 +145,6 @@ function summarizeRowErrors(rowErrors: Record<string, string[] | undefined> | un
 export function PurchasesEditor({
   rows,
   onRowsChange,
-  supplierOptions = [],
   unitOptions = defaultPurchaseUnitOptions,
   purchaseUnit,
   errorMessage,
@@ -300,7 +298,7 @@ export function PurchasesEditor({
 
               return (
                 <Box
-                  key={`${row.supplierName}-${index}`}
+                  key={index}
                   sx={{
                     p: 2.5,
                     border: "0.5px solid",
@@ -365,21 +363,14 @@ export function PurchasesEditor({
                       mb: 1.5
                     }}
                   >
-                    <Autocomplete
-                      freeSolo
-                      options={supplierOptions}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Fornecedor"
+                      name="purchaseSupplierName"
                       value={row.supplierName}
-                      onInputChange={(_event, value) => updateRow(index, { supplierName: value })}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          fullWidth
-                          size="small"
-                          label="Fornecedor"
-                          name="purchaseSupplierName"
-                          sx={editableWhiteSx}
-                        />
-                      )}
+                      onChange={(event) => updateRow(index, { supplierName: event.target.value })}
+                      sx={editableWhiteSx}
                     />
                     <input type="hidden" name="purchaseIsPrimary" value={String(row.purchaseIsPrimary)} />
                     <Box>
@@ -593,7 +584,7 @@ export function PurchasesEditor({
           <Stack spacing={2}>
             {rows.map((row, index) => (
               <Box
-                key={`${row.supplierName}-${index}`}
+                key={index}
                 sx={{
                   p: 2,
                   border: "1px solid",
@@ -602,19 +593,12 @@ export function PurchasesEditor({
                 }}
               >
                 <Stack spacing={2}>
-                  <Autocomplete
-                    freeSolo
-                    options={supplierOptions}
+                  <TextField
+                    fullWidth
+                    label="Fornecedor"
+                    name="purchaseSupplierName"
                     value={row.supplierName}
-                    onInputChange={(_event, value) => updateRow(index, { supplierName: value })}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        fullWidth
-                        label="Fornecedor"
-                        name="purchaseSupplierName"
-                      />
-                    )}
+                    onChange={(event) => updateRow(index, { supplierName: event.target.value })}
                   />
                   <input type="hidden" name="purchaseIsPrimary" value={String(row.purchaseIsPrimary)} />
 

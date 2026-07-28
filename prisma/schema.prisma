@@ -20,6 +20,8 @@ model Restaurante {
   fichas      FichaTecnica[]
   importacoes ImportacaoExecucao[]
   assinatura  Assinatura?
+  cardapios   Cardapio[]
+  vendas      Venda[]
 
   @@map("restaurante")
 }
@@ -107,6 +109,8 @@ model Item {
   unidadeUsoPadrao         UnidadeMedida?              @relation("ItemUnidadeUsoPadrao", fields: [cd_unidade_uso_padrao], references: [cd_unidade_medida], onUpdate: NoAction, map: "item_unidade_uso_padrao_id_fkey")
   aliases                  ItemAlias[]
   compras                  ItemCompra[]
+  cardapioItens            CardapioItem[]
+  vendas                   Venda[]
 
   @@unique([nm_normalizado, cd_restaurante], map: "item_nome_normalizado_restaurante_key")
   @@unique([ds_codigo_interno, cd_restaurante], map: "item_codigo_interno_restaurante_key")
@@ -580,6 +584,57 @@ model CalculoComponenteSnapshot {
   @@index([cd_item_componente], map: "idx_calc_comp_snap_item")
   @@index([cd_calculo_execucao, nr_profundidade], map: "idx_calc_comp_snap_prof")
   @@map("calculo_componente_snapshot")
+}
+
+model Cardapio {
+  cd_cardapio    String   @id @default(cuid())
+  cd_restaurante String?
+  nm_cardapio    String
+  tp_canal       String
+  sn_ativo       Boolean        @default(true)
+  ts_criacao     DateTime       @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime       @default(now()) @db.Timestamptz(6)
+  restaurante    Restaurante?   @relation(fields: [cd_restaurante], references: [cd_restaurante], onUpdate: NoAction, map: "cardapio_restaurante_id_fkey")
+  itens          CardapioItem[]
+
+  @@index([cd_restaurante], map: "idx_cardapio_restaurante")
+  @@map("cardapio")
+}
+
+model CardapioItem {
+  cd_cardapio_item String @id @default(cuid())
+  cd_cardapio      String
+  cd_item          String
+  vl_preco_venda   Decimal  @db.Decimal(18, 4)
+  js_dias_semana   Json?
+  sn_ativo         Boolean  @default(true)
+  ts_criacao       DateTime @default(now()) @db.Timestamptz(6)
+  ts_atualizacao   DateTime @default(now()) @db.Timestamptz(6)
+  cardapio         Cardapio @relation(fields: [cd_cardapio], references: [cd_cardapio], onDelete: Cascade, onUpdate: NoAction, map: "cardapio_item_cardapio_id_fkey")
+  item             Item     @relation(fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "cardapio_item_item_id_fkey")
+
+  @@unique([cd_cardapio, cd_item], map: "cardapio_item_cardapio_id_item_id_key")
+  @@index([cd_item], map: "idx_cardapio_item_item")
+  @@map("cardapio_item")
+}
+
+model Venda {
+  cd_venda          String   @id @default(cuid())
+  cd_restaurante    String?
+  cd_item           String
+  dt_venda          DateTime @db.Date
+  nr_quantidade     Decimal  @db.Decimal(18, 4)
+  vl_preco_unitario Decimal  @db.Decimal(18, 4)
+  vl_total          Decimal  @db.Decimal(18, 4)
+  tp_canal          String?
+  ds_origem         String       @default("manual")
+  ts_criacao        DateTime     @default(now()) @db.Timestamptz(6)
+  restaurante       Restaurante? @relation(fields: [cd_restaurante], references: [cd_restaurante], onUpdate: NoAction, map: "venda_restaurante_id_fkey")
+  item              Item         @relation(fields: [cd_item], references: [cd_item], onDelete: Cascade, onUpdate: NoAction, map: "venda_item_id_fkey")
+
+  @@index([cd_restaurante, dt_venda], map: "idx_venda_restaurante_data")
+  @@index([cd_item, dt_venda], map: "idx_venda_item_data")
+  @@map("venda")
 }
 
 enum ficha_status {

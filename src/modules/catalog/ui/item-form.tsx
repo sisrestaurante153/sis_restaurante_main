@@ -23,6 +23,10 @@ interface ItemFormProps {
   operationalCategoryOptions?: string[];
   unitOptions?: string[];
   supplierOptions?: string[];
+  // Preseta o campo Tipo em cadastros novos vindos de uma tela dedicada
+  // (ex.: /pre-preparo -> /itens/novo?type=pre_preparo), sem exigir o objeto
+  // initialValues completo (usado apenas na edicao de item existente).
+  defaultType?: string;
   initialValues?: {
     id?: string;
     code: string;
@@ -67,6 +71,7 @@ export function ItemForm({
   operationalCategoryOptions,
   unitOptions,
   supplierOptions,
+  defaultType,
   initialValues,
   children
 }: ItemFormProps) {
@@ -214,19 +219,15 @@ export function ItemForm({
           }}
         >
           <TextField
-            required
             fullWidth
             select
             size="small"
             label="Tipo"
             name="type"
-            defaultValue={initialValues?.type ?? ""}
+            defaultValue={initialValues?.type ?? defaultType ?? "insumo"}
             error={Boolean(getFieldError("type"))}
             helperText={getFieldError("type") ?? " "}
           >
-            <MenuItem value="" disabled sx={{ display: 'none' }}>
-              Selecione o tipo
-            </MenuItem>
             {resolvedTypeOptions.map((itemType) => (
               <MenuItem key={itemType.value} value={itemType.value}>
                 {itemType.label}

@@ -157,47 +157,63 @@ export async function createOperationalItemImportAction(formData: FormData) {
     const parsed = parseOperationalItemsCsv(await uploadedFile.text());
     const catalogRepository = getCatalogRepository(actor.restaurantId);
     let itemsProcessed = 0;
+    let itemsSkipped = 0;
+    const rowErrors: string[] = [];
 
     for (const row of parsed.rows.filter((entry) => entry.itemName && entry.type)) {
-      const existingItems = await catalogRepository.listItems({
-        page: 1,
-        pageSize: 50,
-        query: row.itemName,
-        status: "all",
-        type: "all"
-      });
-      const existingItem = existingItems.items.find(
-        (item) => item.name.trim().toLowerCase() === row.itemName.trim().toLowerCase()
-      );
+      try {
+        const existingItems = await catalogRepository.listItems({
+          page: 1,
+          pageSize: 50,
+          query: row.itemName,
+          status: "all",
+          type: "all"
+        });
+        const existingItem = existingItems.items.find(
+          (item) => item.name.trim().toLowerCase() === row.itemName.trim().toLowerCase()
+        );
 
-      await catalogRepository.saveItem({
-        id: existingItem?.id,
-        code: existingItem?.code ?? "",
-        name: row.itemName,
-        type: row.type as Parameters<typeof catalogRepository.saveItem>[0]["type"],
-        operationalCategory: row.operationalCategory || existingItem?.category || "Operacional",
-        // Phase 08-04: stockUnit/usageUnit/conversionFactor top-level REMOVIDOS do contrato.
-        // Unidades sao derivadas do purchase principal no repository.saveItem.
-        description: row.descriptionFlag
-          ? `Descricao operacional sinalizada pela importacao em ${row.updatedAt || "data nao informada"}.`
-          : "Atualizacao operacional importada sem descricao detalhada.",
-        active: true,
-        purchases: [
-          {
-            supplierName: existingItem?.supplierName || "Importacao operacional",
-            purchaseUnit: row.purchaseUnit || "un",
-            purchaseIsPrimary: true,
-            purchaseQuantity: row.purchaseQuantity || "1.0000",
-            purchaseCost: row.purchaseCost || "0.0000",
-            priceUpdatedAt: row.updatedAt || new Date().toISOString(),
-            // D-17: default unidade_uso_id = unidade_compra_id, quantidade_uso = 1.
-            usageUnit: row.purchaseUnit || "un",
-            usageQuantity: "1.0000"
-          }
-        ]
-      });
+        // Colunas de preco/quantidade podem vir em formato PT-BR (virgula
+        // decimal, ex: "12,50") — normaliza antes de gravar como Decimal.
+        const purchaseQuantity = parseBrNumber(row.purchaseQuantity || "1");
+        const purchaseCost = parseBrNumber(row.purchaseCost || "0");
 
-      itemsProcessed += 1;
+        await catalogRepository.saveItem({
+          id: existingItem?.id,
+          code: existingItem?.code ?? "",
+          name: row.itemName,
+          type: row.type as Parameters<typeof catalogRepository.saveItem>[0]["type"],
+          operationalCategory: row.operationalCategory || existingItem?.category || "Operacional",
+          // Phase 08-04: stockUnit/usageUnit/conversionFactor top-level REMOVIDOS do contrato.
+          // Unidades sao derivadas do purchase principal no repository.saveItem.
+          description: row.descriptionFlag
+            ? `Descricao operacional sinalizada pela importacao em ${row.updatedAt || "data nao informada"}.`
+            : "Atualizacao operacional importada sem descricao detalhada.",
+          active: true,
+          purchases: [
+            {
+              supplierName: existingItem?.supplierName || "Importacao operacional",
+              purchaseUnit: row.purchaseUnit || "un",
+              purchaseIsPrimary: true,
+              purchaseQuantity,
+              purchaseCost,
+              priceUpdatedAt: row.updatedAt || new Date().toISOString(),
+              // D-17: default unidade_uso_id = unidade_compra_id, quantidade_uso = 1.
+              usageUnit: row.purchaseUnit || "un",
+              usageQuantity: "1.0000"
+            }
+          ]
+        });
+
+        itemsProcessed += 1;
+      } catch (rowError) {
+        // Uma linha invalida nao pode derrubar a execucao inteira nem deixar
+        // o estado inconsistente entre "itens ja gravados" e "falha reportada".
+        itemsSkipped += 1;
+        rowErrors.push(
+          `${row.itemName || "(sem nome)"}: ${rowError instanceof Error ? rowError.message : "erro desconhecido"}`
+        );
+      }
     }
 
     await repository.markImportExecutionCompleted(execution.id, {
@@ -205,7 +221,10 @@ export async function createOperationalItemImportAction(formData: FormData) {
       friendlySummary: {
         headline: "Importacao operacional de itens concluida",
         whatHappened: `A atualizacao operacional foi aplicada ao arquivo ${uploadedFile.name}.`,
-        impact: `${itemsProcessed} itens foram criados ou atualizados a partir do CSV operacional.`,
+        impact:
+          itemsSkipped > 0
+            ? `${itemsProcessed} itens foram criados ou atualizados; ${itemsSkipped} linhas foram ignoradas por erro (ver detalhes tecnicos).`
+            : `${itemsProcessed} itens foram criados ou atualizados a partir do CSV operacional.`,
         whatToDoNow:
           "Revise o historico da execucao e siga com a operacao normal. Os itens ja estao disponiveis no cadastro mestre.",
         nextAction: {
@@ -215,12 +234,14 @@ export async function createOperationalItemImportAction(formData: FormData) {
       },
       technicalDetails: {
         importMode: "operacional_itens",
-        mappedColumns: parsed.mapping
+        mappedColumns: parsed.mapping,
+        rowErrors
       },
       operationalSummary: {
         importMode: "operacional_itens",
         rowsReceived: parsed.rows.length,
-        itemsImported: itemsProcessed
+        itemsImported: itemsProcessed,
+        itemsSkipped
       }
     });
   } catch (error) {
