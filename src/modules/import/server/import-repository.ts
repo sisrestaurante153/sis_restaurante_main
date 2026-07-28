@@ -223,7 +223,7 @@ function mergePlainObject(
   });
 }
 
-async function listPendingConflictsWithPrisma(input?: { executionId?: string }) {
+async function listPendingConflictsWithPrisma(input?: { executionId?: string; restaurantId?: string }) {
   const prisma = resolvePrismaClient();
 
   if (!prisma) {
@@ -235,7 +235,8 @@ async function listPendingConflictsWithPrisma(input?: { executionId?: string }) 
       where: {
         sn_resolvido: false,
         execucao: {
-          tp_status: "concluida_com_conflitos"
+          tp_status: "concluida_com_conflitos",
+          ...(input?.restaurantId ? { cd_restaurante: input.restaurantId } : {})
         },
         ...(input?.executionId ? { cd_importacao_execucao: input.executionId } : {})
       },
@@ -979,7 +980,7 @@ export function getImportRepository(restaurantId = "rest_padrao") {
     },
 
     async listPendingConflicts(input?: { executionId?: string }) {
-      const prismaResult = await listPendingConflictsWithPrisma(input);
+      const prismaResult = await listPendingConflictsWithPrisma({ ...input, restaurantId });
       if (prismaResult) {
         return prismaResult;
       }

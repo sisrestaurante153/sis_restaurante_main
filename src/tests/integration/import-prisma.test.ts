@@ -79,7 +79,11 @@ describe.skipIf(!runIntegration)("import prisma integration", () => {
     const execucao = await prisma.importacaoExecucao.create({
       data: {
         ds_origem_arquivo: "integracao-importacao.xlsx",
-        tp_status: importacao_status.concluida_com_conflitos
+        tp_status: importacao_status.concluida_com_conflitos,
+        // listPendingConflicts agora escopa por restaurante (fix de bug de
+        // badge cross-tenant); getImportRepository() usa "rest_padrao" como
+        // default quando chamado sem argumento, como faz este teste.
+        cd_restaurante: "rest_padrao"
       }
     });
 
