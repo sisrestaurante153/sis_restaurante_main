@@ -71,15 +71,13 @@ const STATUS_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   inativo: { bg: "#F1EFE8", text: "#444441" },
 };
 
-// Pre-preparo e intermediario saíram deste filtro: têm tela própria em /pre-preparo.
+// Grade de Itens = cadastro mestre de insumo/embalagem. Pre-preparo e
+// intermediario tem tela propria (/pre-preparo); prato/porcao/apoio/produto
+// pronto sao geridos via ficha tecnica e nao aparecem mais aqui.
 const typeOptions = [
   { value: "all", label: "Todos os tipos" },
   { value: "insumo", label: "Insumo" },
-  { value: "embalagem", label: "Embalagem" },
-  { value: "prato", label: "Prato" },
-  { value: "porcao", label: "Porcao" },
-  { value: "apoio", label: "Apoio" },
-  { value: "produto_pronto", label: "Produto pronto" }
+  { value: "embalagem", label: "Embalagem" }
 ];
 
 const statusOptions = [

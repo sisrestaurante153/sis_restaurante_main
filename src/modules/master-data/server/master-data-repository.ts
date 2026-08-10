@@ -92,17 +92,20 @@ function sortByName<T extends { name: string }>(rows: T[]) {
   return [...rows].sort((left, right) => left.name.localeCompare(right.name));
 }
 
+// Semeia os tipos canonicos SOMENTE na primeira execucao (tabela vazia).
+// Antes disso o loop rodava incondicionalmente a cada listagem (upsert, ou
+// mesmo "create se nao existir por codigo") — qualquer tipo que o usuario
+// excluisse de propósito era recriado no proximo carregamento da tela, entao
+// o botao "Excluir" em Tipos de Item nunca tinha efeito visivel. Uma vez que
+// a tabela tenha pelo menos uma linha, ela é considerada "ja inicializada" e
+// o registro passa a refletir fielmente as exclusoes do usuario.
 async function ensureItemTypeRegistry(tx: Prisma.TransactionClient) {
+  const count = await tx.tipoItemCadastro.count();
+  if (count > 0) return;
+
   for (const [code, name] of Object.entries(ITEM_TYPE_LABELS)) {
-    await tx.tipoItemCadastro.upsert({
-      where: { tp_codigo: code as item_type },
-      update: {
-        nm_tipo_item: name
-      },
-      create: {
-        tp_codigo: code as item_type,
-        nm_tipo_item: name
-      }
+    await tx.tipoItemCadastro.create({
+      data: { tp_codigo: code as item_type, nm_tipo_item: name }
     });
   }
 }
@@ -110,11 +113,12 @@ async function ensureItemTypeRegistry(tx: Prisma.TransactionClient) {
 async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
   await ensureItemTypeRegistry(tx);
 
-  const [supplierCount, unitCount, categoryCount, modalityCount] = await Promise.all([
+  const [supplierCount, unitCount, categoryCount, modalityCount, stageTypeCount] = await Promise.all([
     tx.fornecedor.count(),
     tx.unidadeMedida.count(),
     tx.categoriaOperacional.count(),
-    tx.modalidade.count()
+    tx.modalidade.count(),
+    tx.tipoEtapa.count()
   ]);
 
   if (supplierCount === 0) {
@@ -127,14 +131,17 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
     });
   }
 
-  // Upsert canonical units so new entries are always present (even when DB already had units).
-  // update:{} preserves any name/type changes made by the user in the admin UI.
-  void unitCount;
-  for (const unit of DEFAULT_UNITS) {
-    await tx.unidadeMedida.upsert({
-      where: { ds_codigo: unit.code },
-      update: {},
-      create: { ds_codigo: unit.code, nm_unidade: unit.name, tp_unidade: unit.measureType, sn_ativo: true }
+  // Mesmo criterio: unidades canonicas so sao semeadas se a tabela estiver
+  // vazia, para nao reviver unidades que o usuario excluiu de proposito.
+  if (unitCount === 0) {
+    await tx.unidadeMedida.createMany({
+      data: DEFAULT_UNITS.map((unit) => ({
+        ds_codigo: unit.code,
+        nm_unidade: unit.name,
+        tp_unidade: unit.measureType,
+        sn_ativo: true
+      })),
+      skipDuplicates: true
     });
   }
 
@@ -160,11 +167,15 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
     });
   }
 
-  for (const stageType of DEFAULT_STAGE_TYPES) {
-    await tx.tipoEtapa.upsert({
-      where: { ds_codigo: stageType.code },
-      update: { nm_tipo_etapa: stageType.name },
-      create: { ds_codigo: stageType.code, nm_tipo_etapa: stageType.name, sn_ativo: true }
+  // Idem: tipos de etapa so sao semeados se a tabela estiver vazia.
+  if (stageTypeCount === 0) {
+    await tx.tipoEtapa.createMany({
+      data: DEFAULT_STAGE_TYPES.map((stageType) => ({
+        ds_codigo: stageType.code,
+        nm_tipo_etapa: stageType.name,
+        sn_ativo: true
+      })),
+      skipDuplicates: true
     });
   }
 }

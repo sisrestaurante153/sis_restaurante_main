@@ -361,12 +361,15 @@ async function listItemsWithPrisma(input: ListItemsInput & { restaurantId: strin
   }
 
   const query = input.query.trim();
-  // Pre-preparo e intermediario ganharam tela propria (/pre-preparo); a grade
-  // geral de itens so os exibe quando explicitamente filtrada por esse tipo.
+  // Pre-preparo/intermediario tem tela propria (/pre-preparo) e prato/porcao/
+  // apoio/produto_pronto sao geridos via ficha tecnica — a grade geral de
+  // itens mostra por padrao so insumo + embalagem; os demais tipos so
+  // aparecem quando explicitamente filtrados.
+  const GRID_DEFAULT_TYPES: item_type[] = ["insumo", "embalagem"];
   const typeFilter =
     input.type && input.type !== "all"
       ? { tp_item: input.type }
-      : { tp_item: { notIn: ["pre_preparo", "intermediario"] satisfies item_type[] } };
+      : { tp_item: { in: GRID_DEFAULT_TYPES } };
   const where: Prisma.ItemWhereInput = {
     cd_restaurante: input.restaurantId,
     AND: [
@@ -870,9 +873,7 @@ export function getCatalogRepository(restaurantId = "rest_padrao") {
             .toLowerCase()
             .includes(normalizedQuery);
         const matchesType =
-          type === "all"
-            ? item.type !== "pre_preparo" && item.type !== "intermediario"
-            : item.type === type;
+          type === "all" ? item.type === "insumo" || item.type === "embalagem" : item.type === type;
         const matchesStatus =
           status === "all" ? true : status === "ativos" ? item.active : !item.active;
         const matchesCategory =
