@@ -6,6 +6,7 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { saveMasterDataAction, deleteMasterDataAction } from "@/modules/master-data/server/master-data-actions";
+import { UpdateRowForm } from "@/components/ui/UpdateRowForm";
 
 type SearchParams = Promise<{
   saved?: string;
@@ -145,8 +146,23 @@ export default async function MasterDataScreen({
       {/* List */}
       <div className="flex flex-col gap-3">
         {data.map((item) => (
-          <div key={item.id} className="bg-white p-5 rounded-2xl border border-ink-200 shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center group hover:border-blue-300 transition-colors">
-            <form action={saveMasterDataAction} className="flex-1 w-full flex flex-col md:flex-row gap-4 items-center">
+          <div
+            key={item.id}
+            className={`bg-white p-5 rounded-2xl border shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center group transition-colors ${
+              item.active ? "border-ink-200 hover:border-blue-300" : "border-error/30 bg-error/5"
+            }`}
+          >
+            {!item.active && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-error bg-error/10 border border-error/30 rounded-full px-2.5 py-1 whitespace-nowrap">
+                Inativo
+              </span>
+            )}
+            <UpdateRowForm
+              action={saveMasterDataAction}
+              itemName={item.name}
+              inUseCount={item.inUseCount}
+              className="flex-1 w-full flex flex-col md:flex-row gap-4 items-center"
+            >
               <input type="hidden" name="kind" value={kindInfo.dbKind} />
               <input type="hidden" name="id" value={item.id} />
               <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
@@ -193,7 +209,7 @@ export default async function MasterDataScreen({
               <button type="submit" className="h-10 px-5 border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold rounded-lg transition-colors text-sm whitespace-nowrap">
                 Atualizar
               </button>
-            </form>
+            </UpdateRowForm>
 
             <form action={deleteMasterDataAction} className="w-full lg:w-auto">
               <input type="hidden" name="kind" value={kindInfo.dbKind} />

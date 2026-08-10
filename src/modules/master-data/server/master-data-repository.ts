@@ -285,10 +285,19 @@ async function listUnitsWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
+    // Sem filtro de sn_ativo: unidades inativas precisam continuar visiveis
+    // no cadastro (mesmo criterio ja usado para fornecedores/categorias/
+    // modalidades), senao inativar uma unidade a faz "sumir" da tela sem
+    // nenhuma forma de conferir ou reverter.
     const rows = await prisma.unidadeMedida.findMany({
-      where: { sn_ativo: true },
       orderBy: { ds_codigo: "asc" }
     });
+
+    const usageCounts = await prisma.itemCompra.groupBy({
+      by: ["cd_unidade_compra"],
+      _count: { cd_unidade_compra: true }
+    });
+    const usageByUnit = new Map(usageCounts.map((row) => [row.cd_unidade_compra, row._count.cd_unidade_compra]));
 
     return rows
       .filter((row) => !isInternalUnitCode(row.ds_codigo))
@@ -297,7 +306,8 @@ async function listUnitsWithPrisma() {
         code: row.ds_codigo,
         name: row.nm_unidade,
         measureType: UNIT_TYPE_LABELS[row.tp_unidade],
-        active: row.sn_ativo
+        active: row.sn_ativo,
+        inUseCount: usageByUnit.get(row.cd_unidade_medida) ?? 0
       }));
   } catch {
     return null;
@@ -389,13 +399,15 @@ function listSuppliersFromDemo() {
 }
 
 function listUnitsFromDemo() {
-  return getDemoStore().units
+  const store = getDemoStore();
+  return store.units
     .map((row) => ({
       id: row.id,
       code: row.code,
       name: row.name,
       measureType: row.measureType,
-      active: row.active
+      active: row.active,
+      inUseCount: store.items.filter((item) => item.purchaseUnit === row.code).length
     }))
     .sort((left, right) => left.code.localeCompare(right.code));
 }

@@ -922,7 +922,7 @@ function ItemRowView({ row, tdBase, categoryLabel }: ItemRowViewProps) {
   const rowStyle: CSSProperties = {
     borderBottom: "0.5px solid #D3D1C7",
     cursor: "pointer",
-    background: hover ? "#F7F7F5" : "transparent",
+    background: hover ? "#F7F7F5" : row.active ? "transparent" : "#FBF4F4",
     transition: "background .1s"
   };
 
@@ -973,9 +973,23 @@ function ItemRowView({ row, tdBase, categoryLabel }: ItemRowViewProps) {
           style={{
             fontWeight: 500,
             fontSize: 13,
-            color: "#2C2C2A"
+            color: row.active ? "#2C2C2A" : "#A32D2D"
           }}
         >
+          {!row.active ? (
+            <span
+              aria-label="Item inativo"
+              title="Item inativo"
+              style={{
+                display: "inline-block",
+                marginRight: 5,
+                fontWeight: 700,
+                color: "#A32D2D"
+              }}
+            >
+              ⊘
+            </span>
+          ) : null}
           {localName}
         </span>
       </InlineEditCell>
