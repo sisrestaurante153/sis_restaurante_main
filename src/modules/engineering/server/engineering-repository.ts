@@ -41,6 +41,7 @@ export interface ListFichasInput {
   grupo?: string;
   sortBy?: FichaSortBy;
   sortDir?: "asc" | "desc";
+  itemTypes?: item_type[];
 }
 
 export interface SaveFichaInput {
@@ -1074,6 +1075,9 @@ async function listFichasWithPrisma(input: ListFichasInput, restaurantId: string
           ? { itemResultante: { nm_categoria_operacional: null } }
           : { itemResultante: { nm_categoria_operacional: { contains: input.grupo, mode: "insensitive" } } }
         : {},
+      input.itemTypes && input.itemTypes.length > 0
+        ? { itemResultante: { tp_item: { in: input.itemTypes } } }
+        : {},
       query
         ? {
             OR: [
@@ -2069,8 +2073,8 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
       }));
     },
 
-    async listFichas({ page, pageSize, query, status = "all", modalidade, grupo, sortBy, sortDir }: ListFichasInput) {
-      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status, modalidade, grupo, sortBy, sortDir }, restaurantId);
+    async listFichas({ page, pageSize, query, status = "all", modalidade, grupo, sortBy, sortDir, itemTypes }: ListFichasInput) {
+      const prismaResult = await listFichasWithPrisma({ page, pageSize, query, status, modalidade, grupo, sortBy, sortDir, itemTypes }, restaurantId);
       if (prismaResult) {
         return prismaResult;
       }
@@ -2096,8 +2100,9 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
             : grupo === "__none__"
               ? !fichaGrupo || /sem /i.test(fichaGrupo)
               : fichaGrupo.toLowerCase() === grupo.toLowerCase();
+        const matchesItemType = !itemTypes || itemTypes.length === 0 ? true : itemTypes.includes(ficha.itemType as item_type);
 
-        return matchesQuery && matchesStatus && matchesModalidade && matchesGrupo;
+        return matchesQuery && matchesStatus && matchesModalidade && matchesGrupo && matchesItemType;
       });
 
       const dir = sortDir === "desc" ? -1 : 1;

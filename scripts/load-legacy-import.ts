@@ -18,6 +18,24 @@ import {
 } from "@/modules/import/domain/legacy-import";
 import { normalizeAliasValue } from "@/modules/import/domain/reconciliation";
 import { recalculateCascade } from "@/modules/engineering/server/cost-engine-service";
+import { levenshteinDistance } from "@/modules/platform/similarity";
+
+// Item criado na importacao e casado por igualdade EXATA de nm_normalizado
+// (unique constraint). Isso significa que se o nome na planilha mudar um
+// pouco entre duas importacoes (ex: "1kg" vs "1 kg", acento diferente), o
+// upsert nao reconhece e cria um item novo em silencio — causa raiz de ~226
+// grupos de itens duplicados encontrados na base (ver investigacao). Este
+// limiar decide quando um nome "quase igual" a um item JA EXISTENTE no banco
+// (de uma importacao anterior) deve virar conflito pra revisao humana em vez
+// de duplicata silenciosa.
+const FUZZY_DUPLICATE_SIMILARITY_THRESHOLD = 0.9;
+
+function nameSimilarity(a: string, b: string): number {
+  if (!a || !b) return 0;
+  const maxLen = Math.max(a.length, b.length);
+  if (maxLen === 0) return 1;
+  return 1 - levenshteinDistance(a, b) / maxLen;
+}
 
 export type ImportedItem = {
   source_kind: string;
@@ -152,7 +170,55 @@ async function upsertImportedItems(
     Awaited<ReturnType<typeof prisma.item.upsert>>
   >();
 
+  // Base de comparacao pro fuzzy-match: itens ja existentes no banco (de
+  // importacoes anteriores ou cadastro manual) + os que forem criados ao
+  // longo deste mesmo run (pra tambem pegar quase-duplicatas dentro da
+  // propria planilha sendo importada agora).
+  const knownNormalizedNames: Array<{ cd_item: string; nm_item: string; nm_normalizado: string }> =
+    await prisma.item.findMany({
+      where: { cd_restaurante: "rest_padrao", sn_ativo: true },
+      select: { cd_item: true, nm_item: true, nm_normalizado: true }
+    });
+  const fuzzyConflicts: Array<{
+    type: string;
+    raw_name: string;
+    normalized_name: string;
+    sheet_name: string;
+    row_number: number;
+    confidence: number;
+    matched_existing_item_id: string;
+    matched_existing_item_name: string;
+  }> = [];
+
   for (const item of items) {
+    const isExactMatch = knownNormalizedNames.some((known) => known.nm_normalizado === item.canonical_name);
+    if (!isExactMatch) {
+      let bestMatch: { cd_item: string; nm_item: string; nm_normalizado: string } | null = null;
+      let bestRatio = 0;
+      for (const known of knownNormalizedNames) {
+        const ratio = nameSimilarity(item.canonical_name, known.nm_normalizado);
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestMatch = known;
+        }
+      }
+      if (bestMatch && bestRatio >= FUZZY_DUPLICATE_SIMILARITY_THRESHOLD) {
+        console.warn(
+          `[dedup] Possivel duplicata: "${item.display_name}" (${(bestRatio * 100).toFixed(1)}% parecido com item ja existente "${bestMatch.nm_item}"). Criando mesmo assim e registrando conflito para revisao.`
+        );
+        fuzzyConflicts.push({
+          type: "possible_duplicate_item",
+          raw_name: item.display_name,
+          normalized_name: item.canonical_name,
+          sheet_name: item.sheet_name,
+          row_number: item.row_number,
+          confidence: bestRatio,
+          matched_existing_item_id: bestMatch.cd_item,
+          matched_existing_item_name: bestMatch.nm_item
+        });
+      }
+    }
+
     const purchaseUnit = item.purchase_unit ? units.get(item.purchase_unit) : null;
     const usageUnitCode = item.usage_unit ?? item.purchase_unit;
     const usageUnit = usageUnitCode ? units.get(usageUnitCode) : null;
@@ -190,6 +256,13 @@ async function upsertImportedItems(
     });
 
     byCanonical.set(item.canonical_name, persisted);
+    if (!isExactMatch) {
+      knownNormalizedNames.push({
+        cd_item: persisted.cd_item,
+        nm_item: persisted.nm_item,
+        nm_normalizado: item.canonical_name
+      });
+    }
 
     if (
       purchaseUnit &&
@@ -308,7 +381,7 @@ async function upsertImportedItems(
     }
   }
 
-  return byCanonical;
+  return { byCanonical, fuzzyConflicts };
 }
 
 async function applyAliases(
@@ -589,7 +662,7 @@ export async function loadLegacyImportReport(input: {
 
     const units = await ensureUnits(prisma);
     const suppliers = await ensureSuppliers(prisma);
-    const itemsByCanonical = await upsertImportedItems(
+    const { byCanonical: itemsByCanonical, fuzzyConflicts } = await upsertImportedItems(
       prisma,
       importRunId,
       report.staging.items,
@@ -605,7 +678,11 @@ export async function loadLegacyImportReport(input: {
       itemsByCanonical,
       units
     );
-    await persistConflicts(prisma, importRunId, report.conflicts);
+    // Quase-duplicatas detectadas no upsert (nome muito parecido com item ja
+    // existente, mas nao identico) entram na mesma fila de conflitos que o
+    // parser Python ja usa — aparecem pro usuario reconciliar na tela de
+    // importacao, em vez de virar item duplicado silencioso.
+    await persistConflicts(prisma, importRunId, [...report.conflicts, ...fuzzyConflicts]);
     if (itemsByCanonical.size > 0) {
       await recalculateCascade(
         prisma,

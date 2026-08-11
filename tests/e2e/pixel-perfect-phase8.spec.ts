@@ -374,7 +374,9 @@ test("pixel-perfect: tela-ficha-tecnica-v2.html vs /fichas/nova", async ({ page 
   // 2026-04-24 (Quick 20260424): nova coluna Cod. 72px entre drag e Item; Qtde
   // bumped 80->110px (zero cortado); CF_GRID_TEMPLATE removido — Coccao Final
   // alinha ao mesmo GRID_TEMPLATE.
-  const expectedGrid = "22px 72px 1fr 110px 80px 240px 90px 90px 96px 28px";
+  // 2026-08-11: coluna Cod. bumped 72->92px + fonte 11->14px (cliente reportou
+  // campo pequeno demais pra digitar o codigo confortavelmente).
+  const expectedGrid = "22px 92px 1fr 110px 80px 240px 90px 90px 96px 28px";
   record(results, {
     id: "ficha-grid-template",
     description: "FichaFlatGrid GRID_TEMPLATE matches HTML contract",

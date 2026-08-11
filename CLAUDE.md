@@ -14,11 +14,9 @@ npm run format       # Prettier (write)
 npm run format:check # Prettier (dry-run)
 
 # Tests
-npm run test:unit               # Vitest unit tests
-npm run test:unit:watch         # Vitest watch mode
+npm run test:unit               # Vitest unit tests (watch: test:unit:watch)
 npm run test:integration        # Vitest integration tests
-npm run test:e2e                # Playwright e2e
-npm run test:e2e:ui             # Playwright interactive UI
+npm run test:e2e                # Playwright e2e (interactive: test:e2e:ui)
 npm test                        # All tests (unit + integration + e2e)
 
 # Database
@@ -28,7 +26,6 @@ npm run db:migrate   # Prisma migrate dev
 npm run db:push      # Prisma db push (no migration file)
 npm run db:generate  # Prisma client generation
 npm run db:seed      # Seed bootstrap data
-npm run db:logs      # Docker Compose DB logs
 
 # Operational scripts
 npm run ops:migrate-and-seed    # Migrations + optional seed (env RUN_DB_SEED=true)
@@ -46,31 +43,33 @@ npm run import:legacy:load      # Load parsed data into DB
 
 ## Architecture
 
-**Modular Monolith** (ADR 001) — single Next.js App Router deployment, domain split into 8 modules under `src/modules/`:
+**Modular Monolith** (ADR 001) — single Next.js App Router deployment, domain split into 10 modules under `src/modules/`:
 
 | Module | Responsibility |
 |--------|---------------|
 | `platform` | Core infra: session, email, logging, shared utilities |
 | `access` | Auth, RBAC (roles + permissions) |
-| `master-data` | Unit types, operational categories, item aliases |
-| `catalog` | Item (insumo) CRUD |
+| `master-data` | Suppliers, units, operational categories, item/stage type registries |
+| `catalog` | Item (insumo/embalagem) CRUD |
 | `engineering` | Technical sheets (fichas), composition, recursive cost calculation |
 | `import` | Legacy Excel parse → staging → conflict reconciliation |
+| `menu` | Cardápios (sales menus) and their item/price links |
+| `sales` | Vendas (sales records) and financial return reporting |
 | `billing` | Subscription management, Asaas payment webhook |
 | `audit` | Change audit log |
 
-Each module follows this folder structure:
-```
-src/modules/<module>/
-├── ui/       # React components, forms, client/server UI
-├── server/   # Server actions, use cases ("use server")
-├── domain/   # Types, interfaces, business rules
-└── infra/    # Prisma queries, external adapters
-```
+Each module has `ui/`, `server/`, `domain/` (types, business rules). A separate
+`infra/` layer is **not** a real convention — only `platform` has one; every
+other module queries Prisma directly inside `server/*-repository.ts`.
+
+Repositories follow a factory pattern: `getXRepository(restaurantId)` returns
+an object of async methods, tries a Prisma-backed path first, and falls back
+to an in-memory/file-backed demo store (`src/modules/platform/server/demo-data.ts`)
+when `DATABASE_URL` is unset — keep this fallback in sync when adding fields.
 
 ### App Router Layout
 
-- `src/app/(app)/` — Authenticated routes (dashboard, fichas, itens, etc.)
+- `src/app/(app)/` — Authenticated routes (dashboard, fichas, itens, pre-preparo, cardapios, vendas, retorno-financeiro, cadastros, importacao, billing, etc.)
 - `src/app/(auth)/` — Public routes (login, signup, password reset)
 - `src/app/api/` — API endpoints (health, auth callbacks, webhooks)
 
@@ -106,6 +105,13 @@ Excel → Python parser → `importacao_staging` rows (status: pending/conflict/
 
 All IDs are CUIDs. All timestamps are `timestamptz(6)` (UTC). Soft deletes use `sn_ativo` boolean. `ds_codigo_interno` on items must always be numeric; auto-generation increments the highest existing value.
 
+## Code Conventions
+
+- **Named exports only** — no `export default` for components, functions, or repositories (`export function ItemForm(...)`, `export function getCatalogRepository(...)`).
+- Server-only modules start with `import "server-only";`. Server actions/mutations use `"use server"`.
+- File naming: kebab-case (`catalog-repository.ts`, `items-listing-view.tsx`).
+- Tests mirror source paths under `src/tests/unit/`, suffix `.test.ts`/`.test.tsx`.
+
 ## Testing Layout
 
 ```
@@ -118,17 +124,16 @@ tests/python/           # Python unittest (import pipeline)
 ## Environment Setup
 
 Copy `.env.example` to `.env`. Required variables:
-- `DATABASE_URL` — PostgreSQL connection string
+- `DATABASE_URL` — PostgreSQL connection string. If pointed at a Supabase
+  transaction pooler (port 6543), it **must** include `?pgbouncer=true` —
+  without it Prisma's prepared statements fail intermittently.
 - `SESSION_SECRET` — 32-char hex
 - `APP_URL` — base URL (used for dynamic basePath in next.config.ts)
 - `RESEND_API_KEY` + `EMAIL_FROM` — transactional email
 - `ASAAS_API_KEY`, `ASAAS_WALLET_ID`, `ASAAS_ENV`, `ASAAS_WEBHOOK_TOKEN` — payments
 - `SENTRY_DSN` — error tracking (optional in dev)
 
-Bootstrap credentials after seed:
-- `admin@sis-restaurante.local` / `admin123`
-- `engenharia@sis-restaurante.local` / `engenharia123`
-- `consulta@sis-restaurante.local` / `consulta123`
+Bootstrap credentials after seed (email / password): `admin@sis-restaurante.local` / `admin123`, `engenharia@sis-restaurante.local` / `engenharia123`, `consulta@sis-restaurante.local` / `consulta123`.
 
 ## Tech Stack
 

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -15,6 +15,7 @@ import Typography from "@mui/material/Typography";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { saveMasterDataAction, deleteMasterDataAction } from "@/modules/master-data/server/master-data-actions";
 import { UpdateRowForm } from "@/components/ui/UpdateRowForm";
+import { LinkedItemsButton } from "@/components/ui/LinkedItemsDialog";
 import { PageHeader } from "@/modules/platform/ui/page-header";
 
 type SearchParams = Promise<{
@@ -55,14 +56,7 @@ const KIND_MAPPING: Record<string, KindConfig> = {
   categorias: {
     title: "Categorias Operacionais",
     dbKind: "operational-category",
-    desc: "Categorias de agrupamento de insumos.",
-    codeMode: "text-readonly",
-    usageLabel: "itens"
-  },
-  grupos: {
-    title: "Grupos Operacionais",
-    dbKind: "operational-category",
-    desc: "Grupos operacionais de fichas técnicas.",
+    desc: "Categorias de agrupamento de insumos e fichas técnicas.",
     codeMode: "text-readonly",
     usageLabel: "itens"
   },
@@ -175,6 +169,13 @@ export default async function MasterDataScreen({
   searchParams?: SearchParams;
 }) {
   const p = await params;
+
+  // "grupos" foi consolidado em "categorias" (eram a mesma tabela exibida
+  // com dois nomes diferentes) — redireciona links/bookmarks antigos.
+  if (p.kind === "grupos") {
+    redirect("/cadastros/categorias");
+  }
+
   const config = KIND_MAPPING[p.kind];
   if (!config) {
     notFound();
@@ -187,7 +188,7 @@ export default async function MasterDataScreen({
   let data: any[] = [];
   if (p.kind === "fornecedores") data = await repository.listSuppliers();
   if (p.kind === "unidades") data = await repository.listUnits();
-  if (p.kind === "categorias" || p.kind === "grupos") data = await repository.listOperationalCategories();
+  if (p.kind === "categorias") data = await repository.listOperationalCategories();
   if (p.kind === "modalidades") data = await repository.listModalities();
   if (p.kind === "tipos-item") data = await repository.listItemTypes();
   if (p.kind === "tipos-etapa") data = await repository.listStageTypes();
@@ -378,19 +379,13 @@ export default async function MasterDataScreen({
                     </TextField>
                   ) : null}
 
-                  <Box sx={{ textAlign: "center" }}>
-                    {item.inUseCount > 0 ? (
-                      <Chip
-                        size="small"
-                        label={`${item.inUseCount} ${config.usageLabel}`}
-                        sx={{ bgcolor: "#E6F1FB", color: "#185FA5", fontWeight: 600, fontSize: 11 }}
-                      />
-                    ) : (
-                      <Typography variant="caption" color="text.disabled">
-                        sem uso
-                      </Typography>
-                    )}
-                  </Box>
+                  <LinkedItemsButton
+                    kind={config.dbKind}
+                    recordId={item.id}
+                    recordName={item.name}
+                    usageLabel={config.usageLabel}
+                    inUseCount={item.inUseCount}
+                  />
 
                   <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
                     <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" }}>

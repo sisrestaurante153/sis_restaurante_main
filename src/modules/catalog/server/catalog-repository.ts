@@ -95,6 +95,7 @@ function paginate<T>(rows: T[], page: number, pageSize: number) {
 function toItemListRow(item: DemoItemRecord) {
   // Demo path parity (B-01 Q2): espelha mapPurchases/mapItemListRow Prisma — single row sempre e principal.
   const hasPurchase = !!item.purchaseCost && item.purchaseCost !== "0.0000";
+  const linkedFicha = getDemoStore().fichas.find((ficha) => ficha.itemId === item.id);
   const conversionFactor = Number(item.conversionFactor);
   const purchaseQuantity = Number(item.purchaseQuantity);
   const purchaseCost = Number(item.purchaseCost);
@@ -123,6 +124,7 @@ function toItemListRow(item: DemoItemRecord) {
     description: item.description,
     totalCost: item.costs.total,
     fichaStatus: item.fichaStatus,
+    fichaId: linkedFicha?.id ?? null,
     active: item.active,
     updatedAt: item.lastCalculationAt
   };

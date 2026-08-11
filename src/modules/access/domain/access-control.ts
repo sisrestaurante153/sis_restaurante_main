@@ -100,6 +100,7 @@ const protectedRoutePolicies: RoutePolicy[] = [
   { pattern: /^\/vendas\/nova$/, permission: "sales.write" },
   { pattern: /^\/vendas$/, permission: "sales.read" },
   { pattern: /^\/retorno-financeiro$/, permission: "sales.read" },
+  { pattern: /^\/historico$/, permission: "ficha.read" },
   { pattern: /^\/auditoria$/, permission: "platform.manage" },
   { pattern: /^\/billing$/, permission: "platform.manage" },
   { pattern: /^\/billing\/.*$/, permission: "platform.manage" },

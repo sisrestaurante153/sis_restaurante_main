@@ -302,11 +302,28 @@ async function listUnitsWithPrisma() {
       orderBy: { ds_codigo: "asc" }
     });
 
-    const usageCounts = await prisma.itemCompra.groupBy({
-      by: ["cd_unidade_compra"],
-      _count: { cd_unidade_compra: true }
-    });
-    const usageByUnit = new Map(usageCounts.map((row) => [row.cd_unidade_compra, row._count.cd_unidade_compra]));
+    // Precisa somar as MESMAS 4 fontes que deleteUnit() verifica (item.cd_unidade_uso_padrao,
+    // item.cd_unidade_estoque, item_compra.cd_unidade_compra, ficha_componente.cd_unidade_uso) —
+    // senao o badge "sem uso" mente e o botao de excluir bloqueia mesmo assim (bug reportado).
+    const [usoPadraoCounts, estoqueCounts, compraCounts, componenteCounts] = await Promise.all([
+      prisma.item.groupBy({ by: ["cd_unidade_uso_padrao"], _count: { cd_unidade_uso_padrao: true } }),
+      prisma.item.groupBy({ by: ["cd_unidade_estoque"], _count: { cd_unidade_estoque: true } }),
+      prisma.itemCompra.groupBy({ by: ["cd_unidade_compra"], _count: { cd_unidade_compra: true } }),
+      prisma.fichaComponente.groupBy({ by: ["cd_unidade_uso"], _count: { cd_unidade_uso: true } })
+    ]);
+    const usageByUnit = new Map<string, number>();
+    const addCounts = (
+      entries: Array<{ key: string | null; count: number }>
+    ) => {
+      for (const { key, count } of entries) {
+        if (!key) continue;
+        usageByUnit.set(key, (usageByUnit.get(key) ?? 0) + count);
+      }
+    };
+    addCounts(usoPadraoCounts.map((row) => ({ key: row.cd_unidade_uso_padrao, count: row._count.cd_unidade_uso_padrao })));
+    addCounts(estoqueCounts.map((row) => ({ key: row.cd_unidade_estoque, count: row._count.cd_unidade_estoque })));
+    addCounts(compraCounts.map((row) => ({ key: row.cd_unidade_compra, count: row._count.cd_unidade_compra })));
+    addCounts(componenteCounts.map((row) => ({ key: row.cd_unidade_uso, count: row._count.cd_unidade_uso })));
 
     return rows
       .filter((row) => !isInternalUnitCode(row.ds_codigo))

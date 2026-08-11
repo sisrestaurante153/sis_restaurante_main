@@ -13,6 +13,7 @@ import SoupKitchenRoundedIcon from "@mui/icons-material/SoupKitchenRounded";
 import RestaurantMenuRoundedIcon from "@mui/icons-material/RestaurantMenuRounded";
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 
 export interface NavigationItem {
   href: string;
@@ -80,7 +81,8 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
       items: [
         { href: "/cardapios", label: "Cardápios", icon: RestaurantMenuRoundedIcon },
         { href: "/vendas", label: "Vendas", icon: PointOfSaleRoundedIcon },
-        { href: "/retorno-financeiro", label: "Retorno Financeiro", icon: TrendingUpRoundedIcon }
+        { href: "/retorno-financeiro", label: "Retorno Financeiro", icon: TrendingUpRoundedIcon },
+        { href: "/historico", label: "Histórico", icon: HistoryRoundedIcon }
       ]
     }
   ];

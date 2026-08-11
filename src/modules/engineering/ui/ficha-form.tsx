@@ -670,7 +670,7 @@ export function FichaForm({
             </TextField>
             <Box sx={{ mt: -1.5, pl: 0.5 }}>
               <Link
-                href="/cadastros/grupos"
+                href="/cadastros/categorias"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize: 11, color: "#185FA5", textDecoration: "underline", fontWeight: 500 }}

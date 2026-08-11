@@ -43,9 +43,9 @@ const MENUS: MenuDef[] = [
     accentSoft: "#FDF1E0"
   },
   {
-    title: "Grupos Operacionais",
+    title: "Categorias Operacionais",
     description: "Agrupamento de insumos e fichas técnicas.",
-    href: "/cadastros/grupos",
+    href: "/cadastros/categorias",
     icon: CategoryRoundedIcon,
     accent: "#1B6B2C",
     accentSoft: "#EAF3DE"
@@ -96,7 +96,7 @@ export default async function CadastrosHubPage() {
       total: units.length,
       inactive: units.filter((row) => !row.active).length
     },
-    "/cadastros/grupos": {
+    "/cadastros/categorias": {
       total: categories.length,
       inactive: categories.filter((row) => !row.active).length
     },

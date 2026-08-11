@@ -36,7 +36,7 @@ import { MONTAGEM_CODE } from "@/modules/engineering/ui/ficha-flat-rows";
 // Quick 20260424 fase2 #5: nova coluna FC/IC (90px) entre Peso e Custo unit. —
 // campo dedicado read-only com chip verde estilo Coccao Final, label dinamico
 // (FC para limpeza, IC para coccao). 10 cols ao todo.
-export const GRID_TEMPLATE = "22px 72px 1fr 110px 80px 240px 90px 90px 96px 28px";
+export const GRID_TEMPLATE = "22px 92px 1fr 110px 80px 240px 90px 90px 96px 28px";
 
 const DEFAULT_UNITS = ["kg", "g", "l", "ml", "un"];
 
@@ -133,7 +133,7 @@ function CodeInput({
           commit();
         }
       }}
-      slotProps={{ htmlInput: { style: { fontSize: 11 } } }}
+      slotProps={{ htmlInput: { style: { fontSize: 14 } } }}
     />
   );
 }
@@ -397,6 +397,51 @@ export function FichaFlatGrid({
   const [notFoundQuery, setNotFoundQuery] = useState<string | null>(null);
   const [refreshedAfterCreate, setRefreshedAfterCreate] = useState(false);
 
+  // Item pendente (Índice de Cocção): campo "Peso" pode alternar para modo
+  // "% perda" — cliente digita só o número da perda (ex: 43), sem sinal, e o
+  // sistema calcula o peso final sozinho (qtde_usada * (1 - perda/100)).
+  // Esses dois mapas sao indexados por posicao da linha; como nao ha id estavel
+  // por linha, precisam ser remapeados manualmente em toda reordenacao/remocao
+  // (ver remapIndexedState abaixo) para nao vazar estado de uma linha pra outra.
+  const [pesoModeByIndex, setPesoModeByIndex] = useState<Record<number, "peso" | "perda">>({});
+  const [percentDraftByIndex, setPercentDraftByIndex] = useState<Record<number, string>>({});
+
+  function remapIndexedState<T>(map: Record<number, T>, remap: (index: number) => number | null): Record<number, T> {
+    const next: Record<number, T> = {};
+    for (const [key, value] of Object.entries(map)) {
+      const newIndex = remap(Number(key));
+      if (newIndex !== null) {
+        next[newIndex] = value;
+      }
+    }
+    return next;
+  }
+
+  function remapIndexOnMove(index: number, from: number, to: number): number | null {
+    if (index === from) return to;
+    if (from < to) {
+      return index > from && index <= to ? index - 1 : index;
+    }
+    return index >= to && index < from ? index + 1 : index;
+  }
+
+  function remapIndexOnRemove(index: number, removedIndex: number): number | null {
+    if (index === removedIndex) return null;
+    return index > removedIndex ? index - 1 : index;
+  }
+
+  function handleReorderRows(from: number, to: number) {
+    setPesoModeByIndex((prev) => remapIndexedState(prev, (index) => remapIndexOnMove(index, from, to)));
+    setPercentDraftByIndex((prev) => remapIndexedState(prev, (index) => remapIndexOnMove(index, from, to)));
+    onReorderRows?.(from, to);
+  }
+
+  function handleRemoveRow(index: number) {
+    setPesoModeByIndex((prev) => remapIndexedState(prev, (i) => remapIndexOnRemove(i, index)));
+    setPercentDraftByIndex((prev) => remapIndexedState(prev, (i) => remapIndexOnRemove(i, index)));
+    onRemoveRow(index);
+  }
+
   const regularStageTypes = stageTypeOptions.filter((option) => option.code !== MONTAGEM_CODE);
   const regularRowIndices = rows
     .map((row, index) => ({ row, index }))
@@ -505,7 +550,7 @@ export function FichaFlatGrid({
                 setDraggingIndex(null);
                 setHoverIndex(null);
                 if (Number.isFinite(from) && from !== index) {
-                  onReorderRows(from, index);
+                  handleReorderRows(from, index);
                 }
               }}
               onDragEnd={() => {
@@ -667,32 +712,107 @@ export function FichaFlatGrid({
                     />
                   </Stack>
                   <Stack spacing={0.25}>
-                    {/* Ajuste 3: DecimalTextField para peso de saída */}
-                    <DecimalTextField
-                      fullWidth
-                      size="small"
-                      label={pesoLabel}
-                      placeholder="Qtde Final"
-                      value={row.outputWeight ?? ""}
-                      onChange={(value) => onUpdateRow(index, { outputWeight: value })}
-                      onBlur={(event) => {
-                        const raw = event.target.value.replace(",", ".");
-                        const num = parseFloat(raw);
-                        if (!raw.trim() || isNaN(num) || num === 0) {
-                          onUpdateRow(index, {
-                            stageTypeId: undefined,
-                            stageTypeCode: undefined,
-                            stageTypeLabel: undefined,
-                            outputWeight: ""
-                          });
-                        }
-                      }}
-                    />
-                    {/* Quick 20260424 fase2 #5 rev3: hint embaixo do Peso volta pra
-                        spacer invisivel — o calculo agora vive na coluna FC/IC dedicada. */}
-                    <Typography variant="caption" sx={{ fontSize: 10, pl: 0.5, visibility: "hidden" }}>
-                      &nbsp;
-                    </Typography>
+                    {pesoModeByIndex[index] === "perda" ? (
+                      // Pendencia "Indice de Coccao": digita a % de perda direto (sem
+                      // sinal), sistema calcula outputWeight = qtde_usada * (1 - perda/100).
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="% Perda"
+                        placeholder="Ex: 43"
+                        value={percentDraftByIndex[index] ?? ""}
+                        inputMode="decimal"
+                        slotProps={{
+                          input: {
+                            endAdornment: (
+                              <Tooltip arrow title="Digitar peso final direto">
+                                <IconButton
+                                  size="small"
+                                  tabIndex={-1}
+                                  onClick={() => {
+                                    setPesoModeByIndex((prev) => ({ ...prev, [index]: "peso" }));
+                                  }}
+                                >
+                                  <Typography sx={{ fontSize: 11, fontWeight: 700 }}>#</Typography>
+                                </IconButton>
+                              </Tooltip>
+                            )
+                          },
+                          htmlInput: { style: { textAlign: "right" } }
+                        }}
+                        onChange={(event) => {
+                          const raw = event.target.value;
+                          setPercentDraftByIndex((prev) => ({ ...prev, [index]: raw }));
+                          const pct = parseFloat(raw.replace(",", "."));
+                          if (!raw.trim()) {
+                            onUpdateRow(index, { outputWeight: "" });
+                            return;
+                          }
+                          if (isNaN(pct) || qty <= 0) {
+                            // Sem qtde usada preenchida ainda nao da pra calcular o peso —
+                            // limpa outputWeight pra nao deixar um valor de uma qtde antiga.
+                            onUpdateRow(index, { outputWeight: "" });
+                            return;
+                          }
+                          const pctAbs = Math.min(Math.abs(pct), 100);
+                          const computed = qty * (1 - pctAbs / 100);
+                          onUpdateRow(index, { outputWeight: computed.toFixed(4) });
+                        }}
+                        onBlur={() => {
+                          const raw = percentDraftByIndex[index] ?? "";
+                          if (!raw.trim()) {
+                            onUpdateRow(index, {
+                              stageTypeId: undefined,
+                              stageTypeCode: undefined,
+                              stageTypeLabel: undefined,
+                              outputWeight: ""
+                            });
+                          }
+                        }}
+                      />
+                    ) : (
+                      // Ajuste 3: DecimalTextField para peso de saída
+                      <DecimalTextField
+                        fullWidth
+                        size="small"
+                        label={pesoLabel}
+                        placeholder="Qtde Final"
+                        value={row.outputWeight ?? ""}
+                        onChange={(value) => onUpdateRow(index, { outputWeight: value })}
+                        onBlur={(event) => {
+                          const raw = event.target.value.replace(",", ".");
+                          const num = parseFloat(raw);
+                          if (!raw.trim() || isNaN(num) || num === 0) {
+                            onUpdateRow(index, {
+                              stageTypeId: undefined,
+                              stageTypeCode: undefined,
+                              stageTypeLabel: undefined,
+                              outputWeight: ""
+                            });
+                          }
+                        }}
+                      />
+                    )}
+                    {pesoModeByIndex[index] === "perda" ? (
+                      <Typography variant="caption" sx={{ fontSize: 10, pl: 0.5, color: "#6B6656" }}>
+                        {qty > 0 ? `${pesoLabel}: ${fmtNum(out)}` : "Preencha a Qtde primeiro"}
+                      </Typography>
+                    ) : (
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: 10, pl: 0.5, color: "#185FA5", cursor: "pointer", textDecoration: "underline" }}
+                        onClick={() => {
+                          const pct = qty > 0 && out > 0 ? ((1 - out / qty) * 100) : 0;
+                          setPercentDraftByIndex((prev) => ({
+                            ...prev,
+                            [index]: pct > 0 ? String(Number(pct.toFixed(1))) : ""
+                          }));
+                          setPesoModeByIndex((prev) => ({ ...prev, [index]: "perda" }));
+                        }}
+                      >
+                        digitar % de perda
+                      </Typography>
+                    )}
                   </Stack>
                 </Box>
               ) : (
@@ -764,7 +884,7 @@ export function FichaFlatGrid({
                 {formatCurrency(subtotal)}
               </Box>
 
-              <IconButton type="button" aria-label={`Remover item ${index + 1}`} size="small" onClick={() => onRemoveRow(index)}>
+              <IconButton type="button" aria-label={`Remover item ${index + 1}`} size="small" onClick={() => handleRemoveRow(index)}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -863,7 +983,7 @@ export function FichaFlatGrid({
               type="button"
               aria-label="Remover Coccao Final"
               size="small"
-              onClick={() => onRemoveRow(coccaoFinalEntry.index)}
+              onClick={() => handleRemoveRow(coccaoFinalEntry.index)}
             >
               <DeleteOutlineIcon fontSize="small" />
             </IconButton>

@@ -7,6 +7,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Alert from "@mui/material/Alert";
+import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -142,9 +143,56 @@ function summarizeRowErrors(rowErrors: Record<string, string[] | undefined> | un
   return collected;
 }
 
+function SupplierField({
+  value,
+  onChange,
+  supplierOptions,
+  fullWidth,
+  size,
+  sx
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  supplierOptions: string[];
+  fullWidth?: boolean;
+  size?: "small" | "medium";
+  sx?: object;
+}) {
+  const isKnown = supplierOptions.some(
+    (option) => option.trim().toLowerCase() === value.trim().toLowerCase()
+  );
+  const isNew = value.trim().length > 0 && !isKnown;
+
+  return (
+    <Autocomplete
+      freeSolo
+      fullWidth={fullWidth}
+      size={size}
+      options={supplierOptions}
+      value={value}
+      inputValue={value}
+      onInputChange={(_event, newValue) => onChange(newValue)}
+      onChange={(_event, newValue) => onChange(newValue ?? "")}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Fornecedor"
+          name="purchaseSupplierName"
+          helperText={isNew ? "Fornecedor novo — sera cadastrado ao salvar" : undefined}
+          sx={sx}
+          slotProps={{
+            formHelperText: { sx: { color: "#185FA5", fontSize: 11 } }
+          }}
+        />
+      )}
+    />
+  );
+}
+
 export function PurchasesEditor({
   rows,
   onRowsChange,
+  supplierOptions = [],
   unitOptions = defaultPurchaseUnitOptions,
   purchaseUnit,
   errorMessage,
@@ -363,13 +411,12 @@ export function PurchasesEditor({
                       mb: 1.5
                     }}
                   >
-                    <TextField
+                    <SupplierField
                       fullWidth
                       size="small"
-                      label="Fornecedor"
-                      name="purchaseSupplierName"
+                      supplierOptions={supplierOptions}
                       value={row.supplierName}
-                      onChange={(event) => updateRow(index, { supplierName: event.target.value })}
+                      onChange={(value) => updateRow(index, { supplierName: value })}
                       sx={editableWhiteSx}
                     />
                     <input type="hidden" name="purchaseIsPrimary" value={String(row.purchaseIsPrimary)} />
@@ -593,12 +640,11 @@ export function PurchasesEditor({
                 }}
               >
                 <Stack spacing={2}>
-                  <TextField
+                  <SupplierField
                     fullWidth
-                    label="Fornecedor"
-                    name="purchaseSupplierName"
+                    supplierOptions={supplierOptions}
                     value={row.supplierName}
-                    onChange={(event) => updateRow(index, { supplierName: event.target.value })}
+                    onChange={(value) => updateRow(index, { supplierName: value })}
                   />
                   <input type="hidden" name="purchaseIsPrimary" value={String(row.purchaseIsPrimary)} />
 

@@ -52,6 +52,10 @@ interface FichasListingViewProps {
   modalidadeOptions?: { id: string; label: string }[];
   grupoOptions?: { id: string; label: string }[];
   didYouMean?: string | null;
+  // Permite reaproveitar esta tela em rotas filtradas (ex: /pre-preparo), mantendo
+  // busca/ordenacao/paginacao dentro da mesma rota em vez de navegar para /fichas.
+  basePath?: string;
+  newHref?: string;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -262,7 +266,7 @@ function InlineEditCell({ value, onSave, align = "left", style, children }: Inli
   );
 }
 
-export function DesktopNewFichaAction() {
+export function DesktopNewFichaAction({ href = "/fichas/nova", label = "Nova ficha" }: { href?: string; label?: string } = {}) {
   const theme = useTheme();
   const smUp = useMediaQuery(theme.breakpoints.up("sm"));
 
@@ -271,8 +275,8 @@ export function DesktopNewFichaAction() {
   }
 
   return (
-    <Button component={Link} href="/fichas/nova" variant="contained" startIcon={<AddIcon />}>
-      Nova ficha
+    <Button component={Link} href={href as never} variant="contained" startIcon={<AddIcon />}>
+      {label}
     </Button>
   );
 }
@@ -290,7 +294,9 @@ export function FichasListingView({
   sortDir,
   modalidadeOptions,
   grupoOptions,
-  didYouMean
+  didYouMean,
+  basePath = "/fichas",
+  newHref = "/fichas/nova"
 }: FichasListingViewProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -373,21 +379,21 @@ export function FichasListingView({
     if (sortBy) params.set("sortBy", sortBy);
     if (sortDir) params.set("sortDir", sortDir);
 
-    sessionStorage.setItem("fichas_listing_filters", params.toString());
-  }, [queryValue, statusValue, modalidadeValue, grupoValue, page, pageSize, sortBy, sortDir]);
+    sessionStorage.setItem(`fichas_listing_filters:${basePath}`, params.toString());
+  }, [queryValue, statusValue, modalidadeValue, grupoValue, page, pageSize, sortBy, sortDir, basePath]);
 
   // Restore search parameters from sessionStorage if URL has no search params
   useEffect(() => {
     if (typeof window !== "undefined") {
       const currentSearch = window.location.search;
       if (!currentSearch) {
-        const saved = sessionStorage.getItem("fichas_listing_filters");
+        const saved = sessionStorage.getItem(`fichas_listing_filters:${basePath}`);
         if (saved) {
-          router.replace(`/fichas?${saved}` as never);
+          router.replace(`${basePath}?${saved}` as never);
         }
       }
     }
-  }, [router]);
+  }, [router, basePath]);
 
   // items já vêm filtrados do servidor; useMemo mantido apenas como identidade
   const visibleItems = useMemo(() => items, [items]);
@@ -437,7 +443,7 @@ export function FichasListingView({
       params.set("sortDir", nextSortDir);
     }
     const search = params.toString();
-    return search ? `/fichas?${search}` : "/fichas";
+    return search ? `${basePath}?${search}` : basePath;
   }
 
   function handleSortClick(col: FichaSortBy) {
@@ -716,7 +722,7 @@ export function FichasListingView({
         <Fab
           color="primary"
           component={Link}
-          href="/fichas/nova"
+          href={newHref as never}
           aria-label="Nova ficha"
           sx={{ position: "fixed", right: 16, bottom: 24, zIndex: (theme) => theme.zIndex.appBar }}
         >

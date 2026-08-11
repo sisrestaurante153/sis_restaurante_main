@@ -53,6 +53,11 @@ function resolveFichaStatus(item: CatalogItemRecord) {
   return active?.tp_status ?? item.fichasResultantes[0]?.tp_status ?? null;
 }
 
+function resolvePreferredFichaId(item: CatalogItemRecord) {
+  const active = item.fichasResultantes.find((ficha) => ficha.tp_status === "ativa");
+  return active?.cd_ficha_tecnica ?? item.fichasResultantes[0]?.cd_ficha_tecnica ?? null;
+}
+
 function resolvePreferredPurchase(item: CatalogItemRecord) {
   return (
     item.compras.find((purchase) => purchase.sn_principal) ??
@@ -164,6 +169,7 @@ export function mapItemListRow(item: CatalogItemRecord) {
     description: item.ds_descricao ?? "",
     totalCost: costs.total,
     fichaStatus: resolveFichaStatus(item),
+    fichaId: resolvePreferredFichaId(item),
     active: item.sn_ativo,
     updatedAt: item.custosSnapshot[0]?.ts_calculo.toISOString() ?? item.ts_atualizacao.toISOString()
   };
