@@ -191,15 +191,18 @@ async function listItemTypesWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
-    const rows = await prisma.tipoItemCadastro.findMany({
-      orderBy: { nm_tipo_item: "asc" }
-    });
+    const [rows, usageCounts] = await Promise.all([
+      prisma.tipoItemCadastro.findMany({ orderBy: { nm_tipo_item: "asc" } }),
+      prisma.item.groupBy({ by: ["tp_item"], _count: { tp_item: true } })
+    ]);
+    const usageByCode = new Map(usageCounts.map((row) => [row.tp_item, row._count.tp_item]));
 
     return rows.map((row) => ({
       id: row.cd_tipo_item,
       code: row.tp_codigo,
       name: row.nm_tipo_item,
-      active: row.sn_ativo
+      active: row.sn_ativo,
+      inUseCount: usageByCode.get(row.tp_codigo) ?? 0
     }));
   } catch {
     return null;
@@ -217,15 +220,18 @@ async function listOperationalCategoriesWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
-    const rows = await prisma.categoriaOperacional.findMany({
-      orderBy: { nm_categoria: "asc" }
-    });
+    const [rows, usageCounts] = await Promise.all([
+      prisma.categoriaOperacional.findMany({ orderBy: { nm_categoria: "asc" } }),
+      prisma.item.groupBy({ by: ["nm_categoria_operacional"], _count: { nm_categoria_operacional: true } })
+    ]);
+    const usageByName = new Map(usageCounts.map((row) => [row.nm_categoria_operacional, row._count.nm_categoria_operacional]));
 
     return rows.map((row) => ({
       id: row.cd_categoria,
       code: row.ds_codigo,
       name: row.nm_categoria,
-      active: row.sn_ativo
+      active: row.sn_ativo,
+      inUseCount: usageByName.get(row.nm_categoria) ?? 0
     }));
   } catch {
     return null;
@@ -243,14 +249,17 @@ async function listSuppliersWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
-    const rows = await prisma.fornecedor.findMany({
-      orderBy: { nm_fornecedor: "asc" }
-    });
+    const [rows, usageCounts] = await Promise.all([
+      prisma.fornecedor.findMany({ orderBy: { nm_fornecedor: "asc" } }),
+      prisma.itemCompra.groupBy({ by: ["cd_fornecedor"], _count: { cd_fornecedor: true } })
+    ]);
+    const usageById = new Map(usageCounts.map((row) => [row.cd_fornecedor, row._count.cd_fornecedor]));
 
     return rows.map((row) => ({
       id: row.cd_fornecedor,
       name: row.nm_fornecedor,
-      active: row.sn_ativo
+      active: row.sn_ativo,
+      inUseCount: usageById.get(row.cd_fornecedor) ?? 0
     }));
   } catch {
     return null;
@@ -325,15 +334,18 @@ async function listModalitiesWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
-    const rows = await prisma.modalidade.findMany({
-      orderBy: { nm_modalidade: "asc" }
-    });
+    const [rows, usageCounts] = await Promise.all([
+      prisma.modalidade.findMany({ orderBy: { nm_modalidade: "asc" } }),
+      prisma.fichaTecnica.groupBy({ by: ["cd_modalidade"], _count: { cd_modalidade: true } })
+    ]);
+    const usageById = new Map(usageCounts.map((row) => [row.cd_modalidade, row._count.cd_modalidade]));
 
     return rows.map((row) => ({
       id: row.cd_modalidade,
       code: row.ds_codigo,
       name: row.nm_modalidade,
-      active: row.sn_ativo
+      active: row.sn_ativo,
+      inUseCount: usageById.get(row.cd_modalidade) ?? 0
     }));
   } catch {
     return null;
@@ -351,15 +363,18 @@ async function listStageTypesWithPrisma() {
       await ensureMasterDataRegistry(tx);
     });
 
-    const rows = await prisma.tipoEtapa.findMany({
-      orderBy: { nm_tipo_etapa: "asc" }
-    });
+    const [rows, usageCounts] = await Promise.all([
+      prisma.tipoEtapa.findMany({ orderBy: { nm_tipo_etapa: "asc" } }),
+      prisma.fichaEtapa.groupBy({ by: ["cd_tipo_etapa"], _count: { cd_tipo_etapa: true } })
+    ]);
+    const usageById = new Map(usageCounts.map((row) => [row.cd_tipo_etapa, row._count.cd_tipo_etapa]));
 
     return rows.map((row) => ({
       id: row.cd_tipo_etapa,
       code: row.ds_codigo as DemoStageTypeRegistryEntry["code"],
       name: row.nm_tipo_etapa,
-      active: row.sn_ativo
+      active: row.sn_ativo,
+      inUseCount: usageById.get(row.cd_tipo_etapa) ?? 0
     }));
   } catch {
     return null;
@@ -367,33 +382,39 @@ async function listStageTypesWithPrisma() {
 }
 
 function listItemTypesFromDemo() {
+  const store = getDemoStore();
   return sortByName(
-    getDemoStore().itemTypes.map((row) => ({
+    store.itemTypes.map((row) => ({
       id: row.id,
       code: row.code,
       name: row.name,
-      active: row.active
+      active: row.active,
+      inUseCount: store.items.filter((item) => item.type === row.code).length
     }))
   );
 }
 
 function listOperationalCategoriesFromDemo() {
+  const store = getDemoStore();
   return sortByName(
-    getDemoStore().operationalCategories.map((row) => ({
+    store.operationalCategories.map((row) => ({
       id: row.id,
       code: row.code,
       name: row.name,
-      active: row.active
+      active: row.active,
+      inUseCount: store.items.filter((item) => item.operationalCategory === row.name).length
     }))
   );
 }
 
 function listSuppliersFromDemo() {
+  const store = getDemoStore();
   return sortByName(
-    getDemoStore().suppliers.map((row) => ({
+    store.suppliers.map((row) => ({
       id: row.id,
       name: row.name,
-      active: row.active
+      active: row.active,
+      inUseCount: store.items.filter((item) => item.supplier === row.name).length
     }))
   );
 }
@@ -418,7 +439,8 @@ function listModalitiesFromDemo() {
       id: row.id,
       code: row.code,
       name: row.label,
-      active: row.active
+      active: row.active,
+      inUseCount: 0
     }))
   );
 }
@@ -429,7 +451,8 @@ function listStageTypesFromDemo() {
       id: row.id,
       code: row.code,
       name: row.name,
-      active: row.active
+      active: row.active,
+      inUseCount: 0
     }))
   );
 }

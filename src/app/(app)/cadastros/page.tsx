@@ -5,99 +5,184 @@ import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import FastfoodRoundedIcon from "@mui/icons-material/FastfoodRounded";
 import LabelRoundedIcon from "@mui/icons-material/LabelRounded";
 import LinearScaleRoundedIcon from "@mui/icons-material/LinearScaleRounded";
+import type { SvgIconComponent } from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { PageHeader } from "@/modules/platform/ui/page-header";
+import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 
-export default function CadastrosHubPage() {
-  const menus = [
-    {
-      title: "Fornecedores",
-      description: "Gerencie os parceiros e empresas fornecedoras.",
-      href: "/cadastros/fornecedores",
-      icon: <BusinessRoundedIcon fontSize="large" />,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-      border: "hover:border-blue-600"
+interface MenuDef {
+  title: string;
+  description: string;
+  href: string;
+  icon: SvgIconComponent;
+  accent: string;
+  accentSoft: string;
+}
+
+const MENUS: MenuDef[] = [
+  {
+    title: "Fornecedores",
+    description: "Parceiros e empresas usados nas referências de compra.",
+    href: "/cadastros/fornecedores",
+    icon: BusinessRoundedIcon,
+    accent: "#185FA5",
+    accentSoft: "#E6F1FB"
+  },
+  {
+    title: "Unidades",
+    description: "Unidades de compra, estoque e uso (kg, L, un...).",
+    href: "/cadastros/unidades",
+    icon: ScaleRoundedIcon,
+    accent: "#A8631A",
+    accentSoft: "#FDF1E0"
+  },
+  {
+    title: "Grupos Operacionais",
+    description: "Agrupamento de insumos e fichas técnicas.",
+    href: "/cadastros/grupos",
+    icon: CategoryRoundedIcon,
+    accent: "#1B6B2C",
+    accentSoft: "#EAF3DE"
+  },
+  {
+    title: "Modalidades",
+    description: "Modalidades selecionadas na ficha técnica.",
+    href: "/cadastros/modalidades",
+    icon: FastfoodRoundedIcon,
+    accent: "#8B3FA8",
+    accentSoft: "#F3E8F7"
+  },
+  {
+    title: "Tipos de Item",
+    description: "Nomenclatura dos tipos canônicos (insumo, preparo...).",
+    href: "/cadastros/tipos-item",
+    icon: LabelRoundedIcon,
+    accent: "#2C2C2A",
+    accentSoft: "#F0EFEA"
+  },
+  {
+    title: "Tipos de Etapa",
+    description: "Etapas que governam FC, IC e fluxo de montagem.",
+    href: "/cadastros/tipos-etapa",
+    icon: LinearScaleRoundedIcon,
+    accent: "#A32D2D",
+    accentSoft: "#FBEAEA"
+  }
+];
+
+export default async function CadastrosHubPage() {
+  const repository = getMasterDataRepository();
+  const [suppliers, units, categories, modalities, itemTypes, stageTypes] = await Promise.all([
+    repository.listSuppliers(),
+    repository.listUnits(),
+    repository.listOperationalCategories(),
+    repository.listModalities(),
+    repository.listItemTypes(),
+    repository.listStageTypes()
+  ]);
+
+  const countsByHref: Record<string, { total: number; inactive: number }> = {
+    "/cadastros/fornecedores": {
+      total: suppliers.length,
+      inactive: suppliers.filter((row) => !row.active).length
     },
-    {
-      title: "Unidades",
-      description: "Unidades de compra, estoque e uso (ex: kg, L, un).",
-      href: "/cadastros/unidades",
-      icon: <ScaleRoundedIcon fontSize="large" />,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-      border: "hover:border-orange-500"
+    "/cadastros/unidades": {
+      total: units.length,
+      inactive: units.filter((row) => !row.active).length
     },
-    {
-      title: "Grupos Operacionais",
-      description: "Grupos usados no agrupamento de insumos e fichas.",
-      href: "/cadastros/grupos",
-      icon: <CategoryRoundedIcon fontSize="large" />,
-      color: "text-blue-700",
-      bg: "bg-blue-100",
-      border: "hover:border-blue-700"
+    "/cadastros/grupos": {
+      total: categories.length,
+      inactive: categories.filter((row) => !row.active).length
     },
-    {
-      title: "Modalidades",
-      description: "Modalidades selecionadas diretamente na ficha técnica.",
-      href: "/cadastros/modalidades",
-      icon: <FastfoodRoundedIcon fontSize="large" />,
-      color: "text-orange-700",
-      bg: "bg-orange-100",
-      border: "hover:border-orange-600"
+    "/cadastros/modalidades": {
+      total: modalities.length,
+      inactive: modalities.filter((row) => !row.active).length
     },
-    {
-      title: "Tipos de Item",
-      description: "Nomenclatura dos tipos canônicos (insumo, preparo...).",
-      href: "/cadastros/tipos-item",
-      icon: <LabelRoundedIcon fontSize="large" />,
-      color: "text-ink-600",
-      bg: "bg-ink-100",
-      border: "hover:border-ink-600"
+    "/cadastros/tipos-item": {
+      total: itemTypes.length,
+      inactive: itemTypes.filter((row) => !row.active).length
     },
-    {
-      title: "Tipos de Etapa",
-      description: "Etapas que governam FC, IC e fluxo de montagem.",
-      href: "/cadastros/tipos-etapa",
-      icon: <LinearScaleRoundedIcon fontSize="large" />,
-      color: "text-blue-900",
-      bg: "bg-blue-100",
-      border: "hover:border-blue-900"
+    "/cadastros/tipos-etapa": {
+      total: stageTypes.length,
+      inactive: stageTypes.filter((row) => !row.active).length
     }
-  ] as const;
+  };
 
   return (
-    <div className="flex flex-col gap-8 pb-8">
-      <div>
-        <span className="text-[10px] font-bold tracking-widest text-orange-600 uppercase mb-2 block">
-          CONFIGURAÇÕES BASE
-        </span>
-        <h1 className="text-3xl font-display font-bold text-blue-900 mb-2">
-          Cadastros Mestres
-        </h1>
-        <p className="text-ink-500 font-body text-sm max-w-2xl">
-          Selecione a categoria de dados mestres que deseja visualizar ou editar. Estas configurações afetam todo o comportamento de cálculos e agrupamentos do sistema.
-        </p>
-      </div>
+    <>
+      <PageHeader
+        breadcrumbs={[{ label: "Home", href: "/dashboard" }, { label: "Cadastros" }]}
+        title="Cadastros Mestres"
+        description="Dados base que afetam cálculos e agrupamentos em todo o sistema — fornecedores, unidades, categorias, modalidades e tipos canônicos."
+        size="compact"
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {menus.map((menu) => (
-          <Link 
-            key={menu.href} 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            href={menu.href as any}
-            className={`group flex flex-col bg-white p-6 rounded-2xl border border-ink-200 shadow-sm transition-all hover:shadow-md ${menu.border}`}
-          >
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-colors ${menu.bg} ${menu.color} group-hover:scale-110 duration-300`}>
-              {menu.icon}
-            </div>
-            <h3 className="font-display font-bold text-xl text-blue-900 mb-2 group-hover:text-orange-600 transition-colors">
-              {menu.title}
-            </h3>
-            <p className="text-ink-500 text-sm font-body">
-              {menu.description}
-            </p>
-          </Link>
-        ))}
-      </div>
-    </div>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" },
+          gap: 2
+        }}
+      >
+        {MENUS.map((menu) => {
+          const counts = countsByHref[menu.href];
+          const Icon = menu.icon;
+          return (
+            <Card key={menu.href} variant="outlined" sx={{ borderRadius: 3 }}>
+              <CardActionArea component={Link} href={menu.href as never} sx={{ height: "100%" }}>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 2.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: menu.accentSoft,
+                        color: menu.accent
+                      }}
+                    >
+                      <Icon fontSize="medium" />
+                    </Box>
+                    {counts ? (
+                      <Stack alignItems="flex-end" spacing={0.5}>
+                        <Typography sx={{ fontSize: 22, fontWeight: 700, color: "#2C2C2A", lineHeight: 1 }}>
+                          {counts.total}
+                        </Typography>
+                        {counts.inactive > 0 ? (
+                          <Chip
+                            size="small"
+                            label={`${counts.inactive} inativo${counts.inactive > 1 ? "s" : ""}`}
+                            sx={{
+                              height: 18,
+                              fontSize: 10,
+                              fontWeight: 600,
+                              bgcolor: "#FBEAEA",
+                              color: "#A32D2D"
+                            }}
+                          />
+                        ) : null}
+                      </Stack>
+                    ) : null}
+                  </Stack>
+                  <Typography sx={{ fontWeight: 700, fontSize: 16, color: "#185FA5", mb: 0.5 }}>
+                    {menu.title}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12.5, color: "#6B6656" }}>{menu.description}</Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          );
+        })}
+      </Box>
+    </>
   );
 }

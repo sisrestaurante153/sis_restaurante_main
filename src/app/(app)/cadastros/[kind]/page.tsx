@@ -1,12 +1,21 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { saveMasterDataAction, deleteMasterDataAction } from "@/modules/master-data/server/master-data-actions";
 import { UpdateRowForm } from "@/components/ui/UpdateRowForm";
+import { PageHeader } from "@/modules/platform/ui/page-header";
 
 type SearchParams = Promise<{
   saved?: string;
@@ -14,33 +23,166 @@ type SearchParams = Promise<{
   error?: string;
 }>;
 
-const KIND_MAPPING: Record<string, { title: string, dbKind: string, desc: string }> = {
-  "fornecedores": { title: "Fornecedores", dbKind: "supplier", desc: "Fornecedores usados nas referências de compra." },
-  "unidades": { title: "Unidades", dbKind: "unit", desc: "Unidades de compra, estoque e uso." },
-  "categorias": { title: "Categorias Operacionais", dbKind: "operational-category", desc: "Categorias de agrupamento de insumos." },
-  "grupos": { title: "Grupos Operacionais", dbKind: "operational-category", desc: "Grupos operacionais de fichas técnicas." },
-  "modalidades": { title: "Modalidades", dbKind: "modality", desc: "Modalidades de fichas técnicas." },
-  "tipos-item": { title: "Tipos de Item", dbKind: "item-type", desc: "Nomenclatura dos tipos canônicos." },
-  "tipos-etapa": { title: "Tipos de Etapa", dbKind: "stage-type", desc: "Tipos de etapas de preparação e cálculo." }
+type CodeMode = "none" | "text" | "text-readonly" | "select-item-type" | "select-stage-type";
+
+interface KindConfig {
+  title: string;
+  dbKind: string;
+  desc: string;
+  codeMode: CodeMode;
+  codePlaceholder?: string;
+  hasMeasureType?: boolean;
+  usageLabel: string;
+}
+
+const KIND_MAPPING: Record<string, KindConfig> = {
+  fornecedores: {
+    title: "Fornecedores",
+    dbKind: "supplier",
+    desc: "Fornecedores usados nas referências de compra dos itens.",
+    codeMode: "none",
+    usageLabel: "compras"
+  },
+  unidades: {
+    title: "Unidades",
+    dbKind: "unit",
+    desc: "Unidades de compra, estoque e uso (ex: kg, L, un).",
+    codeMode: "text",
+    codePlaceholder: "ex: un",
+    hasMeasureType: true,
+    usageLabel: "compras"
+  },
+  categorias: {
+    title: "Categorias Operacionais",
+    dbKind: "operational-category",
+    desc: "Categorias de agrupamento de insumos.",
+    codeMode: "text-readonly",
+    usageLabel: "itens"
+  },
+  grupos: {
+    title: "Grupos Operacionais",
+    dbKind: "operational-category",
+    desc: "Grupos operacionais de fichas técnicas.",
+    codeMode: "text-readonly",
+    usageLabel: "itens"
+  },
+  modalidades: {
+    title: "Modalidades",
+    dbKind: "modality",
+    desc: "Modalidades selecionadas diretamente na ficha técnica.",
+    codeMode: "text",
+    codePlaceholder: "ex: delivery",
+    usageLabel: "fichas"
+  },
+  "tipos-item": {
+    title: "Tipos de Item",
+    dbKind: "item-type",
+    desc: "Nomenclatura dos tipos canônicos (insumo, preparo...).",
+    codeMode: "select-item-type",
+    usageLabel: "itens"
+  },
+  "tipos-etapa": {
+    title: "Tipos de Etapa",
+    dbKind: "stage-type",
+    desc: "Tipos de etapas de preparação e cálculo (governam FC/IC).",
+    codeMode: "select-stage-type",
+    usageLabel: "etapas"
+  }
 };
 
-export default async function MasterDataScreen({ 
+const ITEM_TYPE_OPTIONS = [
+  "insumo", "pre_preparo", "intermediario", "produto_pronto",
+  "prato", "porcao", "marmita", "combo", "embalagem", "apoio"
+];
+
+const STAGE_TYPE_OPTIONS = [
+  { value: "limpeza_pre_preparo", label: "Limpeza / Pré-Preparo" },
+  { value: "coccao_preparo", label: "Cocção / Preparo" },
+  { value: "montagem", label: "Montagem" }
+];
+
+const inputSx = {
+  "& .MuiInputBase-root": { bgcolor: "#fff" }
+} as const;
+
+// Ultima coluna (56px) e dedicada so ao botao de excluir, que vive num <form>
+// separado do de salvar — precisa de uma coluna propria pro grid auto-placement
+// nao empurrar o botao pra uma nova linha.
+function GridColumns({ config }: { config: KindConfig }) {
+  const codeWidth = config.codeMode !== "none" ? "140px " : "";
+  const measureWidth = config.hasMeasureType ? "150px " : "";
+  return { columns: `${codeWidth}1fr ${measureWidth}110px 150px 90px 56px` };
+}
+
+function CodeField({
+  config,
+  defaultValue
+}: {
+  config: KindConfig;
+  defaultValue?: string;
+}) {
+  if (config.codeMode === "none") return null;
+
+  if (config.codeMode === "select-item-type") {
+    return (
+      <TextField select size="small" name="code" defaultValue={defaultValue ?? "insumo"} sx={inputSx} fullWidth>
+        {ITEM_TYPE_OPTIONS.map((o) => (
+          <MenuItem key={o} value={o}>
+            {o}
+          </MenuItem>
+        ))}
+      </TextField>
+    );
+  }
+
+  if (config.codeMode === "select-stage-type") {
+    return (
+      <TextField
+        select
+        size="small"
+        name="code"
+        defaultValue={defaultValue ?? "limpeza_pre_preparo"}
+        sx={inputSx}
+        fullWidth
+      >
+        {STAGE_TYPE_OPTIONS.map((o) => (
+          <MenuItem key={o.value} value={o.value}>
+            {o.label}
+          </MenuItem>
+        ))}
+      </TextField>
+    );
+  }
+
+  return (
+    <TextField
+      size="small"
+      name="code"
+      defaultValue={defaultValue}
+      placeholder={config.codePlaceholder}
+      slotProps={{ htmlInput: { readOnly: config.codeMode === "text-readonly" } }}
+      sx={config.codeMode === "text-readonly" ? { "& .MuiInputBase-root": { bgcolor: "#F0EFEA" } } : inputSx}
+      fullWidth
+    />
+  );
+}
+
+export default async function MasterDataScreen({
   params,
   searchParams
-}: { 
+}: {
   params: Promise<{ kind: string }>;
   searchParams?: SearchParams;
 }) {
   const p = await params;
-  const kindInfo = KIND_MAPPING[p.kind];
-  if (!kindInfo) {
+  const config = KIND_MAPPING[p.kind];
+  if (!config) {
     notFound();
   }
 
   const sParams = await searchParams;
   const repository = getMasterDataRepository();
 
-  // Fetch only what we need based on kind
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let data: any[] = [];
   if (p.kind === "fornecedores") data = await repository.listSuppliers();
@@ -50,178 +192,271 @@ export default async function MasterDataScreen({
   if (p.kind === "tipos-item") data = await repository.listItemTypes();
   if (p.kind === "tipos-etapa") data = await repository.listStageTypes();
 
+  const activeCount = data.filter((row) => row.active).length;
+  const { columns } = GridColumns({ config });
+  const redirectUri = `/cadastros/${p.kind}`;
+
   return (
-    <div className="flex flex-col gap-6 pb-8">
-      {/* Header */}
-      <div>
-        <Link 
-          href="/cadastros" 
-          className="inline-flex items-center gap-2 text-ink-500 hover:text-orange-600 transition-colors text-sm font-semibold mb-4"
+    <>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Cadastros", href: "/cadastros" },
+          { label: config.title }
+        ]}
+        title={config.title}
+        description={config.desc}
+        size="compact"
+      />
+
+      <Stack spacing={2.5}>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          <Chip size="small" label={`${data.length} no total`} sx={{ fontWeight: 600 }} />
+          <Chip
+            size="small"
+            label={`${activeCount} ativo${activeCount === 1 ? "" : "s"}`}
+            sx={{ bgcolor: "#EAF3DE", color: "#1B6B2C", fontWeight: 600 }}
+          />
+          {data.length - activeCount > 0 ? (
+            <Chip
+              size="small"
+              label={`${data.length - activeCount} inativo${data.length - activeCount === 1 ? "" : "s"}`}
+              sx={{ bgcolor: "#FBEAEA", color: "#A32D2D", fontWeight: 600 }}
+            />
+          ) : null}
+        </Stack>
+
+        {sParams?.saved ? (
+          <Alert severity="success" icon={<CheckCircleRoundedIcon fontSize="small" />}>
+            Registro salvo com sucesso.
+          </Alert>
+        ) : null}
+        {sParams?.deleted ? (
+          <Alert severity="success" icon={<CheckCircleRoundedIcon fontSize="small" />}>
+            Registro removido com sucesso.
+          </Alert>
+        ) : null}
+        {sParams?.error ? (
+          <Alert severity="error" icon={<ErrorRoundedIcon fontSize="small" />}>
+            {decodeURIComponent(sParams.error)}
+          </Alert>
+        ) : null}
+
+        <Box
+          sx={{
+            border: "0.5px solid #D3D1C7",
+            borderRadius: 2.5,
+            overflow: "hidden",
+            bgcolor: "#fff"
+          }}
         >
-          <ArrowBackRoundedIcon fontSize="small" />
-          Voltar para Cadastros
-        </Link>
-        <span className="text-[10px] font-bold tracking-widest text-orange-600 uppercase mb-2 block">
-          CADASTROS MESTRES
-        </span>
-        <h1 className="text-3xl font-display font-bold text-blue-900 mb-2">
-          {kindInfo.title}
-        </h1>
-        <p className="text-ink-500 font-body text-sm max-w-2xl">
-          {kindInfo.desc}
-        </p>
-      </div>
-
-      {/* Alerts */}
-      {sParams?.saved && (
-        <div className="bg-success-bg border border-success/30 text-success px-4 py-3 rounded-xl flex items-center gap-3">
-          <CheckCircleRoundedIcon fontSize="small" />
-          <span className="text-sm font-semibold">Registro salvo com sucesso!</span>
-        </div>
-      )}
-      {sParams?.deleted && (
-        <div className="bg-success-bg border border-success/30 text-success px-4 py-3 rounded-xl flex items-center gap-3">
-          <CheckCircleRoundedIcon fontSize="small" />
-          <span className="text-sm font-semibold">Registro removido com sucesso!</span>
-        </div>
-      )}
-      {sParams?.error && (
-        <div className="bg-error/10 border border-error/30 text-error px-4 py-3 rounded-xl flex items-center gap-3">
-          <ErrorRoundedIcon fontSize="small" />
-          <span className="text-sm font-semibold">{decodeURIComponent(sParams.error)}</span>
-        </div>
-      )}
-
-      {/* Creation Form */}
-      <div className="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
-        <h3 className="font-display font-semibold text-lg text-blue-900 mb-4">Novo Registro</h3>
-        <form action={saveMasterDataAction} className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-          <input type="hidden" name="kind" value={kindInfo.dbKind} />
-          <input type="hidden" name="active" value="true" />
-          <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
-          
-          {(p.kind === "unidades" || p.kind === "modalidades" || p.kind === "tipos-item" || p.kind === "tipos-etapa") && (
-            <div className="w-full md:w-1/4">
-              <label className="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1 block">Código</label>
-              {p.kind === "tipos-item" ? (
-                <select name="code" className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900">
-                  {["insumo", "pre_preparo", "intermediario", "produto_pronto", "prato", "porcao", "marmita", "combo", "embalagem", "apoio"].map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              ) : p.kind === "tipos-etapa" ? (
-                <select name="code" className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900">
-                  <option value="limpeza_pre_preparo">Limpeza / Pré-Preparo</option>
-                  <option value="coccao_preparo">Cocção / Preparo</option>
-                  <option value="montagem">Montagem</option>
-                </select>
-              ) : (
-                <input type="text" name="code" className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900" placeholder="ex: un" required />
-              )}
-            </div>
-          )}
-
-          <div className="w-full flex-1">
-            <label className="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1 block">Nome / Descrição</label>
-            <input type="text" name="name" className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900" placeholder="Digite o nome..." required />
-          </div>
-
-          {p.kind === "unidades" && (
-            <div className="w-full md:w-1/4">
-              <label className="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1 block">Tipo</label>
-              <select name="measureType" className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900">
-                <option value="massa">Massa</option>
-                <option value="volume">Volume</option>
-                <option value="contagem">Contagem</option>
-              </select>
-            </div>
-          )}
-
-          <div className="w-full md:w-auto mt-5 md:mt-0 pt-0.5">
-            <button type="submit" className="h-11 w-full md:w-auto px-6 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm">
-              Adicionar
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* List */}
-      <div className="flex flex-col gap-3">
-        {data.map((item) => (
-          <div
-            key={item.id}
-            className={`bg-white p-5 rounded-2xl border shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center group transition-colors ${
-              item.active ? "border-ink-200 hover:border-blue-300" : "border-error/30 bg-error/5"
-            }`}
+          {/* Cabeçalho */}
+          <Box
+            sx={{
+              display: { xs: "none", md: "grid" },
+              gridTemplateColumns: columns,
+              gap: 1.5,
+              px: 2.5,
+              py: 1.25,
+              bgcolor: "#F7F5EF",
+              borderBottom: "0.5px solid #D3D1C7"
+            }}
           >
-            {!item.active && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-error bg-error/10 border border-error/30 rounded-full px-2.5 py-1 whitespace-nowrap">
-                Inativo
-              </span>
-            )}
-            <UpdateRowForm
-              action={saveMasterDataAction}
-              itemName={item.name}
-              inUseCount={item.inUseCount}
-              className="flex-1 w-full flex flex-col md:flex-row gap-4 items-center"
-            >
-              <input type="hidden" name="kind" value={kindInfo.dbKind} />
-              <input type="hidden" name="id" value={item.id} />
-              <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
-              
-              {item.code !== undefined && (
-                <div className="w-full md:w-1/4">
-                  {p.kind === "tipos-item" ? (
-                    <select name="code" defaultValue={item.code} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900">
-                      {["insumo", "pre_preparo", "intermediario", "produto_pronto", "prato", "porcao", "marmita", "combo", "embalagem", "apoio"].map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  ) : p.kind === "tipos-etapa" ? (
-                    <select name="code" defaultValue={item.code} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900">
-                      <option value="limpeza_pre_preparo">Limpeza / Pré-Preparo</option>
-                      <option value="coccao_preparo">Cocção / Preparo</option>
-                      <option value="montagem">Montagem</option>
-                    </select>
-                  ) : (
-                    <input type="text" name="code" defaultValue={item.code} readOnly={p.kind === "categorias" || p.kind === "grupos"} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900 read-only:bg-ink-50 read-only:text-ink-500 read-only:focus:border-ink-200" />
-                  )}
-                </div>
-              )}
+            {config.codeMode !== "none" ? <ColHeader>Código</ColHeader> : null}
+            <ColHeader>Nome</ColHeader>
+            {config.hasMeasureType ? <ColHeader>Tipo</ColHeader> : null}
+            <ColHeader align="center">Uso</ColHeader>
+            <ColHeader align="center">Status</ColHeader>
+            <Box sx={{ gridColumn: "span 2" }}>
+              <ColHeader align="right">Ações</ColHeader>
+            </Box>
+          </Box>
 
-              <div className="w-full flex-1">
-                <input type="text" name="name" defaultValue={item.name} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900" />
-              </div>
+          {/* Linha de criação */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: columns },
+              gap: 1.5,
+              px: 2.5,
+              py: 2,
+              borderBottom: "0.5px solid #D3D1C7",
+              bgcolor: "#F4F8FC"
+            }}
+          >
+            <form action={saveMasterDataAction} style={{ display: "contents" }}>
+              <input type="hidden" name="kind" value={config.dbKind} />
+              <input type="hidden" name="active" value="true" />
+              <input type="hidden" name="redirectUri" value={redirectUri} />
 
-              {p.kind === "unidades" && (
-                <div className="w-full md:w-1/4">
-                  <select name="measureType" defaultValue={item.measureType} className="w-full h-11 px-4 rounded-xl border border-ink-200 bg-paper focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-sm font-medium text-ink-900">
-                    <option value="massa">Massa</option>
-                    <option value="volume">Volume</option>
-                    <option value="contagem">Contagem</option>
-                  </select>
-                </div>
-              )}
+              {config.codeMode !== "none" ? <CodeField config={config} /> : null}
 
-              <div className="flex items-center gap-3 min-w-[120px]">
-                <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-ink-600">
-                  <input type="checkbox" name="active" value="true" defaultChecked={item.active} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-600 cursor-pointer accent-blue-600" />
-                  Ativo
-                </label>
-              </div>
+              <TextField
+                size="small"
+                name="name"
+                placeholder="Nome do novo registro..."
+                required
+                sx={inputSx}
+                fullWidth
+              />
 
-              <button type="submit" className="h-10 px-5 border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold rounded-lg transition-colors text-sm whitespace-nowrap">
-                Atualizar
-              </button>
-            </UpdateRowForm>
+              {config.hasMeasureType ? (
+                <TextField select size="small" name="measureType" defaultValue="massa" sx={inputSx} fullWidth>
+                  <MenuItem value="massa">Massa</MenuItem>
+                  <MenuItem value="volume">Volume</MenuItem>
+                  <MenuItem value="contagem">Contagem</MenuItem>
+                </TextField>
+              ) : null}
 
-            <form action={deleteMasterDataAction} className="w-full lg:w-auto">
-              <input type="hidden" name="kind" value={kindInfo.dbKind} />
-              <input type="hidden" name="id" value={item.id} />
-              <input type="hidden" name="redirectUri" value={`/cadastros/${p.kind}`} />
-              <button type="submit" className="w-full h-10 px-4 text-ink-400 hover:text-error hover:bg-error/10 font-semibold rounded-lg transition-colors flex items-center justify-center">
-                <DeleteOutlineRoundedIcon fontSize="small" />
-              </button>
+              <Box />
+              <Box />
+
+              <Box sx={{ gridColumn: "span 2", display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="small"
+                  startIcon={<AddRoundedIcon />}
+                  sx={{ backgroundColor: "#185FA5", "&:hover": { backgroundColor: "#0C447C" } }}
+                >
+                  Adicionar
+                </Button>
+              </Box>
             </form>
-          </div>
-        ))}
-      </div>
-    </div>
+          </Box>
+
+          {/* Linhas de dados */}
+          {data.length === 0 ? (
+            <Box sx={{ py: 5, textAlign: "center" }}>
+              <Typography variant="body2" color="text.secondary">
+                Nenhum registro cadastrado ainda.
+              </Typography>
+            </Box>
+          ) : (
+            data.map((item) => (
+              <Box
+                key={item.id}
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: columns },
+                  gap: 1.5,
+                  px: 2.5,
+                  py: 1.5,
+                  alignItems: "center",
+                  borderBottom: "0.5px solid #EFEDE6",
+                  bgcolor: item.active ? "transparent" : "#FDF4F4",
+                  "&:last-of-type": { borderBottom: "none" },
+                  "&:hover": { bgcolor: item.active ? "#FAFAF8" : "#FCEDED" }
+                }}
+              >
+                <UpdateRowForm
+                  action={saveMasterDataAction}
+                  itemName={item.name}
+                  inUseCount={item.inUseCount}
+                  style={{ display: "contents" }}
+                >
+                  <input type="hidden" name="kind" value={config.dbKind} />
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="redirectUri" value={redirectUri} />
+
+                  {config.codeMode !== "none" ? <CodeField config={config} defaultValue={item.code} /> : null}
+
+                  <TextField size="small" name="name" defaultValue={item.name} sx={inputSx} fullWidth />
+
+                  {config.hasMeasureType ? (
+                    <TextField
+                      select
+                      size="small"
+                      name="measureType"
+                      defaultValue={item.measureType ?? "massa"}
+                      sx={inputSx}
+                      fullWidth
+                    >
+                      <MenuItem value="massa">Massa</MenuItem>
+                      <MenuItem value="volume">Volume</MenuItem>
+                      <MenuItem value="contagem">Contagem</MenuItem>
+                    </TextField>
+                  ) : null}
+
+                  <Box sx={{ textAlign: "center" }}>
+                    {item.inUseCount > 0 ? (
+                      <Chip
+                        size="small"
+                        label={`${item.inUseCount} ${config.usageLabel}`}
+                        sx={{ bgcolor: "#E6F1FB", color: "#185FA5", fontWeight: 600, fontSize: 11 }}
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.disabled">
+                        sem uso
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+                    <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        name="active"
+                        value="true"
+                        defaultChecked={item.active}
+                        style={{ width: 16, height: 16, accentColor: "#185FA5", cursor: "pointer" }}
+                      />
+                    </label>
+                    <Chip
+                      size="small"
+                      label={item.active ? "Ativo" : "Inativo"}
+                      sx={
+                        item.active
+                          ? { bgcolor: "#EAF3DE", color: "#1B6B2C", fontWeight: 600, fontSize: 11 }
+                          : { bgcolor: "#FBEAEA", color: "#A32D2D", fontWeight: 600, fontSize: 11 }
+                      }
+                    />
+                  </Stack>
+
+                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Button type="submit" size="small" variant="outlined" sx={{ minWidth: 0, px: 1.5, fontSize: 12, whiteSpace: "nowrap" }}>
+                      Salvar
+                    </Button>
+                  </Box>
+                </UpdateRowForm>
+
+                <form action={deleteMasterDataAction} style={{ display: "contents" }}>
+                  <input type="hidden" name="kind" value={config.dbKind} />
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="redirectUri" value={redirectUri} />
+                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <IconButton
+                      type="submit"
+                      size="small"
+                      aria-label={`Excluir ${item.name}`}
+                      sx={{ color: "#888780", "&:hover": { color: "#A32D2D", bgcolor: "#FBEAEA" } }}
+                    >
+                      <DeleteOutlineRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </form>
+              </Box>
+            ))
+          )}
+        </Box>
+      </Stack>
+    </>
+  );
+}
+
+function ColHeader({ children, align = "left" }: { children: React.ReactNode; align?: "left" | "center" | "right" }) {
+  return (
+    <Typography
+      sx={{
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: "#888780",
+        textAlign: align
+      }}
+    >
+      {children}
+    </Typography>
   );
 }
