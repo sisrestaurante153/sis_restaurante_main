@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -542,7 +542,12 @@ export function ItemsListingView({
   }
 
   function navigateImmediate(overrides: Parameters<typeof buildHref>[0]) {
-    router.push(buildHref({ ...overrides, page: 1 }) as never);
+    const href = buildHref({ ...overrides, page: 1 });
+    // startTransition evita que o router.push desmonte o input de busca (perda
+    // de foco/cursor no meio da digitacao) enquanto o Server Component recarrega.
+    startTransition(() => {
+      router.push(href as never);
+    });
   }
 
   useEffect(() => {
