@@ -638,13 +638,14 @@ export function FichasListingView({
           <table
             style={{
               width: "100%",
+              minWidth: 1220,
               borderCollapse: "collapse",
               tableLayout: "fixed"
             }}
           >
             <colgroup>
               <col style={{ width: 60 }} />
-              <col />
+              <col style={{ width: 220 }} />
               <col style={{ width: 100 }} />
               <col style={{ width: 100 }} />
               <col style={{ width: 110 }} />

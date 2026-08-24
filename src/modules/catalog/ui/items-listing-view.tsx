@@ -793,7 +793,7 @@ function ItemsTable({ items, sortField, sortOrder, onSort, categoryLabel }: Item
 
   if (items.length === 0) {
     return (
-      <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+      <table style={{ width: "100%", minWidth: 1260, borderCollapse: "collapse", tableLayout: "fixed" }}>
         <colgroup>
           {COLUMNS.map((col) => (
             <col key={col.field} style={{ width: `${col.width}px` }} />
@@ -844,7 +844,7 @@ function ItemsTable({ items, sortField, sortOrder, onSort, categoryLabel }: Item
     <table
       role="grid"
       data-testid="items-table"
-      style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}
+      style={{ width: "100%", minWidth: 1260, borderCollapse: "collapse", tableLayout: "fixed" }}
     >
       <colgroup>
         {COLUMNS.map((col) => (
