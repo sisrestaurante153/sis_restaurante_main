@@ -338,11 +338,16 @@ export function FichasListingView({
   }, [grupoOptions]);
 
   useEffect(() => {
-    setQueryValue(query);
     setStatusValue(status);
     setModalidadeValue(modalidade ? decodeURIComponent(modalidade) : "all");
     setGrupoValue(grupo ? decodeURIComponent(grupo) : "all");
-  }, [query, status, modalidade, grupo]);
+  }, [status, modalidade, grupo]);
+
+  // NAO ressincroniza queryValue a partir da prop `query`: cada keystroke
+  // agenda um router.push (debounce) e, se o servidor demorar, a resposta de
+  // uma navegacao antiga sobrescrevia o input com o valor antigo enquanto o
+  // usuario ja tinha digitado mais — "apagando" letras. Input local e a fonte
+  // da verdade a partir da montagem; a URL e so reflexo (deep-link/paginacao).
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

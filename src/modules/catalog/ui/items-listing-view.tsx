@@ -451,11 +451,19 @@ export function ItemsListingView({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setQueryValue(query);
     setTypeValue(type);
     setStatusValue(status);
     setCategoryValue(category);
-  }, [query, type, status, category]);
+  }, [type, status, category]);
+
+  // NAO ressincroniza queryValue a partir da prop `query` a cada navegacao.
+  // Causa raiz do bug "apaga letra enquanto digita": cada keystroke agenda um
+  // router.push (debounce), e como o Server Component demora pra responder
+  // (Supabase as vezes lento), a resposta de uma navegacao ANTIGA chegava
+  // depois que o usuario ja tinha digitado mais letras — e esse efeito
+  // sobrescrevia o input com o valor antigo, "apagando" o que foi digitado
+  // depois. O input local e a fonte da verdade a partir da montagem; a URL e
+  // so um reflexo (usada pra deep-link/paginacao), nao o inverso.
 
   // Save search parameters to sessionStorage
   useEffect(() => {
