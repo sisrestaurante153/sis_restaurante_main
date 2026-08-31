@@ -267,13 +267,25 @@ export function ConfigurableItemImport() {
         setHeaders(fileHeaders);
 
         const newMapping: Record<string, string> = {};
+        const newDefaultValues: Record<string, string> = {};
         TARGET_FIELDS.forEach((field) => {
+          // Campos com valor fixo (hoje so "Tipo") nao entram no auto-mapeamento
+          // por coluna: planilhas externas costumam ter uma coluna "Categoria"
+          // ou parecida que nao tem nada a ver com tipo de item (ex: classificacao
+          // ABC de compras), e mapear errado ali e mais perigoso que so aplicar
+          // um valor fixo pra todas as linhas. Ja vem pre-selecionado com a
+          // primeira opcao (Insumo) em vez de exigir o usuario escolher.
+          if (field.defaultOptions) {
+            newDefaultValues[field.systemField] = field.defaultOptions[0].value;
+            return;
+          }
           const aliases = (FIELD_ALIASES[field.systemField] ?? [field.label, field.systemField])
             .map((a) => a.toLowerCase());
           const matched = fileHeaders.find((h) => aliases.includes(h.toLowerCase()));
           if (matched) newMapping[field.systemField] = matched;
         });
         setMapping(newMapping);
+        setDefaultValues(newDefaultValues);
 
         // raw:false pega o texto formatado da celula em vez do numero "cru" do
         // SheetJS — sem isso, valores PT-BR tipo "24,46" viram o inteiro 2446

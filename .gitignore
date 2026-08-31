@@ -20,3 +20,6 @@ npm-debug.log*
 pnpm-debug.log*
 src/generated
 output
+
+# scripts de teste/depuracao temporarios (nunca comitar)
+scratch-*
