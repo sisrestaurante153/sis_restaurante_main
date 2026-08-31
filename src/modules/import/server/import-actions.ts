@@ -26,6 +26,20 @@ function parseBrNumber(value: unknown): string {
   return str;
 }
 
+// Normaliza nome pra comparacao de match na importacao: remove acentos, colapsa
+// espacos duplicados e ignora maiusculas/minusculas. Planilhas de fornecedor/
+// relatorio externo raramente batem char-a-char com o nome cadastrado aqui
+// (espacos extras, acentuacao diferente etc) — sem isso, o match falha e a
+// importacao acaba CRIANDO um item novo em vez de atualizar o preco do existente.
+function normalizeForMatch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 async function ensureCategoriaOperacional(nome: string) {
   if (!nome || nome.trim() === "") return;
   const env = getServerEnv();
@@ -170,7 +184,7 @@ export async function createOperationalItemImportAction(formData: FormData) {
           type: "all"
         });
         const existingItem = existingItems.items.find(
-          (item) => item.name.trim().toLowerCase() === row.itemName.trim().toLowerCase()
+          (item) => normalizeForMatch(item.name) === normalizeForMatch(row.itemName)
         );
 
         // Colunas de preco/quantidade podem vir em formato PT-BR (virgula
@@ -342,13 +356,15 @@ export async function createMappedItemImportAction(formData: FormData) {
     });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    // raw: true retorna o valor numérico real da célula (float) sem aplicar o
-    // formato da planilha — evita que formatos PT-BR (ex: "0,00") façam o XLSX
-    // dividir o valor por 1000 ou retornar string com símbolo de moeda.
+    // raw:false pega o texto formatado da celula em vez do numero "cru" do
+    // SheetJS. Com raw:true (usado antes), um valor PT-BR tipo "24,46" era lido
+    // como o inteiro 2446 (a virgula interpretada como separador de milhar),
+    // inflando o preco em 100x. parseBrNumber abaixo ja trata corretamente
+    // "24,46", "R$ 24,46" e "1.234,56" vindos do texto formatado.
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const rows = (XLSX.utils.sheet_to_json(worksheet, { raw: true, defval: "" }) as Record<string, unknown>[])
+    const rows = (XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" }) as Record<string, unknown>[])
       .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), v])));
 
     // Pre-carrega todos os itens existentes em 1 query para evitar N listItems por linha.
@@ -367,7 +383,7 @@ export async function createMappedItemImportAction(formData: FormData) {
         }
       });
       for (const it of allExisting) {
-        existingItemMap.set(it.nm_item.trim().toLowerCase(), {
+        existingItemMap.set(normalizeForMatch(it.nm_item), {
           id: it.cd_item,
           code: it.ds_codigo_interno ?? "",
           category: it.nm_categoria_operacional ?? "Importado"
@@ -399,11 +415,15 @@ export async function createMappedItemImportAction(formData: FormData) {
       if (!validTypes.includes(itemType)) itemType = "insumo";
 
       try {
-        const existingItem = existingItemMap.get(String(itemName).trim().toLowerCase());
+        const existingItem = existingItemMap.get(normalizeForMatch(String(itemName)));
 
         const rawCode = getValue("internalCode");
         const rawCodeStr = rawCode !== undefined && rawCode !== null ? String(rawCode).trim() : "";
-        const code = rawCodeStr !== "" && rawCodeStr !== "0" ? rawCodeStr : (existingItem?.code || "");
+        // Se o item ja existe (matched por nome), o codigo dele NUNCA e
+        // sobrescrito pelo valor da planilha — planilhas de fornecedor/relatorio
+        // externo usam numeracao de outro sistema, nao a nossa ds_codigo_interno.
+        // O codigo da planilha so e usado ao CRIAR um item novo (sem match).
+        const code = existingItem?.code || (rawCodeStr !== "" && rawCodeStr !== "0" ? rawCodeStr : "");
         const operationalCategory = String(getValue("operationalCategory") || existingItem?.category || "Importado");
 
         await ensureCategoriaOperacional(operationalCategory);
@@ -531,7 +551,9 @@ export async function saveImportedItemAction(input: {
     const rawType = input.type.toLowerCase().trim();
     const itemType = (VALID_ITEM_TYPES.includes(rawType as typeof VALID_ITEM_TYPES[number]) ? rawType : "insumo") as typeof VALID_ITEM_TYPES[number];
     const rawCodeStr = input.internalCode.trim();
-    const code = rawCodeStr !== "" && rawCodeStr !== "0" ? rawCodeStr : (input.existingItemCode ?? "");
+    // Mesma regra do import em lote: codigo de item ja existente nunca e
+    // sobrescrito pela planilha, so usado ao criar um item novo (sem match).
+    const code = input.existingItemCode || (rawCodeStr !== "" && rawCodeStr !== "0" ? rawCodeStr : "");
     const operationalCategory = input.operationalCategory || input.existingItemCategory || "Importado";
 
     await ensureCategoriaOperacional(operationalCategory);

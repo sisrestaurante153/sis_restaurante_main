@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { Upload, ArrowRight, CheckCircle2, AlertCircle, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { Upload, ArrowRight, CheckCircle2, AlertCircle, Loader2, XCircle, AlertTriangle, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,6 +35,20 @@ const ITEM_TYPE_OPTIONS = [
   { value: "combo", label: "Combo" },
   { value: "apoio", label: "Apoio" },
 ];
+
+// Mesma normalizacao usada no servidor (import-actions.ts) pra decidir se uma
+// linha da planilha bate com um item ja existente: remove acentos, colapsa
+// espacos duplicados e ignora maiusculas/minusculas. Sem isso, nomes vindos de
+// planilha de fornecedor raramente batem char-a-char e o import cria item
+// duplicado em vez de atualizar o preco do existente.
+function normalizeForMatch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+}
 
 const FIELD_ALIASES: Record<string, string[]> = {
   internalCode: ["Código Interno", "Codigo Interno", "Código", "Codigo", "Cod.", "Cod", "internalCode"],
@@ -87,6 +101,12 @@ export function ConfigurableItemImport() {
   const [progress, setProgress] = useState<ImportProgress | null>(null);
   const [aborted, setAborted] = useState(false);
 
+  // Itens NOVOS (sem match no cadastro) cuja planilha nao trouxe codigo —
+  // precisa perguntar pro usuario se o sistema gera o codigo automaticamente
+  // ou se ele prefere preencher a coluna de codigo na planilha e reimportar.
+  const [missingCodeCount, setMissingCodeCount] = useState<number | null>(null);
+  const [codeChoice, setCodeChoice] = useState<"auto" | "manual" | null>(null);
+
   const getValue = useCallback(
     (row: Record<string, unknown>, field: string): unknown => {
       const columnName = mapping[field];
@@ -96,18 +116,40 @@ export function ConfigurableItemImport() {
     [mapping, defaultValues]
   );
 
+  const validRows = allRows.filter((row) => Boolean(getValue(row, "itemName")));
+
+  useEffect(() => {
+    if (step !== 3) return;
+    let cancelled = false;
+    setMissingCodeCount(null);
+    setCodeChoice(null);
+
+    (async () => {
+      const existingItems = await preloadImportItemsAction();
+      const existingItemMap = new Map(existingItems.map((item) => [normalizeForMatch(item.name), item]));
+
+      let count = 0;
+      for (const row of validRows) {
+        const itemName = String(getValue(row, "itemName")).trim();
+        const isExisting = existingItemMap.has(normalizeForMatch(itemName));
+        const hasCode = String(getValue(row, "internalCode") || "").trim() !== "";
+        if (!isExisting && !hasCode) count += 1;
+      }
+
+      if (!cancelled) {
+        setMissingCodeCount(count);
+        setCodeChoice(count === 0 ? "auto" : null);
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const handleImport = async () => {
     if (!file || isProcessing) return;
     setIsProcessing(true);
     setAborted(false);
-
-    // Filtra linhas válidas. Tipo nao e mais obrigatorio aqui: sem coluna/valor
-    // padrao mapeado, o item assume "insumo" automaticamente (ver getValue(row, "type")
-    // || "insumo" mais abaixo), entao a linha nao pode ser descartada so por falta de Tipo.
-    const validRows = allRows.filter((row) => {
-      const name = getValue(row, "itemName");
-      return Boolean(name);
-    });
 
     const prog: ImportProgress = {
       current: 0,
@@ -121,7 +163,7 @@ export function ConfigurableItemImport() {
     // 1. Pre-carrega mapa de itens existentes (1 query)
     const existingItems = await preloadImportItemsAction();
     const existingItemMap = new Map(
-      existingItems.map((item) => [item.name.trim().toLowerCase(), item])
+      existingItems.map((item) => [normalizeForMatch(item.name), item])
     );
 
     const processedNames: string[] = [];
@@ -136,7 +178,16 @@ export function ConfigurableItemImport() {
 
       setProgress((p) => p ? { ...p, current: i + 1, currentItemName: itemName } : p);
 
-      const existingItem = existingItemMap.get(itemName.toLowerCase());
+      const existingItem = existingItemMap.get(normalizeForMatch(itemName));
+      const hasCode = String(getValue(row, "internalCode") || "").trim() !== "";
+
+      // Usuario escolheu preencher os codigos ele mesmo: item novo sem codigo
+      // e pulado em vez de ganhar um codigo gerado automaticamente.
+      if (!existingItem && !hasCode && codeChoice === "manual") {
+        errors.push({ itemName, error: "Sem código na planilha — pulado (preencha o código e reimporte)" });
+        setProgress((p) => p ? { ...p, errors } : p);
+        continue;
+      }
 
       const result = await saveImportedItemAction({
         name: itemName,
@@ -190,16 +241,29 @@ export function ConfigurableItemImport() {
     if (!uploadedFile) return;
 
     setFile(uploadedFile);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const bstr = evt.target?.result;
-      const wb = XLSX.read(bstr, { type: "binary" });
+
+    (async () => {
+      // readAsBinaryString le byte-a-byte (Latin-1), o que corrompe qualquer
+      // acento em CSV UTF-8 — praticamente toda planilha de fornecedor real
+      // (ç, ã, é etc), fazendo o parser falhar silenciosamente e travar na
+      // Step 1. .csv usa File.text() (UTF-8 correto); .xlsx (zip binario)
+      // usa arrayBuffer, que o SheetJS decodifica certo internamente.
+      const isCsv = uploadedFile.name.toLowerCase().endsWith(".csv");
+      const wb = isCsv
+        ? XLSX.read(await uploadedFile.text(), { type: "string" })
+        : XLSX.read(await uploadedFile.arrayBuffer(), { type: "array" });
+
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       const data = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
 
       if (data.length > 0) {
-        const fileHeaders = data[0].map((h) => String(h).trim());
+        // Array.from (nao .map) para "densificar": quando a 1a celula da linha
+        // de cabecalho vem vazia (ex: CSV comecando com ";"), o SheetJS retorna
+        // um array esparso com um buraco de verdade no indice 0 — .map() pula
+        // buracos e preserva o buraco no resultado, mas .find() (usado logo
+        // abaixo) NAO pula buracos e passa undefined, quebrando .toLowerCase().
+        const fileHeaders = Array.from(data[0], (h) => String(h ?? "").trim());
         setHeaders(fileHeaders);
 
         const newMapping: Record<string, string> = {};
@@ -211,13 +275,16 @@ export function ConfigurableItemImport() {
         });
         setMapping(newMapping);
 
-        const rows = XLSX.utils.sheet_to_json(ws, { defval: "" }) as Record<string, unknown>[];
+        // raw:false pega o texto formatado da celula em vez do numero "cru" do
+        // SheetJS — sem isso, valores PT-BR tipo "24,46" viram o inteiro 2446
+        // (a virgula e lida como separador de milhar), inflando o preco em 100x.
+        // parseBrNumber (import-actions.ts) ja trata corretamente "24,46", "R$ 24,46" etc.
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false }) as Record<string, unknown>[];
         setAllRows(rows);
         setPreviewData(rows.slice(0, 5));
         setStep(2);
       }
-    };
-    reader.readAsBinaryString(uploadedFile);
+    })();
   }, []);
 
   const handleMappingChange = (systemField: string, column: string) => {
@@ -304,7 +371,9 @@ export function ConfigurableItemImport() {
                           <SelectValue placeholder="Selecione a coluna..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {headers.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                          {/* Radix Select proibe value="" (reservado pra "sem selecao") — colunas sem
+                              nome no cabecalho (ex: planilha comecando com ";") nao sao selecionaveis. */}
+                          {headers.filter((h) => h !== "").map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       {field.defaultOptions && !mapping[field.systemField] && (
@@ -397,6 +466,47 @@ export function ConfigurableItemImport() {
             </div>
           </Card>
 
+          {/* Pergunta sobre codigo de itens novos sem codigo na planilha */}
+          {!isProcessing && missingCodeCount !== null && missingCodeCount > 0 && (
+            <Card className="border-amber-200 bg-amber-50">
+              <div className="p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <HelpCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-amber-900">
+                      {missingCodeCount} item{missingCodeCount > 1 ? "ns" : ""} novo{missingCodeCount > 1 ? "s" : ""} sem código de produto na planilha
+                    </h3>
+                    <p className="text-sm text-amber-800/80 mt-1">
+                      {missingCodeCount > 1 ? "Esses itens não têm" : "Esse item não tem"} correspondência no cadastro atual e a planilha não trouxe código pra {missingCodeCount > 1 ? "eles" : "ele"}. Como quer prosseguir?
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    variant={codeChoice === "auto" ? "default" : "outline"}
+                    className="flex-1 justify-start h-auto py-3 text-left"
+                    onClick={() => setCodeChoice("auto")}
+                  >
+                    <div>
+                      <div className="font-medium">Gerar código automaticamente</div>
+                      <div className="text-xs font-normal opacity-80">O sistema atribui o próximo código disponível pra cada item novo.</div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant={codeChoice === "manual" ? "default" : "outline"}
+                    className="flex-1 justify-start h-auto py-3 text-left"
+                    onClick={() => setCodeChoice("manual")}
+                  >
+                    <div>
+                      <div className="font-medium">Vou definir os códigos eu mesmo</div>
+                      <div className="text-xs font-normal opacity-80">Esses itens são pulados agora; preencha o código na planilha e reimporte.</div>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* Barra de progresso */}
           {isProcessing && progress && (
             <div className={`rounded-xl border px-6 py-4 space-y-3 ${progress.phase === "concluido" ? "border-green-200 bg-green-50" : "border-blue-200 bg-blue-50"}`}>
@@ -465,12 +575,14 @@ export function ConfigurableItemImport() {
                 </Button>
               )}
               <Button
-                disabled={isProcessing}
+                disabled={isProcessing || missingCodeCount === null || (missingCodeCount > 0 && codeChoice === null)}
                 onClick={handleImport}
                 className="px-8 bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>
+                ) : missingCodeCount === null ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verificando itens...</>
                 ) : (
                   "Iniciar Importação"
                 )}
