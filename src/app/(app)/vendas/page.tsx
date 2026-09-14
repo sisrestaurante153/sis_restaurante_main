@@ -1,3 +1,6 @@
+import Link from "next/link";
+import Button from "@mui/material/Button";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import { requireSession } from "@/modules/access/server/session-cookie";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { getSalesRepository } from "@/modules/sales/server/sales-repository";
@@ -27,6 +30,16 @@ export default async function VendasPage() {
         title="Vendas"
         description="Registro diário de vendas por item, usado no cálculo de retorno financeiro."
         size="compact"
+        actions={
+          <Button
+            component={Link}
+            href={"/vendas/importar" as never}
+            variant="outlined"
+            startIcon={<UploadFileOutlinedIcon />}
+          >
+            Importar vendas
+          </Button>
+        }
       />
 
       <SalesListingView vendas={vendas} itemOptions={sellableOptions} />
