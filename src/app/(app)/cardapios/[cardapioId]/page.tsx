@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Button from "@mui/material/Button";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import { requireSession } from "@/modules/access/server/session-cookie";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
@@ -54,7 +53,7 @@ export default async function CardapioDetailPage({
         }
       />
 
-      <Stack spacing={4}>
+      <Stack spacing={3}>
         <CardapioForm
           formId="edit-cardapio-form"
           initialValues={{
@@ -64,8 +63,6 @@ export default async function CardapioDetailPage({
             active: cardapio.active
           }}
         />
-
-        <Divider />
 
         <CardapioItemsManager cardapioId={cardapio.id} items={cardapio.items} itemOptions={sellableOptions} />
       </Stack>
