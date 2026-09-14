@@ -65,7 +65,21 @@ export function getMenuRepository(restaurantId: string) {
       if (prisma) {
         const row = await prisma.cardapio.findFirst({
           where: { cd_cardapio: id, cd_restaurante: restaurantId },
-          include: { itens: { include: { item: true } } }
+          include: {
+            itens: {
+              include: {
+                item: {
+                  include: {
+                    fichasResultantes: {
+                      where: { tp_status: { in: ["ativa", "rascunho", "inativa"] } },
+                      select: { cd_ficha_tecnica: true },
+                      take: 1
+                    }
+                  }
+                }
+              }
+            }
+          }
         });
 
         if (!row) return null;
@@ -82,7 +96,8 @@ export function getMenuRepository(restaurantId: string) {
             itemType: entry.item.tp_item,
             salePrice: entry.vl_preco_venda.toFixed(4),
             weekdays: parseWeekdays(entry.js_dias_semana),
-            active: entry.sn_ativo
+            active: entry.sn_ativo,
+            hasFichaTecnica: entry.item.fichasResultantes.length > 0
           }))
         };
       }
@@ -105,7 +120,8 @@ export function getMenuRepository(restaurantId: string) {
             itemType: item?.type ?? "prato",
             salePrice: entry.salePrice,
             weekdays: entry.weekdays,
-            active: entry.active
+            active: entry.active,
+            hasFichaTecnica: item?.fichaStatus != null
           };
         })
       };

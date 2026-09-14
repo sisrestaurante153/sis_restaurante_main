@@ -6,6 +6,7 @@ export interface CardapioItemRow {
   salePrice: string;
   weekdays: number[] | null;
   active: boolean;
+  hasFichaTecnica: boolean;
 }
 
 export interface CardapioSummary {

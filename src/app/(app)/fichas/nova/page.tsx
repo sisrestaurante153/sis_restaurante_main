@@ -36,6 +36,11 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
       ? itemOptions.filter((item) => ["prato", "porcao", "marmita", "combo"].includes(item.type))
       : itemOptions;
 
+  // Permite chegar aqui com o item ja pre-selecionado (ex: painel de itens do
+  // cardapio sem ficha tecnica -> "+ Criar ficha" leva direto pro item certo).
+  const preselectedItemId = getSingle(resolvedSearchParams.itemId);
+  const preselectedItem = preselectedItemId ? itemOptions.find((item) => item.id === preselectedItemId) : undefined;
+
   const formId = "new-ficha-form";
 
   return (
@@ -84,9 +89,9 @@ export default async function NewFichaPage({ searchParams }: { searchParams?: Se
           label: stageType.name
         }))}
         initialValues={{
-          itemId: "",
-          itemName: "",
-          itemType: "pre_preparo",
+          itemId: preselectedItem?.id ?? "",
+          itemName: preselectedItem?.name ?? "",
+          itemType: preselectedItem?.type ?? "pre_preparo",
           groupOperational: "",
           modality: {
             id: "",

@@ -8,6 +8,7 @@ import { deleteCardapioAction } from "@/modules/menu/server/menu-actions";
 import { getMenuRepository } from "@/modules/menu/server/menu-repository";
 import { CardapioForm } from "@/modules/menu/ui/cardapio-form";
 import { CardapioItemsManager } from "@/modules/menu/ui/cardapio-items-manager";
+import { MissingFichaPanel } from "@/modules/menu/ui/missing-ficha-panel";
 import { PageHeader } from "@/modules/platform/ui/page-header";
 
 const SELLABLE_TYPES = new Set(["prato", "porcao", "marmita", "combo", "produto_pronto"]);
@@ -63,6 +64,8 @@ export default async function CardapioDetailPage({
             active: cardapio.active
           }}
         />
+
+        <MissingFichaPanel items={cardapio.items} />
 
         <CardapioItemsManager cardapioId={cardapio.id} items={cardapio.items} itemOptions={sellableOptions} />
       </Stack>
