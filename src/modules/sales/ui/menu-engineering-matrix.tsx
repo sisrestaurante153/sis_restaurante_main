@@ -13,10 +13,6 @@ import type { FinancialReturnRow } from "@/modules/sales/domain/types";
 const BORDER = "#D3D1C7";
 const BG = "#F4F4F2";
 
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
