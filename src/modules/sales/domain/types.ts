@@ -18,6 +18,14 @@ export interface SaveVendaInput {
   channel?: string;
 }
 
+export interface FinancialReturnSaleEntry {
+  date: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  channel: string | null;
+}
+
 export interface FinancialReturnRow {
   itemId: string;
   itemName: string;
@@ -26,6 +34,7 @@ export interface FinancialReturnRow {
   costTotal: number;
   marginTotal: number;
   marginPercent: number | null;
+  sales: FinancialReturnSaleEntry[];
 }
 
 export interface FinancialReturnFilters {

@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { requireSession } from "@/modules/access/server/session-cookie";
 import { getSalesRepository } from "@/modules/sales/server/sales-repository";
-import { FinancialReturnView } from "@/modules/sales/ui/financial-return-view";
+import { RetornoFinanceiroTabs } from "@/modules/sales/ui/retorno-financeiro-tabs";
 import { PageHeader } from "@/modules/platform/ui/page-header";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -58,7 +58,7 @@ export default async function RetornoFinanceiroPage({ searchParams }: { searchPa
         </Button>
       </Box>
 
-      <FinancialReturnView rows={rows} />
+      <RetornoFinanceiroTabs rows={rows} />
     </>
   );
 }

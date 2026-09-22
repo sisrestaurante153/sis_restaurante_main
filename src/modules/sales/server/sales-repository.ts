@@ -135,6 +135,13 @@ export function getSalesRepository(restaurantId: string) {
         const revenue = Number(venda.total);
         const unitCost = costByItemId.get(venda.itemId) ?? 0;
         const cost = unitCost * quantity;
+        const saleEntry = {
+          date: venda.date,
+          quantity,
+          unitPrice: Number(venda.unitPrice),
+          total: revenue,
+          channel: venda.channel
+        };
 
         const existing = totalsByItem.get(venda.itemId);
         if (existing) {
@@ -142,6 +149,7 @@ export function getSalesRepository(restaurantId: string) {
           existing.revenueTotal += revenue;
           existing.costTotal += cost;
           existing.marginTotal += revenue - cost;
+          existing.sales.push(saleEntry);
         } else {
           totalsByItem.set(venda.itemId, {
             itemId: venda.itemId,
@@ -150,7 +158,8 @@ export function getSalesRepository(restaurantId: string) {
             revenueTotal: revenue,
             costTotal: cost,
             marginTotal: revenue - cost,
-            marginPercent: null
+            marginPercent: null,
+            sales: [saleEntry]
           });
         }
       }
@@ -158,7 +167,8 @@ export function getSalesRepository(restaurantId: string) {
       return [...totalsByItem.values()]
         .map((row) => ({
           ...row,
-          marginPercent: row.revenueTotal > 0 ? (row.marginTotal / row.revenueTotal) * 100 : null
+          marginPercent: row.revenueTotal > 0 ? (row.marginTotal / row.revenueTotal) * 100 : null,
+          sales: row.sales.sort((a, b) => a.date.localeCompare(b.date))
         }))
         .sort((a, b) => b.marginTotal - a.marginTotal);
     },
