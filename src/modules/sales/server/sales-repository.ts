@@ -108,10 +108,16 @@ export function getSalesRepository(restaurantId: string) {
       persistDemoStore(store);
     },
 
-    // Cruza vendas do periodo com o custo unitario calculado da ficha (custo por
-    // porcao/saida, ver mapCosts.perPortion) para mostrar a margem real por item —
-    // diferente da margem cadastrada na grade de fichas, que usa o preco de venda
-    // configurado e nao a venda de fato ocorrida.
+    // Cruza vendas do periodo com o custo unitario calculado da ficha (custos.total —
+    // o mesmo valor exibido como "custo atual" na tela da ficha tecnica) para mostrar
+    // a margem real por item — diferente da margem cadastrada na grade de fichas, que
+    // usa o preco de venda configurado e nao a venda de fato ocorrida.
+    //
+    // Nao usar costs.perPortion aqui: em itens cujo rendimento da ficha e medido em
+    // peso (kg) e depois embalado em unidades de venda (ex: marmitex), o campo
+    // "costPerPortion" calculado pela engine de custeio nao reflete o custo da unidade
+    // vendida (foi observado retornando o mesmo divisor para itens de rendimentos
+    // bem diferentes) — costs.total e o valor correto e validado contra a tela da ficha.
     async getFinancialReturn(filters: ListVendasFilters = {}): Promise<FinancialReturnRow[]> {
       const vendas = await this.listVendas(filters);
       if (vendas.length === 0) return [];
@@ -123,7 +129,7 @@ export function getSalesRepository(restaurantId: string) {
       await Promise.all(
         uniqueItemIds.map(async (itemId) => {
           const detail = await catalogRepository.getItemDetail(itemId);
-          const unitCost = Number(detail?.costs.perPortion ?? detail?.costs.total ?? "0");
+          const unitCost = Number(detail?.costs.total ?? "0");
           costByItemId.set(itemId, Number.isFinite(unitCost) ? unitCost : 0);
         })
       );
