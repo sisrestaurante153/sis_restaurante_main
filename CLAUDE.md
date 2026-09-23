@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Keep this file current.** Whenever you ship a new feature/module, hit a build-breaking gotcha, or uncover a data-quality/instability issue worth knowing next time, add or update a note here in the same commit — don't let this file drift out of sync with the codebase. Prefer the "Known Issues / Unstable Areas" section below for anything workaround-shaped; prefer the tables above it for anything structural.
+
 ## Commands
 
 ```bash
@@ -54,7 +56,7 @@ npm run import:legacy:load      # Load parsed data into DB
 | `engineering` | Technical sheets (fichas), composition, recursive cost calculation |
 | `import` | Legacy Excel parse → staging → conflict reconciliation |
 | `menu` | Cardápios (sales menus) and their item/price links |
-| `sales` | Vendas (sales records) and financial return reporting |
+| `sales` | Vendas (sales records), CSV/Excel sales import (`/vendas/importar`), and financial return reporting |
 | `billing` | Subscription management, Asaas payment webhook |
 | `audit` | Change audit log |
 
@@ -143,6 +145,13 @@ Bootstrap credentials after seed (email / password): `admin@sis-restaurante.loca
 - **Zod 4** (validation), **Pino** (logging), **Sentry** (error tracking)
 - **Vitest** (unit/integration), **Playwright** (e2e)
 - **Resend** (email), **Asaas** (payments), **XLSX** (Excel import)
+
+## Known Issues / Unstable Areas
+
+- **Ficha técnica cost engine — don't trust `costs.perPortion`.** `catalog-prisma-mappers.ts`'s `mapCosts()` exposes both `costs.total` (matches what the ficha screen shows as "custo atual") and `costs.perPortion` (read from `calculo_execucao.js_metadados.costPerPortion`). For items whose ficha yield is measured by weight (kg) and then packaged into a sale unit (e.g. a marmitex), `costPerPortion` has been observed returning a value computed with the wrong divisor (the same divisor reused across unrelated items with different yields) — it does **not** reliably represent the cost of one sold unit. Always use `costs.total` for per-sold-unit cost (e.g. in `sales-repository.ts`'s `getFinancialReturn`); treat `perPortion` as unverified until the underlying calc-engine bug is found and fixed.
+- **`item.tp_item` is not a reliable ground truth.** A meaningful chunk of Titan Restaurante's catalog has finished, sellable menu items (dishes, drinks, desserts) incorrectly typed as `pre_preparo` instead of `prato`/`porcao`/`marmita`/`combo`/`produto_pronto` — apparently from how they were originally seeded. When matching external data (PDV export descriptions, import spreadsheets) against the catalog by name, **always filter candidates to the sellable types first** (`["prato","porcao","marmita","combo","produto_pronto"]`) — matching against the full catalog risks linking a sale to a same-named pré-preparo/insumo instead of the real sellable item, which then pulls the wrong (usually much larger, batch-scale) cost into financial reports. This caused a real incident (Sept 2026): ~1000 imported `venda` rows across two batches were linked to non-sellable items and had to be re-matched by hand.
+- **`npm run lint` is more permissive than the Vercel build.** `next build`'s ESLint pass (e.g. `no-unused-vars`) can fail in production even when `npm run lint` reports clean. Before pushing UI changes, prefer `npx next lint --dir <changed-module-dir>` (mirrors the build's ruleset) over the bare `npm run lint` script.
+- **`FUZZY_THRESHOLD = 0.60`** (Jaccard token similarity) is the established convention across import/matching code (`sales-import.ts`, one-off import scripts) for auto-accepting a fuzzy name match without human review. Reuse `normalizeForMatch`/`tokens`/`jaccard` from `src/modules/sales/domain/sales-import.ts` rather than re-implementing matching logic — and remember the type-filtering caveat above when reusing it.
 
 ## Docker Compose (Production)
 
