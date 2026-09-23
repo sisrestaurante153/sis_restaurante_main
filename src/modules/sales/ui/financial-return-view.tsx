@@ -13,6 +13,8 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import { FlatSearchInput } from "@/components/ui/FlatSearchInput";
+import { normalizeForMatch } from "@/modules/sales/domain/sales-import";
 import type { FinancialReturnRow } from "@/modules/sales/domain/types";
 
 const BORDER = "#D3D1C7";
@@ -146,9 +148,16 @@ function ItemRow({ row }: { row: FinancialReturnRow }) {
 export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
   const [sortField, setSortField] = useState<SortField>("marginTotal");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [query, setQuery] = useState("");
+
+  const filteredRows = useMemo(() => {
+    if (!query.trim()) return rows;
+    const normalizedQuery = normalizeForMatch(query);
+    return rows.filter((row) => normalizeForMatch(row.itemName).includes(normalizedQuery));
+  }, [rows, query]);
 
   const sortedRows = useMemo(() => {
-    const sorted = [...rows].sort((a, b) => {
+    const sorted = [...filteredRows].sort((a, b) => {
       const av = a[sortField];
       const bv = b[sortField];
       if (typeof av === "string" || typeof bv === "string") {
@@ -160,7 +169,7 @@ export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
     });
     if (sortDir === "desc") sorted.reverse();
     return sorted;
-  }, [rows, sortField, sortDir]);
+  }, [filteredRows, sortField, sortDir]);
 
   function handleSort(field: SortField) {
     if (field === sortField) {
@@ -179,7 +188,7 @@ export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
     );
   }
 
-  const totals = rows.reduce(
+  const totals = filteredRows.reduce(
     (acc, row) => ({
       revenue: acc.revenue + row.revenueTotal,
       cost: acc.cost + row.costTotal,
@@ -189,75 +198,87 @@ export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
   );
 
   return (
-    <Box sx={{ overflowX: "auto", border: `0.5px solid ${BORDER}`, borderRadius: 2 }}>
-      <Table size="small" sx={{ minWidth: 780 }}>
-        <TableHead>
-          <TableRow sx={{ "& th": { bgcolor: BG } }}>
-            <TableCell sx={{ width: 32 }} />
-            <SortableHeader label="Item" field="itemName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-            <SortableHeader
-              label="Qtde vendida"
-              field="quantitySold"
-              align="right"
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <SortableHeader
-              label="Faturamento"
-              field="revenueTotal"
-              align="right"
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <SortableHeader
-              label="Custo"
-              field="costTotal"
-              align="right"
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <SortableHeader
-              label="Margem (R$)"
-              field="marginTotal"
-              align="right"
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <SortableHeader
-              label="Margem (%)"
-              field="marginPercent"
-              align="right"
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {sortedRows.map((row) => (
-            <ItemRow key={row.itemId} row={row} />
-          ))}
-          <TableRow sx={{ "& td": { fontWeight: 700, borderTop: "2px solid", borderColor: "divider" } }}>
-            <TableCell />
-            <TableCell>Total</TableCell>
-            <TableCell align="right">
-              {rows.reduce((sum, row) => sum + row.quantitySold, 0).toLocaleString("pt-BR")}
-            </TableCell>
-            <TableCell align="right">{formatCurrency(totals.revenue)}</TableCell>
-            <TableCell align="right">{formatCurrency(totals.cost)}</TableCell>
-            <TableCell align="right" sx={{ color: totals.margin >= 0 ? "#1B6B2C" : "#A32D2D" }}>
-              {formatCurrency(totals.margin)}
-            </TableCell>
-            <TableCell align="right">
-              {totals.revenue > 0 ? `${((totals.margin / totals.revenue) * 100).toFixed(1)}%` : "--"}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+    <Box>
+      <Box sx={{ mb: 2, maxWidth: 320 }}>
+        <FlatSearchInput value={query} onChange={setQuery} placeholder="Buscar item..." ariaLabel="Buscar item" />
+      </Box>
+
+      {sortedRows.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
+          Nenhum item encontrado para &ldquo;{query}&rdquo;.
+        </Typography>
+      ) : (
+        <Box sx={{ overflowX: "auto", border: `0.5px solid ${BORDER}`, borderRadius: 2 }}>
+          <Table size="small" sx={{ minWidth: 780 }}>
+            <TableHead>
+              <TableRow sx={{ "& th": { bgcolor: BG } }}>
+                <TableCell sx={{ width: 32 }} />
+                <SortableHeader label="Item" field="itemName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                <SortableHeader
+                  label="Qtde vendida"
+                  field="quantitySold"
+                  align="right"
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  label="Faturamento"
+                  field="revenueTotal"
+                  align="right"
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  label="Custo"
+                  field="costTotal"
+                  align="right"
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  label="Margem (R$)"
+                  field="marginTotal"
+                  align="right"
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  label="Margem (%)"
+                  field="marginPercent"
+                  align="right"
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedRows.map((row) => (
+                <ItemRow key={row.itemId} row={row} />
+              ))}
+              <TableRow sx={{ "& td": { fontWeight: 700, borderTop: "2px solid", borderColor: "divider" } }}>
+                <TableCell />
+                <TableCell>Total</TableCell>
+                <TableCell align="right">
+                  {filteredRows.reduce((sum, row) => sum + row.quantitySold, 0).toLocaleString("pt-BR")}
+                </TableCell>
+                <TableCell align="right">{formatCurrency(totals.revenue)}</TableCell>
+                <TableCell align="right">{formatCurrency(totals.cost)}</TableCell>
+                <TableCell align="right" sx={{ color: totals.margin >= 0 ? "#1B6B2C" : "#A32D2D" }}>
+                  {formatCurrency(totals.margin)}
+                </TableCell>
+                <TableCell align="right">
+                  {totals.revenue > 0 ? `${((totals.margin / totals.revenue) * 100).toFixed(1)}%` : "--"}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Box>
+      )}
     </Box>
   );
 }
