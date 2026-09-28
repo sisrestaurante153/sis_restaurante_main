@@ -101,9 +101,15 @@ function QuadrantCard({ quadrant, rows }: { quadrant: Quadrant; rows: FinancialR
 }
 
 export function MenuEngineeringMatrix({ rows }: { rows: FinancialReturnRow[] }) {
+  // Itens sem ficha tecnica nao tem margem real calculada (custo desconhecido,
+  // nao zero) — entram na matriz apenas se tiverem custo, senao a mediana de
+  // margem fica artificialmente puxada pra cima por um monte de "100%" falso.
+  const classifiableRows = useMemo(() => rows.filter((row) => row.hasCostData), [rows]);
+  const missingCostCount = rows.length - classifiableRows.length;
+
   const { qtyMedian, marginMedian, grouped } = useMemo(() => {
-    const qtyMedian = median(rows.map((r) => r.quantitySold));
-    const marginMedian = median(rows.map((r) => r.marginPercent ?? 0));
+    const qtyMedian = median(classifiableRows.map((r) => r.quantitySold));
+    const marginMedian = median(classifiableRows.map((r) => r.marginPercent ?? 0));
 
     const grouped: Record<Quadrant, FinancialReturnRow[]> = {
       alto_alta: [],
@@ -111,11 +117,11 @@ export function MenuEngineeringMatrix({ rows }: { rows: FinancialReturnRow[] }) 
       baixo_alta: [],
       baixo_baixa: []
     };
-    for (const row of rows) {
+    for (const row of classifiableRows) {
       grouped[classify(row, qtyMedian, marginMedian)].push(row);
     }
     return { qtyMedian, marginMedian, grouped };
-  }, [rows]);
+  }, [classifiableRows]);
 
   if (rows.length === 0) {
     return (
@@ -125,11 +131,23 @@ export function MenuEngineeringMatrix({ rows }: { rows: FinancialReturnRow[] }) 
     );
   }
 
+  if (classifiableRows.length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
+        Nenhum item com ficha técnica cadastrada no período selecionado — sem custo conhecido não é possível calcular
+        margem para montar a matriz.
+      </Typography>
+    );
+  }
+
   return (
     <Box>
       <Typography sx={{ fontSize: 12, color: "#888780", mb: 2 }}>
         Classificação por mediana do período: giro alto a partir de {qtyMedian.toLocaleString("pt-BR")} unidades vendidas,
         margem alta a partir de {marginMedian.toFixed(1)}%.
+        {missingCostCount > 0
+          ? ` ${missingCostCount} ${missingCostCount === 1 ? "item sem ficha técnica não entra" : "itens sem ficha técnica não entram"} nesta matriz.`
+          : ""}
       </Typography>
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
         <QuadrantCard quadrant="alto_alta" rows={grouped.alto_alta} />

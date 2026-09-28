@@ -125,12 +125,18 @@ export function getSalesRepository(restaurantId: string) {
       const catalogRepository = getCatalogRepository(restaurantId);
       const uniqueItemIds = [...new Set(vendas.map((venda) => venda.itemId))];
       const costByItemId = new Map<string, number>();
+      // Item sem nenhuma ficha tecnica: fichaStatus vem null do mapper (ver
+      // resolveFichaStatus em catalog-prisma-mappers.ts) — nesse caso costs.total
+      // cai no fallback "0.0000", o que e diferente de "essa ficha custa R$0" e
+      // nao pode ser exibido/classificado como margem de 100%.
+      const hasCostDataByItemId = new Map<string, boolean>();
 
       await Promise.all(
         uniqueItemIds.map(async (itemId) => {
           const detail = await catalogRepository.getItemDetail(itemId);
           const unitCost = Number(detail?.costs.total ?? "0");
           costByItemId.set(itemId, Number.isFinite(unitCost) ? unitCost : 0);
+          hasCostDataByItemId.set(itemId, detail?.fichaStatus != null);
         })
       );
 
@@ -140,6 +146,7 @@ export function getSalesRepository(restaurantId: string) {
         const quantity = Number(venda.quantity);
         const revenue = Number(venda.total);
         const unitCost = costByItemId.get(venda.itemId) ?? 0;
+        const hasCostData = hasCostDataByItemId.get(venda.itemId) ?? false;
         const cost = unitCost * quantity;
         const saleEntry = {
           date: venda.date,
@@ -165,6 +172,7 @@ export function getSalesRepository(restaurantId: string) {
             costTotal: cost,
             marginTotal: revenue - cost,
             marginPercent: null,
+            hasCostData,
             sales: [saleEntry]
           });
         }
@@ -173,7 +181,7 @@ export function getSalesRepository(restaurantId: string) {
       return [...totalsByItem.values()]
         .map((row) => ({
           ...row,
-          marginPercent: row.revenueTotal > 0 ? (row.marginTotal / row.revenueTotal) * 100 : null,
+          marginPercent: row.hasCostData && row.revenueTotal > 0 ? (row.marginTotal / row.revenueTotal) * 100 : null,
           sales: row.sales.sort((a, b) => a.date.localeCompare(b.date))
         }))
         .sort((a, b) => b.marginTotal - a.marginTotal);

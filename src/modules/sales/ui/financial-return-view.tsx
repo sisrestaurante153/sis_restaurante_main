@@ -123,12 +123,25 @@ function ItemRow({ row }: { row: FinancialReturnRow }) {
             {expanded ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
           </IconButton>
         </TableCell>
-        <TableCell>{row.itemName}</TableCell>
+        <TableCell>
+          {row.itemName}
+          {!row.hasCostData && (
+            <Chip
+              size="small"
+              label="sem ficha técnica"
+              variant="outlined"
+              sx={{ ml: 1, height: 18, fontSize: 10, borderColor: "#F0C36D", color: "#854F0B" }}
+            />
+          )}
+        </TableCell>
         <TableCell align="right">{row.quantitySold.toLocaleString("pt-BR")}</TableCell>
         <TableCell align="right">{formatCurrency(row.revenueTotal)}</TableCell>
-        <TableCell align="right">{formatCurrency(row.costTotal)}</TableCell>
-        <TableCell align="right" sx={{ color: row.marginTotal >= 0 ? "#1B6B2C" : "#A32D2D", fontWeight: 500 }}>
-          {formatCurrency(row.marginTotal)}
+        <TableCell align="right">{row.hasCostData ? formatCurrency(row.costTotal) : "--"}</TableCell>
+        <TableCell
+          align="right"
+          sx={row.hasCostData ? { color: row.marginTotal >= 0 ? "#1B6B2C" : "#A32D2D", fontWeight: 500 } : undefined}
+        >
+          {row.hasCostData ? formatCurrency(row.marginTotal) : "--"}
         </TableCell>
         <TableCell align="right">
           <MarginChip marginPercent={row.marginPercent} />
@@ -188,7 +201,12 @@ export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
     );
   }
 
-  const totals = filteredRows.reduce(
+  // Itens sem ficha tecnica entram no faturamento total mas ficam de fora do
+  // custo/margem agregados — somar cost=0 desses itens inflaria a margem geral.
+  const rowsWithCostData = filteredRows.filter((row) => row.hasCostData);
+  const missingCostCount = filteredRows.length - rowsWithCostData.length;
+
+  const totals = rowsWithCostData.reduce(
     (acc, row) => ({
       revenue: acc.revenue + row.revenueTotal,
       cost: acc.cost + row.costTotal,
@@ -262,9 +280,9 @@ export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
               ))}
               <TableRow sx={{ "& td": { fontWeight: 700, borderTop: "2px solid", borderColor: "divider" } }}>
                 <TableCell />
-                <TableCell>Total</TableCell>
+                <TableCell>Total {missingCostCount > 0 ? "(com ficha técnica)" : ""}</TableCell>
                 <TableCell align="right">
-                  {filteredRows.reduce((sum, row) => sum + row.quantitySold, 0).toLocaleString("pt-BR")}
+                  {rowsWithCostData.reduce((sum, row) => sum + row.quantitySold, 0).toLocaleString("pt-BR")}
                 </TableCell>
                 <TableCell align="right">{formatCurrency(totals.revenue)}</TableCell>
                 <TableCell align="right">{formatCurrency(totals.cost)}</TableCell>
@@ -278,6 +296,13 @@ export function FinancialReturnView({ rows }: { rows: FinancialReturnRow[] }) {
             </TableBody>
           </Table>
         </Box>
+      )}
+
+      {missingCostCount > 0 && (
+        <Typography sx={{ fontSize: 11.5, color: "#854F0B", mt: 1.5 }}>
+          {missingCostCount} {missingCostCount === 1 ? "item está" : "itens estão"} sem ficha técnica cadastrada — custo e
+          margem desses itens não entram nos totais acima e aparecem como &ldquo;--&rdquo; na tabela.
+        </Typography>
       )}
     </Box>
   );
