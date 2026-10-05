@@ -1,6 +1,6 @@
 import "server-only";
 import {
-  type Prisma
+  Prisma
 } from "@/generated/prisma/client";
 import type { item_type } from "@/generated/prisma/client";
 import {
@@ -1436,6 +1436,108 @@ async function saveFichaWithPrisma(input: SaveFichaInput, restaurantId: string) 
   }
 }
 
+type FichaSourceForClone = NonNullable<Awaited<ReturnType<typeof queryFicha>>>;
+
+// Nucleo compartilhado de clonagem: cria uma ficha_tecnica nova + etapas +
+// componentes a partir de uma ficha de origem, opcionalmente apontando para
+// um item de destino diferente e com as quantidades escaladas por um fator.
+// Usado tanto pela duplicacao de ficha (mesmo item, sempre rascunho, fator 1)
+// quanto pelo vinculo de ficha a item pendente (item diferente, status e
+// fator variaveis). A ficha de origem nunca e alterada por esta funcao.
+async function cloneFichaCore(opts: {
+  tx: Prisma.TransactionClient;
+  source: FichaSourceForClone;
+  targetItemId: string;
+  restaurantId: string;
+  status: "ativa" | "rascunho";
+  scaleFactor: Prisma.Decimal;
+  observacaoOverride?: string | null;
+}): Promise<string> {
+  const { tx, source, targetItemId, restaurantId, status, scaleFactor, observacaoOverride } = opts;
+  const isScaling = !scaleFactor.equals(1);
+
+  const highestVersion = await tx.fichaTecnica.aggregate({
+    where: { cd_item_resultante: targetItemId },
+    _max: { nr_versao: true }
+  });
+
+  if (status === "ativa") {
+    await tx.fichaTecnica.updateMany({
+      where: { cd_item_resultante: targetItemId, tp_status: "ativa" },
+      data: { tp_status: "inativa" }
+    });
+  }
+
+  const scaledPesoFinal =
+    isScaling && source.tp_modo_rendimento === "peso_final" && source.vl_peso_final
+      ? source.vl_peso_final.times(scaleFactor)
+      : source.vl_peso_final;
+
+  const scaledRendimentoPorcoes =
+    isScaling && source.vl_rendimento_porcoes ? source.vl_rendimento_porcoes.times(scaleFactor) : source.vl_rendimento_porcoes;
+
+  const created = await tx.fichaTecnica.create({
+    data: {
+      cd_item_resultante: targetItemId,
+      nm_exibicao: source.nm_exibicao,
+      cd_modalidade: source.cd_modalidade,
+      cd_unidade_rendimento: source.cd_unidade_rendimento,
+      nr_versao: (highestVersion._max.nr_versao ?? 0) + 1,
+      tp_status: status,
+      tp_modo_rendimento: source.tp_modo_rendimento,
+      vl_pct_perda: source.vl_pct_perda,
+      vl_peso_final: scaledPesoFinal,
+      vl_rendimento_porcoes: scaledRendimentoPorcoes,
+      vl_preco_venda: source.vl_preco_venda,
+      vl_pct_despesa_variavel: source.vl_pct_despesa_variavel,
+      ds_modo_preparo: source.ds_modo_preparo,
+      ds_observacoes: observacaoOverride !== undefined ? observacaoOverride : source.ds_observacoes,
+      cd_restaurante: restaurantId
+    }
+  });
+
+  const stageIdMap = new Map<string, string>();
+
+  for (const stage of source.etapas) {
+    const createdStage = await tx.fichaEtapa.create({
+      data: {
+        cd_ficha_tecnica: created.cd_ficha_tecnica,
+        cd_tipo_etapa: stage.cd_tipo_etapa,
+        nr_ordem: stage.nr_ordem,
+        nm_etapa: stage.nm_etapa,
+        vl_peso_entrada: stage.vl_peso_entrada,
+        vl_peso_saida: stage.vl_peso_saida,
+        vl_fator_correcao: stage.vl_fator_correcao,
+        vl_indice_coccao: stage.vl_indice_coccao,
+        vl_total_snapshot: stage.vl_total_snapshot,
+        ds_observacao: stage.ds_observacao
+      }
+    });
+
+    stageIdMap.set(stage.cd_ficha_etapa, createdStage.cd_ficha_etapa);
+  }
+
+  for (const component of source.componentes) {
+    await tx.fichaComponente.create({
+      data: {
+        cd_ficha_tecnica: created.cd_ficha_tecnica,
+        cd_ficha_etapa: component.cd_ficha_etapa ? stageIdMap.get(component.cd_ficha_etapa) ?? null : null,
+        cd_item_componente: component.cd_item_componente,
+        tp_componente: component.tp_componente,
+        nr_ordem: component.nr_ordem,
+        vl_qtd_bruta: isScaling ? component.vl_qtd_bruta.times(scaleFactor) : component.vl_qtd_bruta,
+        vl_qtd_limpa: isScaling && component.vl_qtd_limpa ? component.vl_qtd_limpa.times(scaleFactor) : component.vl_qtd_limpa,
+        cd_unidade_uso: component.cd_unidade_uso,
+        vl_fator_correcao: component.vl_fator_correcao,
+        vl_indice_coccao: component.vl_indice_coccao,
+        ds_observacao: component.ds_observacao
+      }
+    });
+  }
+
+  return created.cd_ficha_tecnica;
+}
+
 async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
@@ -1452,77 +1554,76 @@ async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
         throw new Error(`Ficha ${fichaId} nao encontrada.`);
       }
 
-      const highestVersion = await tx.fichaTecnica.aggregate({
-        where: { cd_item_resultante: source.cd_item_resultante },
-        _max: { nr_versao: true }
+      return cloneFichaCore({
+        tx,
+        source,
+        targetItemId: source.cd_item_resultante,
+        restaurantId,
+        status: "rascunho",
+        scaleFactor: new Prisma.Decimal(1)
       });
-
-      const created = await tx.fichaTecnica.create({
-        data: {
-          cd_item_resultante: source.cd_item_resultante,
-          nm_exibicao: source.nm_exibicao,
-          cd_modalidade: source.cd_modalidade,
-          cd_unidade_rendimento: source.cd_unidade_rendimento,
-          nr_versao: (highestVersion._max.nr_versao ?? 0) + 1,
-          tp_status: "rascunho",
-          tp_modo_rendimento: source.tp_modo_rendimento,
-          vl_pct_perda: source.vl_pct_perda,
-          vl_peso_final: source.vl_peso_final,
-          vl_rendimento_porcoes: source.vl_rendimento_porcoes,
-          vl_preco_venda: source.vl_preco_venda,
-          vl_pct_despesa_variavel: source.vl_pct_despesa_variavel,
-          ds_modo_preparo: source.ds_modo_preparo,
-          ds_observacoes: source.ds_observacoes,
-          cd_restaurante: restaurantId
-        }
-      });
-
-      const stageIdMap = new Map<string, string>();
-
-      for (const stage of source.etapas) {
-        const createdStage = await tx.fichaEtapa.create({
-          data: {
-            cd_ficha_tecnica: created.cd_ficha_tecnica,
-            cd_tipo_etapa: stage.cd_tipo_etapa,
-            nr_ordem: stage.nr_ordem,
-            nm_etapa: stage.nm_etapa,
-            vl_peso_entrada: stage.vl_peso_entrada,
-            vl_peso_saida: stage.vl_peso_saida,
-            vl_fator_correcao: stage.vl_fator_correcao,
-            vl_indice_coccao: stage.vl_indice_coccao,
-            vl_total_snapshot: stage.vl_total_snapshot,
-            ds_observacao: stage.ds_observacao
-          }
-        });
-
-        stageIdMap.set(stage.cd_ficha_etapa, createdStage.cd_ficha_etapa);
-      }
-
-      for (const component of source.componentes) {
-        await tx.fichaComponente.create({
-          data: {
-            cd_ficha_tecnica: created.cd_ficha_tecnica,
-            cd_ficha_etapa: component.cd_ficha_etapa ? stageIdMap.get(component.cd_ficha_etapa) ?? null : null,
-            cd_item_componente: component.cd_item_componente,
-            tp_componente: component.tp_componente,
-            nr_ordem: component.nr_ordem,
-            vl_qtd_bruta: component.vl_qtd_bruta,
-            vl_qtd_limpa: component.vl_qtd_limpa,
-            cd_unidade_uso: component.cd_unidade_uso,
-            vl_fator_correcao: component.vl_fator_correcao,
-            vl_indice_coccao: component.vl_indice_coccao,
-            ds_observacao: component.ds_observacao
-          }
-        });
-      }
-
-      return created.cd_ficha_tecnica;
     }, { timeout: 30000 });
 
     return getFichaDetailWithPrisma(duplicated, restaurantId);
   } catch {
     return null;
   }
+}
+
+// Vincula uma ficha existente (de outro item, usada como candidata) a um
+// item sem ficha ativa, clonando a estrutura - nunca move/altera a ficha ou
+// o item de origem, que normalmente segue sendo usado como ingrediente em
+// outras fichas. Quando scaleFactor != 1 as quantidades sao recalculadas
+// proporcionalmente; quando status = "ativa" a cascata de custo roda na
+// mesma transacao da criacao, para nunca deixar uma ficha ativa sem
+// snapshot de custo coerente.
+async function linkFichaToPendingItemWithPrisma(input: {
+  sourceFichaId: string;
+  targetItemId: string;
+  restaurantId: string;
+  scaleFactor: Prisma.Decimal;
+  status: "ativa" | "rascunho";
+  observacaoOverride?: string | null;
+}) {
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+
+  if (!prisma) {
+    throw new Error("Vinculo de ficha pendente requer banco de dados configurado.");
+  }
+
+  const linked = await prisma.$transaction(async (tx) => {
+    const source = await queryFicha(tx, input.sourceFichaId, input.restaurantId);
+
+    if (!source) {
+      throw new Error(`Ficha ${input.sourceFichaId} nao encontrada.`);
+    }
+
+    await assertNoCyclesBeforeSaving(
+      tx,
+      input.targetItemId,
+      source.componentes.map((component) => component.cd_item_componente)
+    );
+
+    const newFichaId = await cloneFichaCore({
+      tx,
+      source,
+      targetItemId: input.targetItemId,
+      restaurantId: input.restaurantId,
+      status: input.status,
+      scaleFactor: input.scaleFactor,
+      observacaoOverride: input.observacaoOverride
+    });
+
+    if (input.status === "ativa") {
+      await rebuildDependencyClosureForItem(tx, input.targetItemId);
+      await recalculateCascadeInTransaction(tx, [input.targetItemId], "ficha.vincular-pendente");
+    }
+
+    return newFichaId;
+  }, { timeout: 30000 });
+
+  return getFichaDetailWithPrisma(linked, input.restaurantId);
 }
 
 async function patchFichaQuickWithPrisma(
@@ -2370,6 +2471,23 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
       persistDemoStore(store);
 
       return toFichaDetail(store.fichas.find((entry) => entry.id === duplicated.id) ?? duplicated);
+    },
+
+    async linkFichaToPendingItem(input: {
+      sourceFichaId: string;
+      targetItemId: string;
+      scaleFactor: Prisma.Decimal;
+      status: "ativa" | "rascunho";
+      observacaoOverride?: string | null;
+    }) {
+      return linkFichaToPendingItemWithPrisma({
+        sourceFichaId: input.sourceFichaId,
+        targetItemId: input.targetItemId,
+        restaurantId,
+        scaleFactor: input.scaleFactor,
+        status: input.status,
+        observacaoOverride: input.observacaoOverride
+      });
     },
 
     async patchFichaQuick(input: { fichaId: string; name?: string; sellingPrice?: string }) {

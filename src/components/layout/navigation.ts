@@ -14,6 +14,7 @@ import RestaurantMenuRoundedIcon from "@mui/icons-material/RestaurantMenuRounded
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 export interface NavigationItem {
   href: string;
@@ -72,6 +73,7 @@ export function getNavigationSections(roleCodes: string[]): NavigationSection[] 
         { href: "/itens", label: "Itens", icon: Inventory2RoundedIcon },
         { href: "/pre-preparo", label: "Pré-preparo", icon: SoupKitchenRoundedIcon },
         { href: "/fichas", label: "Fichas Tecnicas", icon: LibraryBooksRoundedIcon },
+        { href: "/fichas/vincular-pendentes", label: "Vincular Fichas", icon: LinkRoundedIcon },
         { href: "/cadastros", label: "Cadastros", icon: HistoryEduRoundedIcon },
         { href: "/importacao", label: "Importacao", icon: CloudUploadRoundedIcon }
       ]
