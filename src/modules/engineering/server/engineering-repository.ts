@@ -1571,19 +1571,21 @@ async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
 }
 
 // Vincula uma ficha existente (de outro item, usada como candidata) a um
-// item sem ficha ativa, clonando a estrutura - nunca move/altera a ficha ou
-// o item de origem, que normalmente segue sendo usado como ingrediente em
-// outras fichas. Quando scaleFactor != 1 as quantidades sao recalculadas
-// proporcionalmente; quando status = "ativa" a cascata de custo roda na
-// mesma transacao da criacao, para nunca deixar uma ficha ativa sem
-// snapshot de custo coerente.
+// item sem ficha ativa. A pedido explicito do cliente: NAO clona e NAO
+// recalcula nada - reatribui a ficha candidata (cd_item_resultante) pro
+// item pendente exatamente como ela esta, ingredientes e rendimento
+// inalterados. So o numero de versao e recalculado (unico por item) e a
+// cascata de custo roda para refletir o novo item resultante.
+//
+// Risco aceito conscientemente a pedido do cliente: se a ficha candidata for
+// usada como ingrediente em outras fichas, essas outras fichas passam a
+// depender do item de destino em vez do item original - a UI avisa o
+// usuario quando isso se aplica (ver usedAsIngredientCount em
+// ficha-link-repository.ts).
 async function linkFichaToPendingItemWithPrisma(input: {
   sourceFichaId: string;
   targetItemId: string;
   restaurantId: string;
-  scaleFactor: Prisma.Decimal;
-  status: "ativa" | "rascunho";
-  observacaoOverride?: string | null;
 }) {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
@@ -1605,22 +1607,34 @@ async function linkFichaToPendingItemWithPrisma(input: {
       source.componentes.map((component) => component.cd_item_componente)
     );
 
-    const newFichaId = await cloneFichaCore({
-      tx,
-      source,
-      targetItemId: input.targetItemId,
-      restaurantId: input.restaurantId,
-      status: input.status,
-      scaleFactor: input.scaleFactor,
-      observacaoOverride: input.observacaoOverride
+    const highestVersion = await tx.fichaTecnica.aggregate({
+      where: { cd_item_resultante: input.targetItemId },
+      _max: { nr_versao: true }
     });
 
-    if (input.status === "ativa") {
-      await rebuildDependencyClosureForItem(tx, input.targetItemId);
-      await recalculateCascadeInTransaction(tx, [input.targetItemId], "ficha.vincular-pendente");
+    if (source.tp_status === "ativa") {
+      await tx.fichaTecnica.updateMany({
+        where: { cd_item_resultante: input.targetItemId, tp_status: "ativa" },
+        data: { tp_status: "inativa" }
+      });
     }
 
-    return newFichaId;
+    await tx.fichaTecnica.update({
+      where: { cd_ficha_tecnica: source.cd_ficha_tecnica },
+      data: {
+        cd_item_resultante: input.targetItemId,
+        nr_versao: (highestVersion._max.nr_versao ?? 0) + 1
+      }
+    });
+
+    await rebuildDependencyClosureForItem(tx, source.cd_item_resultante);
+    await rebuildDependencyClosureForItem(tx, input.targetItemId);
+
+    if (source.tp_status === "ativa") {
+      await recalculateCascadeInTransaction(tx, [input.targetItemId, source.cd_item_resultante], "ficha.vincular-pendente");
+    }
+
+    return source.cd_ficha_tecnica;
   }, { timeout: 30000 });
 
   return getFichaDetailWithPrisma(linked, input.restaurantId);
@@ -2473,20 +2487,11 @@ export function getEngineeringRepository(restaurantId: string = "rest_padrao") {
       return toFichaDetail(store.fichas.find((entry) => entry.id === duplicated.id) ?? duplicated);
     },
 
-    async linkFichaToPendingItem(input: {
-      sourceFichaId: string;
-      targetItemId: string;
-      scaleFactor: Prisma.Decimal;
-      status: "ativa" | "rascunho";
-      observacaoOverride?: string | null;
-    }) {
+    async linkFichaToPendingItem(input: { sourceFichaId: string; targetItemId: string }) {
       return linkFichaToPendingItemWithPrisma({
         sourceFichaId: input.sourceFichaId,
         targetItemId: input.targetItemId,
-        restaurantId,
-        scaleFactor: input.scaleFactor,
-        status: input.status,
-        observacaoOverride: input.observacaoOverride
+        restaurantId
       });
     },
 

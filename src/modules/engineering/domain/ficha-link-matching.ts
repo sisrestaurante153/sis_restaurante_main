@@ -18,6 +18,9 @@ export interface FichaCandidateSource {
 export interface FichaCandidate extends FichaCandidateSource {
   score: number;
   strength: MatchStrength;
+  // Quantas outras fichas usam este item como ingrediente - preenchido pelo
+  // repositorio (ficha-link-repository.ts), nao calculado aqui.
+  usedAsIngredientCount?: number;
 }
 
 export function rankFichaCandidates(
