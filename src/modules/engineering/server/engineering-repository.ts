@@ -1572,10 +1572,12 @@ async function duplicateFichaWithPrisma(fichaId: string, restaurantId: string) {
 
 // Vincula uma ficha existente (de outro item, usada como candidata) a um
 // item sem ficha ativa. A pedido explicito do cliente: NAO clona e NAO
-// recalcula nada - reatribui a ficha candidata (cd_item_resultante) pro
-// item pendente exatamente como ela esta, ingredientes e rendimento
-// inalterados. So o numero de versao e recalculado (unico por item) e a
-// cascata de custo roda para refletir o novo item resultante.
+// recalcula NADA - so reatribui a ficha candidata (cd_item_resultante) pro
+// item pendente exatamente como ela esta, ingredientes, rendimento e custo
+// inalterados. So o numero de versao muda (precisa ser unico por item) e o
+// fechamento de dependencias e atualizado (estrutura do grafo, nao calculo
+// de custo) - nenhuma cascata de recalculo de custo roda aqui. Se o cliente
+// quiser o custo atualizado, isso e uma acao separada e explicita.
 //
 // Risco aceito conscientemente a pedido do cliente: se a ficha candidata for
 // usada como ingrediente em outras fichas, essas outras fichas passam a
@@ -1629,10 +1631,6 @@ async function linkFichaToPendingItemWithPrisma(input: {
 
     await rebuildDependencyClosureForItem(tx, source.cd_item_resultante);
     await rebuildDependencyClosureForItem(tx, input.targetItemId);
-
-    if (source.tp_status === "ativa") {
-      await recalculateCascadeInTransaction(tx, [input.targetItemId, source.cd_item_resultante], "ficha.vincular-pendente");
-    }
 
     return source.cd_ficha_tecnica;
   }, { timeout: 30000 });
