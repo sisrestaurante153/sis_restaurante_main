@@ -6,6 +6,7 @@ import { requireSession } from "@/modules/access/server/session-cookie";
 import { getCatalogRepository } from "@/modules/catalog/server/catalog-repository";
 import { deleteCardapioAction } from "@/modules/menu/server/menu-actions";
 import { getMenuRepository } from "@/modules/menu/server/menu-repository";
+import { getMasterDataRepository } from "@/modules/master-data/server/master-data-repository";
 import { CardapioForm } from "@/modules/menu/ui/cardapio-form";
 import { CardapioItemsManager } from "@/modules/menu/ui/cardapio-items-manager";
 import { MissingFichaPanel } from "@/modules/menu/ui/missing-ficha-panel";
@@ -20,14 +21,21 @@ export default async function CardapioDetailPage({
 }) {
   const [session, { cardapioId }] = await Promise.all([requireSession(), params]);
   const menuRepository = getMenuRepository(session.restaurantId);
-  const [cardapio, itemOptions] = await Promise.all([
+  const [cardapio, itemOptions, channels] = await Promise.all([
     menuRepository.getCardapioDetail(cardapioId),
-    getCatalogRepository(session.restaurantId).listItemOptions()
+    getCatalogRepository(session.restaurantId).listItemOptions(),
+    getMasterDataRepository().listSalesChannels()
   ]);
 
   if (!cardapio) {
     notFound();
   }
+
+  // Mantem o canal atual na lista mesmo que tenha sido desativado depois -
+  // senao o Select fica num estado "valor sem opcao correspondente".
+  const channelOptions = channels
+    .filter((channel) => channel.active || channel.code === cardapio.channel)
+    .map((channel) => ({ code: channel.code, name: channel.name }));
 
   const sellableOptions = itemOptions
     .filter((option) => SELLABLE_TYPES.has(option.type))
@@ -63,6 +71,7 @@ export default async function CardapioDetailPage({
             channel: cardapio.channel,
             active: cardapio.active
           }}
+          channelOptions={channelOptions}
         />
 
         <MissingFichaPanel items={cardapio.items} />

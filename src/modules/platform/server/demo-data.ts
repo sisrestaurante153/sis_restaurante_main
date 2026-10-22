@@ -45,6 +45,13 @@ export interface DemoOperationalCategory {
   active: boolean;
 }
 
+export interface DemoSalesChannel {
+  id: string;
+  code: string;
+  name: string;
+  active: boolean;
+}
+
 export interface DemoItemTypeRegistryEntry {
   id: string;
   code: DemoItemType;
@@ -275,6 +282,7 @@ export interface DemoStore {
   suppliers: DemoSupplier[];
   units: DemoUnit[];
   operationalCategories: DemoOperationalCategory[];
+  salesChannels: DemoSalesChannel[];
   itemTypes: DemoItemTypeRegistryEntry[];
   stageTypes: DemoStageTypeRegistryEntry[];
   users: DemoUser[];
@@ -334,6 +342,14 @@ function createInitialDemoStore(): DemoStore {
       { id: "cat-descartaveis", code: "descartaveis", name: "Descartaveis", active: true },
       { id: "cat-montagem", code: "montagem", name: "Montagem", active: true },
       { id: "cat-operacional", code: "operacional", name: "Operacional", active: true }
+    ],
+    salesChannels: [
+      { id: "canal-salao", code: "salao", name: "Salao", active: true },
+      { id: "canal-delivery", code: "delivery", name: "Delivery", active: true },
+      { id: "canal-ambos", code: "ambos", name: "Salao e delivery", active: true },
+      { id: "canal-ifood", code: "ifood", name: "iFood", active: true },
+      { id: "canal-delivery-proprio", code: "delivery_proprio", name: "Delivery (proprio)", active: true },
+      { id: "canal-televendas", code: "televendas", name: "Televendas", active: true }
     ],
     itemTypes: [
       { id: "tipo-insumo", code: "insumo", name: "Insumo", active: true },
@@ -1031,6 +1047,7 @@ function syncDemoStoreFromDisk() {
       suppliers: persistedStore.suppliers ?? defaults.suppliers,
       units: persistedStore.units ?? defaults.units,
       operationalCategories: persistedStore.operationalCategories ?? defaults.operationalCategories,
+      salesChannels: persistedStore.salesChannels ?? defaults.salesChannels,
       itemTypes: persistedStore.itemTypes ?? defaults.itemTypes,
       stageTypes: persistedStore.stageTypes ?? defaults.stageTypes,
       users: persistedStore.users ?? defaults.users,

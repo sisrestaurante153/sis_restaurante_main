@@ -5,6 +5,7 @@ import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import FastfoodRoundedIcon from "@mui/icons-material/FastfoodRounded";
 import LabelRoundedIcon from "@mui/icons-material/LabelRounded";
 import LinearScaleRoundedIcon from "@mui/icons-material/LinearScaleRounded";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import type { SvgIconComponent } from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -73,18 +74,27 @@ const MENUS: MenuDef[] = [
     icon: LinearScaleRoundedIcon,
     accent: "#A32D2D",
     accentSoft: "#FBEAEA"
+  },
+  {
+    title: "Canais de Venda",
+    description: "Canais usados no cadastro de cardápios (salão, iFood, televendas...).",
+    href: "/cadastros/canais",
+    icon: StorefrontRoundedIcon,
+    accent: "#185FA5",
+    accentSoft: "#E6F1FB"
   }
 ];
 
 export default async function CadastrosHubPage() {
   const repository = getMasterDataRepository();
-  const [suppliers, units, categories, modalities, itemTypes, stageTypes] = await Promise.all([
+  const [suppliers, units, categories, modalities, itemTypes, stageTypes, salesChannels] = await Promise.all([
     repository.listSuppliers(),
     repository.listUnits(),
     repository.listOperationalCategories(),
     repository.listModalities(),
     repository.listItemTypes(),
-    repository.listStageTypes()
+    repository.listStageTypes(),
+    repository.listSalesChannels()
   ]);
 
   const countsByHref: Record<string, { total: number; inactive: number }> = {
@@ -111,6 +121,10 @@ export default async function CadastrosHubPage() {
     "/cadastros/tipos-etapa": {
       total: stageTypes.length,
       inactive: stageTypes.filter((row) => !row.active).length
+    },
+    "/cadastros/canais": {
+      total: salesChannels.length,
+      inactive: salesChannels.filter((row) => !row.active).length
     }
   };
 

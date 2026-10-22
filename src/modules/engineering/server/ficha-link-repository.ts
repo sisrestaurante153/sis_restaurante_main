@@ -83,3 +83,42 @@ export async function listPendingFichaItems(restaurantId: string): Promise<Pendi
     }))
   }));
 }
+
+export interface SearchableFicha {
+  fichaId: string;
+  itemId: string;
+  itemName: string;
+  usedAsIngredientCount: number;
+}
+
+// Lista toda ficha ativa/rascunho do restaurante, pra busca manual quando a
+// sugestao automatica (por semelhanca de nome) nao encontrou nada.
+export async function listAllFichasForSearch(restaurantId: string): Promise<SearchableFicha[]> {
+  const env = getServerEnv();
+  const prisma = getPrismaClient(env.DATABASE_URL);
+  if (!prisma) return [];
+
+  const fichas = await prisma.fichaTecnica.findMany({
+    where: { cd_restaurante: restaurantId, tp_status: { in: ["ativa", "rascunho"] } },
+    select: {
+      cd_ficha_tecnica: true,
+      itemResultante: { select: { cd_item: true, nm_item: true } }
+    },
+    orderBy: { itemResultante: { nm_item: "asc" } }
+  });
+
+  const itemIds = fichas.map((f) => f.itemResultante.cd_item);
+  const usageCounts = await prisma.fichaComponente.groupBy({
+    by: ["cd_item_componente"],
+    where: { cd_item_componente: { in: itemIds }, fichaTecnica: { cd_restaurante: restaurantId } },
+    _count: { cd_item_componente: true }
+  });
+  const usageByItemId = new Map(usageCounts.map((row) => [row.cd_item_componente, row._count.cd_item_componente]));
+
+  return fichas.map((f) => ({
+    fichaId: f.cd_ficha_tecnica,
+    itemId: f.itemResultante.cd_item,
+    itemName: f.itemResultante.nm_item,
+    usedAsIngredientCount: usageByItemId.get(f.itemResultante.cd_item) ?? 0
+  }));
+}

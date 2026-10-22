@@ -9,13 +9,10 @@ import TextField from "@mui/material/TextField";
 import { FormSection } from "@/components/ui/FormSection";
 import { saveCardapioAction, type MenuFormState } from "@/modules/menu/server/menu-actions";
 
-const CHANNEL_OPTIONS = ["salao", "delivery", "ambos"];
-
-const CHANNEL_LABEL: Record<string, string> = {
-  salao: "Salão",
-  delivery: "Delivery",
-  ambos: "Salão e delivery"
-};
+interface ChannelOption {
+  code: string;
+  name: string;
+}
 
 interface CardapioFormProps {
   formId?: string;
@@ -25,9 +22,10 @@ interface CardapioFormProps {
     channel: string;
     active: boolean;
   };
+  channelOptions: ChannelOption[];
 }
 
-export function CardapioForm({ formId = "cardapio-form", initialValues }: CardapioFormProps) {
+export function CardapioForm({ formId = "cardapio-form", initialValues, channelOptions }: CardapioFormProps) {
   const [state, formAction] = useActionState(saveCardapioAction, { status: "idle" } satisfies MenuFormState);
 
   return (
@@ -70,11 +68,11 @@ export function CardapioForm({ formId = "cardapio-form", initialValues }: Cardap
             size="small"
             label="Canal"
             name="channel"
-            defaultValue={initialValues?.channel ?? "salao"}
+            defaultValue={initialValues?.channel ?? channelOptions[0]?.code ?? "salao"}
           >
-            {CHANNEL_OPTIONS.map((channel) => (
-              <MenuItem key={channel} value={channel}>
-                {CHANNEL_LABEL[channel] ?? channel}
+            {channelOptions.map((channel) => (
+              <MenuItem key={channel.code} value={channel.code}>
+                {channel.name}
               </MenuItem>
             ))}
           </TextField>

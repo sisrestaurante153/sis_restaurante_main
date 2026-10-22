@@ -67,6 +67,15 @@ const DEFAULT_OPERATIONAL_CATEGORIES = [
   "Operacional"
 ] as const;
 
+const DEFAULT_SALES_CHANNELS = [
+  { code: "salao", name: "Salão" },
+  { code: "delivery", name: "Delivery" },
+  { code: "ambos", name: "Salão e delivery" },
+  { code: "ifood", name: "iFood" },
+  { code: "delivery_proprio", name: "Delivery (próprio)" },
+  { code: "televendas", name: "Televendas" }
+] as const;
+
 const DEFAULT_MODALITIES = [
   { code: "producao", name: "Producao" },
   { code: "delivery", name: "Delivery" },
@@ -113,10 +122,11 @@ async function ensureItemTypeRegistry(tx: Prisma.TransactionClient) {
 async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
   await ensureItemTypeRegistry(tx);
 
-  const [supplierCount, unitCount, categoryCount, modalityCount, stageTypeCount] = await Promise.all([
+  const [supplierCount, unitCount, categoryCount, channelCount, modalityCount, stageTypeCount] = await Promise.all([
     tx.fornecedor.count(),
     tx.unidadeMedida.count(),
     tx.categoriaOperacional.count(),
+    tx.canalVenda.count(),
     tx.modalidade.count(),
     tx.tipoEtapa.count()
   ]);
@@ -150,6 +160,19 @@ async function ensureMasterDataRegistry(tx: Prisma.TransactionClient) {
       data: DEFAULT_OPERATIONAL_CATEGORIES.map((name) => ({
         ds_codigo: toNormalizedName(name),
         nm_categoria: name,
+        sn_ativo: true
+      })),
+      skipDuplicates: true
+    });
+  }
+
+  // Idem: canais de venda so sao semeados se a tabela estiver vazia, pra
+  // nao reviver canal que o usuario excluiu de proposito.
+  if (channelCount === 0) {
+    await tx.canalVenda.createMany({
+      data: DEFAULT_SALES_CHANNELS.map((channel) => ({
+        ds_codigo: channel.code,
+        nm_canal: channel.name,
         sn_ativo: true
       })),
       skipDuplicates: true
@@ -232,6 +255,35 @@ async function listOperationalCategoriesWithPrisma() {
       name: row.nm_categoria,
       active: row.sn_ativo,
       inUseCount: usageByName.get(row.nm_categoria) ?? 0
+    }));
+  } catch {
+    return null;
+  }
+}
+
+async function listSalesChannelsWithPrisma() {
+  const prisma = resolvePrisma();
+  if (!prisma) {
+    return null;
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await ensureMasterDataRegistry(tx);
+    });
+
+    const [rows, usageCounts] = await Promise.all([
+      prisma.canalVenda.findMany({ orderBy: { nm_canal: "asc" } }),
+      prisma.cardapio.groupBy({ by: ["tp_canal"], _count: { tp_canal: true } })
+    ]);
+    const usageByCode = new Map(usageCounts.map((row) => [row.tp_canal, row._count.tp_canal]));
+
+    return rows.map((row) => ({
+      id: row.cd_canal,
+      code: row.ds_codigo,
+      name: row.nm_canal,
+      active: row.sn_ativo,
+      inUseCount: usageByCode.get(row.ds_codigo) ?? 0
     }));
   } catch {
     return null;
@@ -424,6 +476,19 @@ function listOperationalCategoriesFromDemo() {
   );
 }
 
+function listSalesChannelsFromDemo() {
+  const store = getDemoStore();
+  return sortByName(
+    store.salesChannels.map((row) => ({
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      active: row.active,
+      inUseCount: store.cardapios.filter((cardapio) => cardapio.channel === row.code).length
+    }))
+  );
+}
+
 function listSuppliersFromDemo() {
   const store = getDemoStore();
   return sortByName(
@@ -484,6 +549,10 @@ export function getMasterDataRepository() {
       return (await listOperationalCategoriesWithPrisma()) ?? listOperationalCategoriesFromDemo();
     },
 
+    async listSalesChannels() {
+      return (await listSalesChannelsWithPrisma()) ?? listSalesChannelsFromDemo();
+    },
+
     async listSuppliers() {
       return (await listSuppliersWithPrisma()) ?? listSuppliersFromDemo();
     },
@@ -522,6 +591,57 @@ export function getMasterDataRepository() {
         unitOptions: unitRows.filter((row) => row.active).map((row) => row.code),
         supplierOptions: supplierRows.filter((row) => row.active).map((row) => row.name)
       };
+    },
+
+    async saveSalesChannel(input: { id?: string; name: string; active?: boolean }) {
+      const prisma = resolvePrisma();
+      const name = input.name.trim();
+      const code = toNormalizedName(name);
+
+      if (prisma) {
+        try {
+          const record = input.id
+            ? await prisma.canalVenda.update({
+                where: { cd_canal: input.id },
+                data: { nm_canal: name, ds_codigo: code, sn_ativo: input.active ?? true }
+              })
+            : await prisma.canalVenda.create({
+                data: { nm_canal: name, ds_codigo: code, sn_ativo: input.active ?? true }
+              });
+
+          return {
+            id: record.cd_canal,
+            code: record.ds_codigo,
+            name: record.nm_canal,
+            active: record.sn_ativo
+          };
+        } catch {
+          // fall back to demo storage
+        }
+      }
+
+      const store = getDemoStore();
+      const existing = input.id
+        ? store.salesChannels.find((row) => row.id === input.id)
+        : store.salesChannels.find((row) => row.code === code);
+
+      if (existing) {
+        existing.name = name;
+        existing.code = code;
+        existing.active = input.active ?? existing.active;
+        persistDemoStore(store);
+        return { id: existing.id, code: existing.code, name: existing.name, active: existing.active };
+      }
+
+      const created = {
+        id: createDemoId("canal"),
+        code,
+        name,
+        active: input.active ?? true
+      };
+      store.salesChannels.push(created);
+      persistDemoStore(store);
+      return created;
     },
 
     async saveOperationalCategory(input: { id?: string; name: string; active?: boolean }) {
@@ -616,6 +736,52 @@ export function getMasterDataRepository() {
       }
 
       store.suppliers = store.suppliers.filter((row) => row.id !== id);
+      persistDemoStore(store);
+      return { success: true as const };
+    },
+
+    async deleteSalesChannel(id: string) {
+      const prisma = resolvePrisma();
+
+      if (prisma) {
+        let prismaReachable = false;
+        try {
+          const result = await prisma.$transaction(async (tx) => {
+            prismaReachable = true;
+            const channel = await tx.canalVenda.findUnique({ where: { cd_canal: id } });
+            if (!channel) return { notFound: true, blocked: false };
+            const linked = await tx.cardapio.count({ where: { tp_canal: channel.ds_codigo } });
+            if (linked > 0) return { notFound: false, blocked: true };
+            await tx.canalVenda.delete({ where: { cd_canal: id } });
+            return { notFound: false, blocked: false };
+          });
+
+          if (result.notFound) return { success: false as const, reason: "Canal nao encontrado." };
+          if (result.blocked) return { success: false as const, reason: "Nao foi possivel excluir: existe cardapio vinculado a este canal." };
+          return { success: true as const };
+        } catch {
+          if (prismaReachable) {
+            return { success: false as const, reason: "Erro ao excluir canal. Tente novamente." };
+          }
+          // Banco inacessível — fall to demo storage
+        }
+      }
+
+      const store = getDemoStore();
+      const channel = store.salesChannels.find((row) => row.id === id);
+      if (!channel) {
+        return { success: false as const, reason: "Canal nao encontrado." };
+      }
+
+      const linked = store.cardapios.some((cardapio) => cardapio.channel === channel.code);
+      if (linked) {
+        return {
+          success: false as const,
+          reason: "Nao foi possivel excluir: existe cardapio vinculado a este canal."
+        };
+      }
+
+      store.salesChannels = store.salesChannels.filter((row) => row.id !== id);
       persistDemoStore(store);
       return { success: true as const };
     },

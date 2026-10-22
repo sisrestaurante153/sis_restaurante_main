@@ -1,6 +1,6 @@
 import Alert from "@mui/material/Alert";
 import { requireSession } from "@/modules/access/server/session-cookie";
-import { listPendingFichaItems } from "@/modules/engineering/server/ficha-link-repository";
+import { listAllFichasForSearch, listPendingFichaItems } from "@/modules/engineering/server/ficha-link-repository";
 import { PendingFichasList } from "@/modules/engineering/ui/pending-fichas-list";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageFeedbackSnackbar } from "@/components/ui/PageFeedbackSnackbar";
@@ -15,7 +15,10 @@ export default async function VincularFichasPendentesPage({ searchParams }: { se
 
   // Sempre recalculada ao vivo, sem cache - a lista reflete o estado atual
   // do catalogo a cada carregamento da pagina.
-  const pendingItems = await listPendingFichaItems(session.restaurantId);
+  const [pendingItems, searchableFichas] = await Promise.all([
+    listPendingFichaItems(session.restaurantId),
+    listAllFichasForSearch(session.restaurantId)
+  ]);
 
   const feedback =
     params.linked === "1"
@@ -37,11 +40,11 @@ export default async function VincularFichasPendentesPage({ searchParams }: { se
       />
 
       <Alert severity="info" sx={{ mb: 3 }}>
-        A ficha e o item candidato original nunca sao alterados - vincular sempre cria uma ficha nova para o item
-        pendente. Essa lista e recalculada toda vez que a pagina carrega.
+        Vincular reatribui a ficha escolhida pro item pendente, exatamente como ela esta - ingredientes e custo nao
+        sao recalculados. Essa lista e recalculada toda vez que a pagina carrega.
       </Alert>
 
-      <PendingFichasList items={pendingItems} />
+      <PendingFichasList items={pendingItems} allFichas={searchableFichas} />
       <PageFeedbackSnackbar message={feedback?.message} severity={feedback?.severity} />
     </>
   );

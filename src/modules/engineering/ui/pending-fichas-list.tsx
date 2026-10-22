@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import NextLink from "next/link";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -13,15 +12,18 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import type { PendingFichaItem } from "@/modules/engineering/server/ficha-link-repository";
+import type { PendingFichaItem, SearchableFicha } from "@/modules/engineering/server/ficha-link-repository";
 import { VincularFichaDialog } from "@/modules/engineering/ui/VincularFichaDialog";
+import { SearchFichaDialog } from "@/modules/engineering/ui/SearchFichaDialog";
 
 interface PendingFichasListProps {
   items: PendingFichaItem[];
+  allFichas: SearchableFicha[];
 }
 
-export function PendingFichasList({ items }: PendingFichasListProps) {
+export function PendingFichasList({ items, allFichas }: PendingFichasListProps) {
   const [selectedItem, setSelectedItem] = useState<PendingFichaItem | null>(null);
+  const [searchItem, setSearchItem] = useState<PendingFichaItem | null>(null);
 
   if (items.length === 0) {
     return (
@@ -76,13 +78,8 @@ export function PendingFichasList({ items }: PendingFichasListProps) {
                         Vincular
                       </Button>
                     ) : (
-                      <Button
-                        size="small"
-                        component={NextLink}
-                        href={`/fichas/nova?itemId=${item.itemId}`}
-                        variant="text"
-                      >
-                        Criar do zero
+                      <Button size="small" variant="text" onClick={() => setSearchItem(item)}>
+                        Pesquisar ficha
                       </Button>
                     )}
                   </TableCell>
@@ -100,6 +97,12 @@ export function PendingFichasList({ items }: PendingFichasListProps) {
       </Box>
 
       <VincularFichaDialog open={Boolean(selectedItem)} item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <SearchFichaDialog
+        open={Boolean(searchItem)}
+        item={searchItem}
+        allFichas={allFichas}
+        onClose={() => setSearchItem(null)}
+      />
     </>
   );
 }

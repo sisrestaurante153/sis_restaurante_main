@@ -60,6 +60,13 @@ const KIND_MAPPING: Record<string, KindConfig> = {
     codeMode: "text-readonly",
     usageLabel: "itens"
   },
+  canais: {
+    title: "Canais de Venda",
+    dbKind: "sales-channel",
+    desc: "Canais usados no cadastro de cardápios (ex: salão, iFood, televendas).",
+    codeMode: "text-readonly",
+    usageLabel: "cardápios"
+  },
   modalidades: {
     title: "Modalidades",
     dbKind: "modality",
@@ -189,6 +196,7 @@ export default async function MasterDataScreen({
   if (p.kind === "fornecedores") data = await repository.listSuppliers();
   if (p.kind === "unidades") data = await repository.listUnits();
   if (p.kind === "categorias") data = await repository.listOperationalCategories();
+  if (p.kind === "canais") data = await repository.listSalesChannels();
   if (p.kind === "modalidades") data = await repository.listModalities();
   if (p.kind === "tipos-item") data = await repository.listItemTypes();
   if (p.kind === "tipos-etapa") data = await repository.listStageTypes();

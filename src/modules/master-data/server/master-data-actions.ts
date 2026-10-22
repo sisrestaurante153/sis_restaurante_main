@@ -37,6 +37,7 @@ export async function saveMasterDataAction(formData: FormData) {
     "supplier": "/cadastros/fornecedores",
     "unit": "/cadastros/unidades",
     "operational-category": "/cadastros/categorias",
+    "sales-channel": "/cadastros/canais",
     "modality": "/cadastros/modalidades",
     "item-type": "/cadastros/tipos-item",
     "stage-type": "/cadastros/tipos-etapa"
@@ -44,6 +45,13 @@ export async function saveMasterDataAction(formData: FormData) {
 
   try {
     switch (kind) {
+      case "sales-channel":
+        await repository.saveSalesChannel({
+          id: formData.get("id")?.toString() || undefined,
+          name: formData.get("name")?.toString() ?? "",
+          active: formData.get("active")?.toString() === "true"
+        });
+        break;
       case "supplier":
         await repository.saveSupplier({
           id: formData.get("id")?.toString() || undefined,
@@ -120,6 +128,7 @@ export async function deleteMasterDataAction(formData: FormData) {
     "supplier": "/cadastros/fornecedores",
     "unit": "/cadastros/unidades",
     "operational-category": "/cadastros/categorias",
+    "sales-channel": "/cadastros/canais",
     "modality": "/cadastros/modalidades",
     "item-type": "/cadastros/tipos-item",
     "stage-type": "/cadastros/tipos-etapa"
@@ -132,6 +141,8 @@ export async function deleteMasterDataAction(formData: FormData) {
         ? await repository.deleteUnit(id)
         : kind === "operational-category"
           ? await repository.deleteOperationalCategory(id)
+          : kind === "sales-channel"
+            ? await repository.deleteSalesChannel(id)
           : kind === "modality"
             ? await repository.deleteModality(id)
             : kind === "item-type"

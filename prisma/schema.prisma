@@ -211,6 +211,17 @@ model CategoriaOperacional {
   @@map("categoria_operacional")
 }
 
+model CanalVenda {
+  cd_canal       String @id @default(cuid())
+  ds_codigo      String   @unique(map: "canal_venda_codigo_key")
+  nm_canal       String   @unique(map: "canal_venda_nome_key")
+  sn_ativo       Boolean  @default(true)
+  ts_criacao     DateTime @default(now()) @db.Timestamptz(6)
+  ts_atualizacao DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("canal_venda")
+}
+
 model Modalidade {
   cd_modalidade  String @id @default(cuid())
   ds_codigo      String         @unique(map: "modalidade_codigo_key")
