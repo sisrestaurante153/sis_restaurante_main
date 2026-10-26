@@ -1,4 +1,5 @@
 import "server-only";
+import { recalculateCascade } from "@/modules/engineering/server/cost-engine-service";
 import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import { getServerEnv } from "@/modules/platform/server/env";
 
@@ -183,8 +184,12 @@ export function getLinkedItemsRepository() {
             code: componente.itemComponente.ds_codigo_interno ?? "",
             name: componente.itemComponente.nm_item,
             role: "Ingrediente usado em etapa desse tipo",
-            removable: false,
-            removeBlockedReason: "Editado dentro da ficha técnica correspondente.",
+            // Removivel por aqui: tira o item de todo passo desse tipo de
+            // etapa em qualquer ficha, recalculando o custo das fichas
+            // afetadas. Pedido explicito do cliente pra poder tirar
+            // ingredientes incoerentes (ex: embalagem num passo de limpeza)
+            // sem precisar abrir cada ficha tecnica manualmente.
+            removable: true,
             href: `/itens/${componente.itemComponente.cd_item}`
           }))
         };
@@ -286,6 +291,26 @@ export function getLinkedItemsRepository() {
         }
         await prisma.itemCompra.deleteMany({ where: { cd_item: itemId, cd_fornecedor: recordId } });
         return { ok: true };
+      }
+
+      if (kind === "stage-type") {
+        const componentes = await prisma.fichaComponente.findMany({
+          where: { cd_item_componente: itemId, fichaEtapa: { cd_tipo_etapa: recordId } },
+          select: { fichaTecnica: { select: { cd_item_resultante: true } } }
+        });
+        if (componentes.length === 0) {
+          return { ok: false, message: "Vínculo não encontrado." };
+        }
+
+        const affectedItemIds = [...new Set(componentes.map((c) => c.fichaTecnica.cd_item_resultante))];
+        await prisma.fichaComponente.deleteMany({
+          where: { cd_item_componente: itemId, fichaEtapa: { cd_tipo_etapa: recordId } }
+        });
+        await recalculateCascade(prisma, affectedItemIds, "remocao_item_associado_tipo_etapa");
+        return {
+          ok: true,
+          message: `Removido de ${affectedItemIds.length} ${affectedItemIds.length === 1 ? "ficha" : "fichas"} — custo recalculado.`
+        };
       }
 
       return { ok: false, message: "Remoção não suportada para este cadastro por aqui." };
