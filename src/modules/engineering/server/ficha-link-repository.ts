@@ -13,8 +13,11 @@ export interface PendingFichaItem {
 }
 
 // Lista, sempre calculada ao vivo (sem cache), todo item vendavel sem ficha
-// tecnica ativa, com ate 3 fichas existentes (de outros itens) sugeridas
-// como candidatas por semelhanca de nome.
+// tecnica ativa que ja teve pelo menos uma venda registrada, com ate 3
+// fichas existentes (de outros itens) sugeridas como candidatas por
+// semelhanca de nome. Itens so cadastrados no cardapio (sem nenhuma venda
+// ainda) ficam de fora - sao cadastro novo esperando ficha, nao pendencia
+// urgente de custo/relatorio (pedido explicito do cliente, 2026-10-26).
 export async function listPendingFichaItems(restaurantId: string): Promise<PendingFichaItem[]> {
   const env = getServerEnv();
   const prisma = getPrismaClient(env.DATABASE_URL);
@@ -29,7 +32,8 @@ export async function listPendingFichaItems(restaurantId: string): Promise<Pendi
         cd_restaurante: restaurantId,
         sn_ativo: true,
         tp_item: { in: [...SELLABLE_TYPES] },
-        fichasResultantes: { none: { tp_status: "ativa" } }
+        fichasResultantes: { none: { tp_status: "ativa" } },
+        vendas: { some: {} }
       },
       select: { cd_item: true, nm_item: true, tp_item: true },
       orderBy: { nm_item: "asc" }

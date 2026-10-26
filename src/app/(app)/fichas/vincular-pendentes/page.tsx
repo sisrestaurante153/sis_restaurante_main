@@ -36,7 +36,7 @@ export default async function VincularFichasPendentesPage({ searchParams }: { se
           { label: "Vincular pendentes" }
         ]}
         title="Vincular fichas pendentes"
-        description="Itens vendaveis sem ficha tecnica ativa, com sugestoes de fichas ja existentes no catalogo para vincular."
+        description="Itens vendaveis com venda registrada mas sem ficha tecnica ativa, com sugestoes de fichas ja existentes no catalogo para vincular."
       />
 
       <Alert severity="info" sx={{ mb: 3 }}>
