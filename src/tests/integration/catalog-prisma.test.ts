@@ -14,12 +14,31 @@ describe.skipIf(!runIntegration)("catalog prisma integration", () => {
   const prisma = getIntegrationPrisma();
 
   beforeAll(async () => {
-    await prisma.custoSnapshotItem.deleteMany();
-    await prisma.itemCompra.deleteMany();
-    await prisma.itemAlias.deleteMany();
-    await prisma.conversaoUnidade.deleteMany();
-    await prisma.fichaComponente.deleteMany();
-    await prisma.fichaTecnica.deleteMany();
+    // Escopado aos proprios fixtures do teste (prefixo "integracao-catalogo")
+    // em vez de deleteMany() sem filtro nessas tabelas - um deleteMany() sem
+    // where aqui ja apagou ficha_tecnica/item_compra/etc de producao inteira
+    // uma vez (2026-10-26), porque DATABASE_URL neste projeto e sempre o
+    // banco real, nunca um banco de teste isolado.
+    const testItemIds = (
+      await prisma.item.findMany({
+        where: { nm_normalizado: { startsWith: "integracao-catalogo" } },
+        select: { cd_item: true }
+      })
+    ).map((entry) => entry.cd_item);
+
+    await prisma.custoSnapshotItem.deleteMany({ where: { cd_item: { in: testItemIds } } });
+    await prisma.itemCompra.deleteMany({ where: { cd_item: { in: testItemIds } } });
+    await prisma.itemAlias.deleteMany({ where: { cd_item: { in: testItemIds } } });
+    await prisma.conversaoUnidade.deleteMany({ where: { cd_item: { in: testItemIds } } });
+    await prisma.fichaComponente.deleteMany({
+      where: {
+        OR: [
+          { cd_item_componente: { in: testItemIds } },
+          { fichaTecnica: { cd_item_resultante: { in: testItemIds } } }
+        ]
+      }
+    });
+    await prisma.fichaTecnica.deleteMany({ where: { cd_item_resultante: { in: testItemIds } } });
     await prisma.item.deleteMany({
       where: {
         nm_normalizado: {

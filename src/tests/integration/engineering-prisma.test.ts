@@ -29,7 +29,19 @@ describe.skipIf(!runIntegration)("engineering prisma integration", () => {
   });
 
   it("rebuilds dependency closure and calculates an active ficha", async () => {
-    await prisma.calculoComponenteSnapshot.deleteMany();
+    // Escopado aos fixtures do proprio teste - deleteMany() sem where aqui
+    // ja apagou dado de producao real uma vez (2026-10-26).
+    await prisma.calculoComponenteSnapshot.deleteMany({
+      where: {
+        calculoExecucao: {
+          item: {
+            nm_normalizado: {
+              startsWith: "integracao-engenharia-"
+            }
+          }
+        }
+      }
+    });
     await prisma.custoSnapshotItem.deleteMany({
       where: {
         item: {

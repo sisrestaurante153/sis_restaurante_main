@@ -25,8 +25,17 @@ describe.skipIf(!runIntegration)(
     let unidadeGId = "";
 
     beforeAll(async () => {
-      await prisma.itemCompra.deleteMany();
-      await prisma.conversaoUnidade.deleteMany();
+      // Escopado aos fixtures do proprio teste - deleteMany() sem where
+      // nessas tabelas ja apagou dado de producao real uma vez (2026-10-26).
+      const testItemIds = (
+        await prisma.item.findMany({
+          where: { nm_normalizado: { startsWith: "integracao-presenter" } },
+          select: { cd_item: true }
+        })
+      ).map((entry) => entry.cd_item);
+
+      await prisma.itemCompra.deleteMany({ where: { cd_item: { in: testItemIds } } });
+      await prisma.conversaoUnidade.deleteMany({ where: { cd_item: { in: testItemIds } } });
       await prisma.item.deleteMany({
         where: { nm_normalizado: { startsWith: "integracao-presenter" } }
       });
