@@ -22,9 +22,12 @@ interface VincularFichaDialogProps {
   open: boolean;
   item: PendingFichaItem | null;
   onClose: () => void;
+  // As sugestoes automaticas (por semelhanca de nome) podem ser todas fracas
+  // ou erradas - abre a busca manual por todas as fichas em vez destas.
+  onSearchInstead: () => void;
 }
 
-export function VincularFichaDialog({ open, item, onClose }: VincularFichaDialogProps) {
+export function VincularFichaDialog({ open, item, onClose, onSearchInstead }: VincularFichaDialogProps) {
   const [selected, setSelected] = useState<FichaCandidate | null>(null);
 
   useEffect(() => {
@@ -79,6 +82,9 @@ export function VincularFichaDialog({ open, item, onClose }: VincularFichaDialog
                 ))}
               </RadioGroup>
             </FormControl>
+            <Button size="small" variant="text" onClick={onSearchInstead} sx={{ alignSelf: "flex-start" }}>
+              Nenhuma dessas - pesquisar outra ficha
+            </Button>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>

@@ -96,7 +96,15 @@ export function PendingFichasList({ items, allFichas }: PendingFichasListProps) 
         </Typography>
       </Box>
 
-      <VincularFichaDialog open={Boolean(selectedItem)} item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <VincularFichaDialog
+        open={Boolean(selectedItem)}
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onSearchInstead={() => {
+          setSearchItem(selectedItem);
+          setSelectedItem(null);
+        }}
+      />
       <SearchFichaDialog
         open={Boolean(searchItem)}
         item={searchItem}
