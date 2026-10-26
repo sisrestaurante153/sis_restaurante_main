@@ -51,7 +51,11 @@ async function runPythonParser(execution: ImportExecutionRecord, artifacts: Awai
 }
 
 async function processPendingExecution(execution: ImportExecutionRecord) {
-  const repository = getImportRepository();
+  // getImportRepository(null) = sem filtro de tenant - este worker e um
+  // processo unico compartilhado por todos os restaurantes (nao vinculado a
+  // sessao), entao as operacoes aqui dentro (mark*, getImportExecution) devem
+  // enxergar a execucao de qualquer restaurante, nao so a de "rest_padrao".
+  const repository = getImportRepository(null);
   const workerMetadata = buildWorkerMetadata();
   const artifacts = await getExecutionArtifactPaths(execution.id);
   let currentStage = "parser_python";
@@ -76,7 +80,8 @@ async function processPendingExecution(execution: ImportExecutionRecord) {
 
     const loadSummary = await loadLegacyImportReport({
       reportPath: artifacts.reportPath,
-      executionId: execution.id
+      executionId: execution.id,
+      restaurantId: execution.restaurantId
     });
     if (!("conflictsRecorded" in loadSummary)) {
       throw new Error("O loader retornou um preview em vez do resultado consolidado.");
@@ -173,7 +178,7 @@ async function processPendingExecution(execution: ImportExecutionRecord) {
 }
 
 async function processOnePendingExecution() {
-  const repository = getImportRepository();
+  const repository = getImportRepository(null);
   const activeExecution = await repository.getActiveImportExecution();
 
   if (!activeExecution) {

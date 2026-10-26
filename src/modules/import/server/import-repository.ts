@@ -56,6 +56,7 @@ export interface ImportExecutionRecord {
   requestedByUserId: string | null;
   requestedByName: string | null;
   requestedByEmail: string | null;
+  restaurantId: string | null;
   createdAt: Date;
   startedAt: Date | null;
   finishedAt: Date | null;
@@ -128,6 +129,7 @@ function mapImportExecution(execution: ImportExecutionPayload): ImportExecutionR
     requestedByUserId: execution.cd_solicitante ?? null,
     requestedByName: execution.solicitadoPor?.nm_usuario ?? null,
     requestedByEmail: execution.solicitadoPor?.ds_email ?? null,
+    restaurantId: execution.cd_restaurante ?? null,
     createdAt: execution.ts_criacao,
     startedAt: execution.ts_inicio ?? null,
     finishedAt: execution.ts_fim ?? null,
@@ -152,6 +154,7 @@ function mapDemoExecution(execution: DemoImportExecutionRecord): ImportExecution
     requestedByUserId: execution.requestedByUserId,
     requestedByName: execution.requestedByName,
     requestedByEmail: null,
+    restaurantId: null,
     createdAt: new Date(execution.createdAt),
     startedAt: execution.startedAt ? new Date(execution.startedAt) : null,
     finishedAt: execution.finishedAt ? new Date(execution.finishedAt) : null,
@@ -186,7 +189,7 @@ function importExecutionInclude() {
   } satisfies Prisma.ImportacaoExecucaoInclude;
 }
 
-async function findActiveExecutionTx(tx: Prisma.TransactionClient, restaurantId?: string) {
+async function findActiveExecutionTx(tx: Prisma.TransactionClient, restaurantId?: string | null) {
   return tx.importacaoExecucao.findFirst({
     where: {
       ...(restaurantId ? { cd_restaurante: restaurantId } : {}),
@@ -223,7 +226,7 @@ function mergePlainObject(
   });
 }
 
-async function listPendingConflictsWithPrisma(input?: { executionId?: string; restaurantId?: string }) {
+async function listPendingConflictsWithPrisma(input?: { executionId?: string; restaurantId?: string | null }) {
   const prisma = resolvePrismaClient();
 
   if (!prisma) {
@@ -417,7 +420,7 @@ async function resolveConflictWithPrisma(input: {
 }
 
 async function listImportExecutionsWithPrisma(
-  filters?: ImportExecutionFilters & { restaurantId?: string }
+  filters?: ImportExecutionFilters & { restaurantId?: string | null }
 ) {
   const prisma = resolvePrismaClient();
 
@@ -469,7 +472,7 @@ async function getImportExecutionWithPrisma(id: string) {
   }
 }
 
-async function getActiveImportExecutionWithPrisma(restaurantId?: string) {
+async function getActiveImportExecutionWithPrisma(restaurantId?: string | null) {
   const prisma = resolvePrismaClient();
 
   if (!prisma) {
@@ -813,7 +816,10 @@ function updateDemoExecution(
   return mapDemoExecution(updated);
 }
 
-export function getImportRepository(restaurantId = "rest_padrao") {
+// restaurantId=null (explicito, diferente de omitir o argumento) busca sem
+// filtro de tenant - usado pelo worker de importacao, que e um processo unico
+// compartilhado entre todos os restaurantes, nao vinculado a uma sessao.
+export function getImportRepository(restaurantId: string | null = "rest_padrao") {
   return {
     async createImportExecution(input: {
       originalFileName: string;

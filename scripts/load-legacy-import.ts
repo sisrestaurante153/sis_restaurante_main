@@ -163,7 +163,8 @@ async function upsertImportedItems(
   suppliers: Map<
     string,
     Awaited<ReturnType<typeof prisma.fornecedor.findUnique>>
-  >
+  >,
+  restaurantId: string
 ) {
   const byCanonical = new Map<
     string,
@@ -176,7 +177,7 @@ async function upsertImportedItems(
   // propria planilha sendo importada agora).
   const knownNormalizedNames: Array<{ cd_item: string; nm_item: string; nm_normalizado: string }> =
     await prisma.item.findMany({
-      where: { cd_restaurante: "rest_padrao", sn_ativo: true },
+      where: { cd_restaurante: restaurantId, sn_ativo: true },
       select: { cd_item: true, nm_item: true, nm_normalizado: true }
     });
   const fuzzyConflicts: Array<{
@@ -236,7 +237,7 @@ async function upsertImportedItems(
       where: {
         nm_normalizado_cd_restaurante: {
           nm_normalizado: item.canonical_name,
-          cd_restaurante: "rest_padrao"
+          cd_restaurante: restaurantId
         }
       },
       update: {
@@ -251,7 +252,7 @@ async function upsertImportedItems(
         tp_item: mapImportedItemType(item.item_type),
         cd_unidade_estoque: usageUnit?.cd_unidade_medida ?? null,
         cd_unidade_uso_padrao: usageUnit?.cd_unidade_medida ?? null,
-        cd_restaurante: "rest_padrao"
+        cd_restaurante: restaurantId
       }
     });
 
@@ -432,7 +433,8 @@ async function importRecipes(
   units: Map<
     string,
     Awaited<ReturnType<typeof prisma.unidadeMedida.findUnique>>
-  >
+  >,
+  restaurantId: string
 ) {
   const directEdges: Array<{ parentItemId: string; childItemId: string }> = [];
 
@@ -453,7 +455,7 @@ async function importRecipes(
         tp_status: "ativa",
         tp_modo_rendimento: "peso_final",
         vl_peso_final: numericString(recipe.yield_value, "1.0000"),
-        cd_restaurante: "rest_padrao"
+        cd_restaurante: restaurantId
       },
       create: {
         cd_item_resultante: resultItem.cd_item,
@@ -461,7 +463,7 @@ async function importRecipes(
         tp_status: "ativa",
         tp_modo_rendimento: "peso_final",
         vl_peso_final: numericString(recipe.yield_value, "1.0000"),
-        cd_restaurante: "rest_padrao"
+        cd_restaurante: restaurantId
       }
     });
 
@@ -615,6 +617,11 @@ export async function loadLegacyImportReport(input: {
   reportPath: string;
   executionId?: string | null;
   dryRun?: boolean;
+  // Tenant que recebe os itens/fichas importados. "rest_padrao" so faz
+  // sentido pra execucao manual via CLI (sem executionId); quando a
+  // importacao e gerenciada por uma execucao real (worker), o chamador deve
+  // passar o cd_restaurante daquela execucao - ver nota no import-worker.ts.
+  restaurantId?: string | null;
 }) {
   const dryRun = input.dryRun ?? false;
   const inputAbsolutePath = path.resolve(input.reportPath);
@@ -660,6 +667,21 @@ export async function loadLegacyImportReport(input: {
       });
     }
 
+    // input.restaurantId e a fonte confiavel (o worker ja le isso da propria
+    // execucao antes de chamar). Se nao vier (ex: chamador antigo/esquecido),
+    // busca da execucao gerenciada em vez de assumir rest_padrao em silencio;
+    // so cai no default quando e mesmo uma execucao solta via CLI.
+    const restaurantId =
+      input.restaurantId ??
+      (managedExternally
+        ? (
+            await prisma.importacaoExecucao.findUnique({
+              where: { cd_importacao: importRunId },
+              select: { cd_restaurante: true }
+            })
+          )?.cd_restaurante ?? "rest_padrao"
+        : "rest_padrao");
+
     const units = await ensureUnits(prisma);
     const suppliers = await ensureSuppliers(prisma);
     const { byCanonical: itemsByCanonical, fuzzyConflicts } = await upsertImportedItems(
@@ -667,7 +689,8 @@ export async function loadLegacyImportReport(input: {
       importRunId,
       report.staging.items,
       units,
-      suppliers
+      suppliers,
+      restaurantId
     );
 
     await applyAliases(prisma, report.aliases, itemsByCanonical);
@@ -676,7 +699,8 @@ export async function loadLegacyImportReport(input: {
       importRunId,
       report.staging.recipes,
       itemsByCanonical,
-      units
+      units,
+      restaurantId
     );
     // Quase-duplicatas detectadas no upsert (nome muito parecido com item ja
     // existente, mas nao identico) entram na mesma fila de conflitos que o
