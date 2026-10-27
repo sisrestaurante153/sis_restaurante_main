@@ -49,20 +49,28 @@ export async function listPendingFichaItems(restaurantId: string): Promise<Pendi
         nm_item: true,
         fichasResultantes: {
           where: { tp_status: "ativa" },
-          select: { cd_ficha_tecnica: true },
+          select: { cd_ficha_tecnica: true, nm_exibicao: true },
           take: 1
         }
       }
     })
   ]);
 
+  // Usa o nome de exibicao da ficha quando ele existe e diverge do nome do
+  // item (comum em fichas antigas) - comparar/mostrar pelo nm_item puro faz
+  // a sugestao de match (e a propria busca manual) ignorar ou rotular errado
+  // candidatas obvias, ex: ficha "Porcao polenta frita (sab)" cujo item na
+  // verdade se chama "Polenta Frita 150g".
   const candidateSources = candidatePool
     .filter((item) => item.fichasResultantes.length > 0)
-    .map((item) => ({
-      itemId: item.cd_item,
-      itemName: item.nm_item,
-      fichaId: item.fichasResultantes[0].cd_ficha_tecnica
-    }));
+    .map((item) => {
+      const displayName = item.fichasResultantes[0].nm_exibicao?.trim();
+      return {
+        itemId: item.cd_item,
+        itemName: displayName && displayName.length > 0 ? displayName : item.nm_item,
+        fichaId: item.fichasResultantes[0].cd_ficha_tecnica
+      };
+    });
 
   // Quantas fichas usam cada item candidato como ingrediente - exibido como
   // aviso antes de reatribuir (vincular nao clona, entao reatribuir uma
@@ -106,6 +114,7 @@ export async function listAllFichasForSearch(restaurantId: string): Promise<Sear
     where: { cd_restaurante: restaurantId, tp_status: { in: ["ativa", "rascunho"] } },
     select: {
       cd_ficha_tecnica: true,
+      nm_exibicao: true,
       itemResultante: { select: { cd_item: true, nm_item: true } }
     },
     orderBy: { itemResultante: { nm_item: "asc" } }
@@ -119,10 +128,15 @@ export async function listAllFichasForSearch(restaurantId: string): Promise<Sear
   });
   const usageByItemId = new Map(usageCounts.map((row) => [row.cd_item_componente, row._count.cd_item_componente]));
 
-  return fichas.map((f) => ({
-    fichaId: f.cd_ficha_tecnica,
-    itemId: f.itemResultante.cd_item,
-    itemName: f.itemResultante.nm_item,
-    usedAsIngredientCount: usageByItemId.get(f.itemResultante.cd_item) ?? 0
-  }));
+  return fichas.map((f) => {
+    const displayName = f.nm_exibicao?.trim();
+    return {
+      fichaId: f.cd_ficha_tecnica,
+      itemId: f.itemResultante.cd_item,
+      // Nome de exibicao da ficha quando existe e diverge do item - ver
+      // comentario em listPendingFichaItems sobre o mesmo problema.
+      itemName: displayName && displayName.length > 0 ? displayName : f.itemResultante.nm_item,
+      usedAsIngredientCount: usageByItemId.get(f.itemResultante.cd_item) ?? 0
+    };
+  });
 }
