@@ -33,10 +33,15 @@ async function defaultProbeDatabase(env: ServerEnv) {
 // host exposto temporariamente (sem credenciais) pra diagnosticar divergencia
 // entre o DATABASE_URL configurado na Vercel e o esperado - ver CLAUDE.md,
 // remover depois que o deploy de producao for confirmado apontando pro banco certo.
+// O host do pooler (aws-1-sa-east-1.pooler.supabase.com) e compartilhado
+// entre varios projetos Supabase da mesma regiao - o identificador real do
+// projeto fica no usuario da connection string (ex: postgres.<project-ref>),
+// nao no host. Expor os dois.
 function safeDatabaseHost(databaseUrl?: string): string | undefined {
   if (!databaseUrl) return undefined;
   try {
-    return new URL(databaseUrl).hostname;
+    const url = new URL(databaseUrl);
+    return `${url.username || "(sem usuario)"}@${url.hostname}`;
   } catch {
     return "invalid-url";
   }
