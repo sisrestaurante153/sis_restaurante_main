@@ -1,7 +1,11 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getBillingRepository } from "@/modules/billing/server/billing-repository";
-import { getPayment, getPreapproval } from "@/modules/billing/server/mercadopago-client";
+import {
+  getAuthorizedPayment,
+  getPayment,
+  getPreapproval
+} from "@/modules/billing/server/mercadopago-client";
 
 // Mercado Pago envia eventos via POST com { type, data: { id } } — o payload
 // não traz o recurso completo, é preciso buscar via API depois de validar a
@@ -20,7 +24,6 @@ interface MercadoPagoWebhookPayload {
 // sem isso o evento era ignorado em silencio e a assinatura nunca mudava de
 // status. Aceitar as duas formas porque a doc cita ambas.
 const PREAPPROVAL_TYPES = ["preapproval", "subscription_preapproval"];
-const PAYMENT_TYPES = ["payment", "subscription_authorized_payment"];
 
 // O painel do Mercado Pago tem uma assinatura secreta por modo (teste e
 // producao), e ambos os modos entregam na MESMA URL - entao a rota precisa
@@ -92,6 +95,43 @@ async function getRestaurantContact(gatewaySubscriptionId: string) {
   };
 }
 
+// Falha de email nunca deve derrubar o processamento do evento: o Mercado Pago
+// reenviaria a notificacao e o pagamento seria reprocessado por um motivo que
+// nao tem nada a ver com cobranca.
+async function notifyPaymentConfirmed(gatewaySubscriptionId: string) {
+  try {
+    const contact = await getRestaurantContact(gatewaySubscriptionId);
+    if (!contact) return;
+    const { sendPaymentConfirmedEmail } = await import("@/modules/platform/email-service");
+    await sendPaymentConfirmedEmail({
+      email: contact.email,
+      name: contact.name,
+      restaurantName: contact.restaurantName,
+      planLabel: planLabels[contact.plan] || contact.plan,
+      value: contact.value
+    });
+  } catch (emailErr) {
+    console.error("[mercadopago-webhook] erro ao enviar email de pagamento confirmado", emailErr);
+  }
+}
+
+async function notifyOverdue(gatewaySubscriptionId: string, value: number) {
+  try {
+    const contact = await getRestaurantContact(gatewaySubscriptionId);
+    if (!contact) return;
+    const { sendOverdueEmail } = await import("@/modules/platform/email-service");
+    await sendOverdueEmail({
+      email: contact.email,
+      name: contact.name,
+      restaurantName: contact.restaurantName,
+      dueDate: new Date().toLocaleDateString("pt-BR"),
+      value
+    });
+  } catch (emailErr) {
+    console.error("[mercadopago-webhook] erro ao enviar email de atraso", emailErr);
+  }
+}
+
 async function findLocalSubscriptionByGatewayId(gatewaySubscriptionId: string) {
   const { getPrismaClient } = await import("@/modules/platform/infra/prisma");
   const { getServerEnv } = await import("@/modules/platform/server/env");
@@ -121,84 +161,63 @@ export async function POST(request: Request) {
   const repo = getBillingRepository();
 
   try {
-    if (PAYMENT_TYPES.includes(payload.type)) {
-      const payment = await getPayment(payload.data.id);
+    if (payload.type === "subscription_authorized_payment") {
+      // data.id aqui e o id da FATURA, nao de um payment - buscar em
+      // /v1/payments com ele retorna 404. A fatura e o unico recurso que
+      // correlaciona o pagamento com a assinatura (preapproval_id).
+      const invoice = await getAuthorizedPayment(payload.data.id);
+      const gatewaySubscriptionId = invoice.preapproval_id;
+      const paymentStatus = invoice.payment?.status ?? invoice.status;
+      const paymentId = invoice.payment?.id ? String(invoice.payment.id) : String(invoice.id);
+      const amount = Number(invoice.transaction_amount) || 0;
 
-      // GAP CONHECIDO (ver spec, seção de judgment calls): a API real do
-      // Mercado Pago precisa ser consultada para confirmar de qual campo do
-      // objeto Payment extrair o id da assinatura (preapproval) relacionada
-      // — não é payload.data.id, que é o id do próprio pagamento. Candidatos
-      // a validar contra a doc oficial: payment.metadata.preapproval_id, ou
-      // point_of_interaction.transaction_data.subscription_id. Até validar,
-      // esta rota não consegue reconciliar pagamentos de assinatura
-      // corretamente (apenas pagamentos PIX avulsos, que já carregam o
-      // gatewayPaymentId correto via gerarCobrancaPixAction).
-      const gatewaySubscriptionId: string | null =
-        (payment as { metadata?: { preapproval_id?: string } }).metadata?.preapproval_id ?? null;
+      const sub = await findLocalSubscriptionByGatewayId(gatewaySubscriptionId);
 
-      if (!gatewaySubscriptionId) {
-        // Pagamento sem assinatura associada (PIX avulso criado via
-        // gerarCobrancaPixAction) — o upsertPayment original já foi feito
-        // na criação; aqui só atualiza o status pelo gatewayPaymentId.
+      if (sub && paymentStatus === "approved") {
+        await repo.updateSubscriptionStatus(gatewaySubscriptionId, "active", 0);
         await repo.upsertPayment({
-          subscriptionId: "", // ignorado no update (where é por gatewayPaymentId)
-          gatewayPaymentId: payment.id,
-          status: payment.status,
-          paymentMethod: "PIX",
-          value: payment.transaction_amount,
-          dueDate: new Date(),
-          paidAt: payment.status === "approved" && payment.date_approved ? new Date(payment.date_approved) : null
+          subscriptionId: sub.id,
+          gatewayPaymentId: paymentId,
+          status: paymentStatus,
+          paymentMethod: null,
+          value: amount,
+          dueDate: invoice.debit_date ? new Date(invoice.debit_date) : new Date(),
+          paidAt: new Date()
         });
-      } else if (payment.status === "approved") {
-        const sub = await findLocalSubscriptionByGatewayId(gatewaySubscriptionId);
-        if (sub) {
-          await repo.updateSubscriptionStatus(gatewaySubscriptionId, "active", 0);
-          await repo.upsertPayment({
-            subscriptionId: sub.id,
-            gatewayPaymentId: payment.id,
-            status: payment.status,
-            paymentMethod: null,
-            value: payment.transaction_amount,
-            dueDate: new Date(),
-            paidAt: payment.date_approved ? new Date(payment.date_approved) : new Date()
-          });
-
-          try {
-            const contact = await getRestaurantContact(gatewaySubscriptionId);
-            if (contact) {
-              const { sendPaymentConfirmedEmail } = await import("@/modules/platform/email-service");
-              await sendPaymentConfirmedEmail({
-                email: contact.email,
-                name: contact.name,
-                restaurantName: contact.restaurantName,
-                planLabel: planLabels[contact.plan] || contact.plan,
-                value: contact.value
-              });
-            }
-          } catch (emailErr) {
-            console.error("[mercadopago-webhook] erro ao enviar email de pagamento confirmado", emailErr);
-          }
-        }
-      } else if (payment.status === "rejected" || payment.status === "cancelled") {
+        await notifyPaymentConfirmed(gatewaySubscriptionId);
+      } else if (sub && (paymentStatus === "rejected" || paymentStatus === "cancelled")) {
         await repo.updateSubscriptionStatus(gatewaySubscriptionId, "overdue", 1);
-
-        try {
-          const contact = await getRestaurantContact(gatewaySubscriptionId);
-          if (contact) {
-            const { sendOverdueEmail } = await import("@/modules/platform/email-service");
-            await sendOverdueEmail({
-              email: contact.email,
-              name: contact.name,
-              restaurantName: contact.restaurantName,
-              dueDate: new Date().toLocaleDateString("pt-BR"),
-              value: payment.transaction_amount
-            });
-          }
-        } catch (emailErr) {
-          console.error("[mercadopago-webhook] erro ao enviar email de atraso", emailErr);
-        }
+        await repo.upsertPayment({
+          subscriptionId: sub.id,
+          gatewayPaymentId: paymentId,
+          status: paymentStatus,
+          paymentMethod: null,
+          value: amount,
+          dueDate: invoice.debit_date ? new Date(invoice.debit_date) : new Date(),
+          paidAt: null
+        });
+        await notifyOverdue(gatewaySubscriptionId, amount);
       }
-      // demais status (pending, in_process, etc.) são intencionalmente ignorados
+      // demais status (scheduled, pending, etc.) sao intencionalmente ignorados
+    } else if (payload.type === "payment") {
+      // Pagamento avulso (PIX gerado por gerarCobrancaPixAction): a linha ja
+      // existe no banco desde a criacao da cobranca, entao aqui so o status
+      // muda. Nunca criar: nao ha como saber a assinatura por este evento.
+      const payment = await getPayment(payload.data.id);
+      const updated = await repo.updatePaymentStatusByGatewayId({
+        gatewayPaymentId: payment.id,
+        status: payment.status,
+        paidAt:
+          payment.status === "approved" && payment.date_approved ? new Date(payment.date_approved) : null
+      });
+
+      if (updated === 0) {
+        console.warn(
+          "[mercadopago-webhook] pagamento sem correspondencia local, ignorado",
+          payment.id,
+          payment.status
+        );
+      }
     } else if (PREAPPROVAL_TYPES.includes(payload.type) || payload.entity === "preapproval") {
       const preapproval = await getPreapproval(payload.data.id);
 

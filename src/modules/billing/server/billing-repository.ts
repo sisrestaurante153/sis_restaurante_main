@@ -227,6 +227,26 @@ export function getBillingRepository() {
       });
     },
 
+    // Atualiza um pagamento que ja existe, identificado so pelo id do gateway.
+    // Usado quando a notificacao nao diz a qual assinatura o pagamento pertence
+    // (PIX avulso, cuja linha ja foi criada na geracao da cobranca): um upsert
+    // aqui tentaria criar a linha sem cd_assinatura valido e violaria a FK.
+    // Retorna quantas linhas foram afetadas para o chamador saber se achou.
+    async updatePaymentStatusByGatewayId(data: {
+      gatewayPaymentId: string;
+      status: string;
+      paidAt?: Date | null;
+    }): Promise<number> {
+      const result = await db.pagamento.updateMany({
+        where: { cd_gateway_payment: data.gatewayPaymentId },
+        data: {
+          tp_status: data.status,
+          ts_pagamento: data.paidAt ?? null
+        }
+      });
+      return result.count;
+    },
+
     async listPlanConfigs() {
       return db.configuracaoPlano.findMany({
         where: { sn_ativo: true },

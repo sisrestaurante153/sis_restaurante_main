@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock do billing repository
 const mockRepo = {
   updateSubscriptionStatus: vi.fn().mockResolvedValue(undefined),
-  upsertPayment: vi.fn().mockResolvedValue(undefined)
+  upsertPayment: vi.fn().mockResolvedValue(undefined),
+  updatePaymentStatusByGatewayId: vi.fn().mockResolvedValue(1)
 };
 
 vi.mock("@/modules/billing/server/billing-repository", () => ({
@@ -14,10 +15,12 @@ vi.mock("@/modules/billing/server/billing-repository", () => ({
 // Mock do cliente Mercado Pago (busca do recurso completo após o evento)
 const mockGetPayment = vi.fn();
 const mockGetPreapproval = vi.fn();
+const mockGetAuthorizedPayment = vi.fn();
 
 vi.mock("@/modules/billing/server/mercadopago-client", () => ({
   getPayment: (id: string) => mockGetPayment(id),
-  getPreapproval: (id: string) => mockGetPreapproval(id)
+  getPreapproval: (id: string) => mockGetPreapproval(id),
+  getAuthorizedPayment: (id: string) => mockGetAuthorizedPayment(id)
 }));
 
 // Mock do prisma usado internamente na route
@@ -113,38 +116,73 @@ describe("webhook Mercado Pago", () => {
     });
   });
 
-  describe("type: payment", () => {
-    it("pagamento de assinatura aprovado atualiza para 'active' e registra o pagamento", async () => {
-      mockGetPayment.mockResolvedValue({
-        id: "pay_1",
-        status: "approved",
-        transaction_amount: 99,
-        date_approved: "2026-06-01T00:00:00Z",
-        metadata: { preapproval_id: "mp_sub_1" }
+  // Cobranca recorrente da assinatura. O data.id e o id da FATURA
+  // (/authorized_payments), nao de um payment - e so a fatura carrega o
+  // preapproval_id que liga o pagamento a assinatura.
+  describe("type: subscription_authorized_payment", () => {
+    it("fatura aprovada atualiza para 'active' e registra o pagamento da assinatura", async () => {
+      mockGetAuthorizedPayment.mockResolvedValue({
+        id: 6114264375,
+        preapproval_id: "mp_sub_1",
+        transaction_amount: "299.00",
+        status: "processed",
+        debit_date: "2026-11-23T11:12:25.892-04:00",
+        payment: { id: 19951521071, status: "approved", status_detail: "accredited" }
       });
 
-      await callWebhook({ type: "payment", data: { id: "pay_1" } });
+      await callWebhook({ type: "subscription_authorized_payment", data: { id: "invoice_1" } });
 
+      expect(mockGetAuthorizedPayment).toHaveBeenCalledWith("invoice_1");
+      expect(mockGetPayment).not.toHaveBeenCalled();
       expect(mockRepo.updateSubscriptionStatus).toHaveBeenCalledWith("mp_sub_1", "active", 0);
       expect(mockRepo.upsertPayment).toHaveBeenCalledWith(
-        expect.objectContaining({ gatewayPaymentId: "pay_1", status: "approved", value: 99 })
+        expect.objectContaining({
+          subscriptionId: "sub-local-1",
+          gatewayPaymentId: "19951521071",
+          status: "approved",
+          value: 299
+        })
       );
     });
 
-    it("pagamento de assinatura rejeitado marca 'overdue'", async () => {
-      mockGetPayment.mockResolvedValue({
-        id: "pay_2",
-        status: "rejected",
-        transaction_amount: 99,
-        metadata: { preapproval_id: "mp_sub_1" }
+    it("fatura recusada marca 'overdue' e registra o pagamento sem data de pagamento", async () => {
+      mockGetAuthorizedPayment.mockResolvedValue({
+        id: 6114264376,
+        preapproval_id: "mp_sub_1",
+        transaction_amount: "299.00",
+        status: "recycling",
+        payment: { id: 19951521072, status: "rejected" }
       });
 
-      await callWebhook({ type: "payment", data: { id: "pay_2" } });
+      await callWebhook({ type: "subscription_authorized_payment", data: { id: "invoice_2" } });
 
       expect(mockRepo.updateSubscriptionStatus).toHaveBeenCalledWith("mp_sub_1", "overdue", 1);
+      expect(mockRepo.upsertPayment).toHaveBeenCalledWith(
+        expect.objectContaining({ gatewayPaymentId: "19951521072", status: "rejected", paidAt: null })
+      );
     });
 
-    it("pagamento PIX avulso (sem preapproval_id) só atualiza o status do próprio pagamento", async () => {
+    it("fatura ainda agendada nao mexe na assinatura", async () => {
+      mockGetAuthorizedPayment.mockResolvedValue({
+        id: 6114264377,
+        preapproval_id: "mp_sub_1",
+        transaction_amount: "299.00",
+        status: "scheduled",
+        payment: { id: 19951521073, status: "pending" }
+      });
+
+      await callWebhook({ type: "subscription_authorized_payment", data: { id: "invoice_3" } });
+
+      expect(mockRepo.updateSubscriptionStatus).not.toHaveBeenCalled();
+      expect(mockRepo.upsertPayment).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("type: payment", () => {
+    // PIX avulso: a linha ja existe desde a geracao da cobranca, entao o evento
+    // so muda o status. Criar aqui violaria a FK, porque este evento nao diz a
+    // qual assinatura o pagamento pertence.
+    it("pagamento avulso so atualiza o status pelo id do gateway", async () => {
       mockGetPayment.mockResolvedValue({
         id: "pay_pix_1",
         status: "approved",
@@ -155,12 +193,23 @@ describe("webhook Mercado Pago", () => {
       await callWebhook({ type: "payment", data: { id: "pay_pix_1" } });
 
       expect(mockRepo.updateSubscriptionStatus).not.toHaveBeenCalled();
-      expect(mockRepo.upsertPayment).toHaveBeenCalledWith(
+      expect(mockRepo.upsertPayment).not.toHaveBeenCalled();
+      expect(mockRepo.updatePaymentStatusByGatewayId).toHaveBeenCalledWith(
         expect.objectContaining({ gatewayPaymentId: "pay_pix_1", status: "approved" })
       );
     });
 
-    it("status pending não dispara nenhum efeito além do upsert sem assinatura", async () => {
+    it("pagamento sem correspondencia local responde 200 sem quebrar", async () => {
+      mockRepo.updatePaymentStatusByGatewayId.mockResolvedValueOnce(0);
+      mockGetPayment.mockResolvedValue({ id: "pay_orfao", status: "approved", transaction_amount: 99 });
+
+      const res = await callWebhook({ type: "payment", data: { id: "pay_orfao" } });
+
+      expect(res.status).toBe(200);
+      expect(mockRepo.upsertPayment).not.toHaveBeenCalled();
+    });
+
+    it("status pending nao mexe na assinatura", async () => {
       mockGetPayment.mockResolvedValue({ id: "pay_3", status: "pending", transaction_amount: 99 });
 
       await callWebhook({ type: "payment", data: { id: "pay_3" } });

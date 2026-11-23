@@ -53,6 +53,24 @@ export interface MercadoPagoPayment {
   };
 }
 
+// A fatura de uma assinatura (GET /authorized_payments/{id}) e o unico recurso
+// documentado que correlaciona um pagamento recorrente com a assinatura que o
+// originou: traz preapproval_id junto com o payment. O objeto Payment comum nao
+// expoe essa ligacao (a suposicao inicial de metadata.preapproval_id nao existe
+// na documentacao e falhou em producao em 2026-11-23).
+export interface MercadoPagoAuthorizedPayment {
+  id: number | string;
+  preapproval_id: string;
+  transaction_amount: number | string;
+  status: string;
+  debit_date?: string;
+  payment?: {
+    id: number | string;
+    status: string;
+    status_detail?: string;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Assinaturas (Preapproval)
 // ---------------------------------------------------------------------------
@@ -90,6 +108,12 @@ export async function getPreapproval(id: string): Promise<MercadoPagoPreapproval
 
 export async function getPayment(id: string): Promise<MercadoPagoPayment> {
   return mercadoPagoRequest<MercadoPagoPayment>(`/v1/payments/${id}`);
+}
+
+// Usado no evento subscription_authorized_payment, cujo data.id e o id da
+// fatura, nao o de um payment - buscar em /v1/payments com esse id nao funciona.
+export async function getAuthorizedPayment(id: string): Promise<MercadoPagoAuthorizedPayment> {
+  return mercadoPagoRequest<MercadoPagoAuthorizedPayment>(`/authorized_payments/${id}`);
 }
 
 export async function createPixPayment(data: {
