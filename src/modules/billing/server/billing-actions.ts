@@ -8,7 +8,7 @@ import { getBillingRepository } from "@/modules/billing/server/billing-repositor
 import { createPreapprovalCheckout, createPixPayment, planToDescription } from "@/modules/billing/server/mercadopago-client";
 import { PLANS } from "@/modules/billing/domain/plans";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createUserSession } from "@/modules/access/server/session-cookie";
 
 // ---------------------------------------------------------------------------
@@ -170,6 +170,23 @@ export async function registrarRestauranteAction(
 // Ativação paga — converte trial em assinatura real via Mercado Pago (cartão)
 // ---------------------------------------------------------------------------
 
+// O Mercado Pago recusa o preapproval com "Invalid value for back_url" quando
+// a URL nao e publica - e foi exatamente o que aconteceu em producao usando
+// env.APP_URL, que tem default http://localhost:3000 e passa na validacao do
+// Zod sem ser utilizavel. Derivar do host da requisicao sempre reflete o
+// dominio real por onde o cliente chegou, inclusive em preview deploys.
+async function resolvePublicBaseUrl(): Promise<string> {
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? "https";
+
+  if (host && !host.startsWith("localhost") && !host.startsWith("127.0.0.1")) {
+    return `${proto}://${host}`;
+  }
+
+  return getServerEnv().APP_URL;
+}
+
 const ativarSchema = z.object({
   subscriptionId: z.string().min(1),
   nomeCliente: z.string().min(2, "Informe o nome completo."),
@@ -210,8 +227,7 @@ export async function ativarAssinaturaAction(
   }
 
   try {
-    const env = getServerEnv();
-    const backUrl = `${env.APP_URL}/assinatura`;
+    const backUrl = `${await resolvePublicBaseUrl()}/assinatura`;
 
     // Cria a cobrança recorrente (preapproval) no Mercado Pago — devolve um
     // link de checkout hospedado onde o cliente informa o cartão. O id do
