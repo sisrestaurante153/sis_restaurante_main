@@ -9,6 +9,7 @@ export interface HealthPayload {
   };
   database: {
     status: DatabaseHealthStatus;
+    host?: string;
   };
   timestamp: string;
 }

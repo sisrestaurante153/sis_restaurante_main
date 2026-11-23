@@ -30,6 +30,18 @@ async function defaultProbeDatabase(env: ServerEnv) {
   }
 }
 
+// host exposto temporariamente (sem credenciais) pra diagnosticar divergencia
+// entre o DATABASE_URL configurado na Vercel e o esperado - ver CLAUDE.md,
+// remover depois que o deploy de producao for confirmado apontando pro banco certo.
+function safeDatabaseHost(databaseUrl?: string): string | undefined {
+  if (!databaseUrl) return undefined;
+  try {
+    return new URL(databaseUrl).hostname;
+  } catch {
+    return "invalid-url";
+  }
+}
+
 export async function getHealthPayload(
   options: GetHealthPayloadOptions = {}
 ): Promise<HealthPayload> {
@@ -44,7 +56,8 @@ export async function getHealthPayload(
       environment: env.NODE_ENV
     },
     database: {
-      status: databaseStatus
+      status: databaseStatus,
+      host: safeDatabaseHost(env.DATABASE_URL)
     },
     timestamp: (options.now ?? new Date()).toISOString()
   };
