@@ -29,6 +29,14 @@ export function SidebarNav({
   const pathname = usePathname();
   const visibleSections = getNavigationSections(roleCodes);
 
+  // Rotas aninhadas (ex: /fichas e /fichas/vincular-pendentes) casariam as
+  // duas pelo prefixo e acenderiam dois itens ao mesmo tempo - so o match
+  // mais especifico vale.
+  const activeHref = visibleSections
+    .flatMap((section) => section.items.map((item) => item.href))
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0];
+
   return (
     <Box component="nav" aria-label="Navegacao principal">
       {visibleSections.map((section) => (
@@ -55,7 +63,7 @@ export function SidebarNav({
 
           <List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.5, px: 2 }}>
             {section.items.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive = item.href === activeHref;
               const count = pendingCounts[item.href] ?? 0;
               const button = (
                 <ListItemButton

@@ -13,12 +13,19 @@ interface MercadoPagoWebhookPayload {
   data: { id: string };
 }
 
+// O painel do Mercado Pago tem uma assinatura secreta por modo (teste e
+// producao), e ambos os modos entregam na MESMA URL - entao a rota precisa
+// aceitar qualquer um dos secrets configurados. MERCADOPAGO_WEBHOOK_SECRET
+// aceita varios valores separados por virgula por causa disso.
 function verifySignature(request: Request, payload: MercadoPagoWebhookPayload): boolean {
   const signatureHeader = request.headers.get("x-signature");
   const requestId = request.headers.get("x-request-id");
-  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  const secrets = (process.env.MERCADOPAGO_WEBHOOK_SECRET ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
 
-  if (!secret) {
+  if (secrets.length === 0) {
     console.warn("MERCADOPAGO_WEBHOOK_SECRET não configurada nas variáveis de ambiente!");
     return false;
   }
@@ -30,9 +37,10 @@ function verifySignature(request: Request, payload: MercadoPagoWebhookPayload): 
   if (!parts.ts || !parts.v1) return false;
 
   const manifest = `id:${payload.data?.id};request-id:${requestId};ts:${parts.ts};`;
-  const expected = createHmac("sha256", secret).update(manifest).digest("hex");
 
-  return expected === parts.v1;
+  return secrets.some(
+    (secret) => createHmac("sha256", secret).update(manifest).digest("hex") === parts.v1
+  );
 }
 
 const planLabels: Record<string, string> = {

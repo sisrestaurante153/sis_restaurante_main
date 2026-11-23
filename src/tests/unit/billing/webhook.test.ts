@@ -91,6 +91,26 @@ describe("webhook Mercado Pago", () => {
       const res = await callWebhook({ type: "payment", data: { id: "pay_1" } });
       expect(res.status).toBe(200);
     });
+
+    // O painel do Mercado Pago gera um secret por modo (teste e producao) e os
+    // dois entregam na mesma URL, entao a rota aceita varios separados por virgula.
+    it("aceita qualquer um dos secrets quando ha mais de um configurado", async () => {
+      process.env.MERCADOPAGO_WEBHOOK_SECRET = `secret-do-outro-modo,${WEBHOOK_SECRET}`;
+      mockGetPayment.mockResolvedValue({ id: "pay_1", status: "pending", transaction_amount: 99 });
+
+      const res = await callWebhook({ type: "payment", data: { id: "pay_1" } });
+
+      expect(res.status).toBe(200);
+    });
+
+    it("rejeita assinatura que nao bate com nenhum dos secrets configurados", async () => {
+      process.env.MERCADOPAGO_WEBHOOK_SECRET = "secret-a,secret-b";
+
+      const res = await callWebhook({ type: "payment", data: { id: "pay_1" } });
+
+      expect(res.status).toBe(401);
+      expect(mockGetPayment).not.toHaveBeenCalled();
+    });
   });
 
   describe("type: payment", () => {
