@@ -185,6 +185,18 @@ describe("webhook Mercado Pago", () => {
 
       expect(mockRepo.updateSubscriptionStatus).toHaveBeenCalledWith("mp_sub_1", "cancelled");
     });
+
+    // O painel manda type "subscription_preapproval" (confirmado via
+    // "Simular notificação" em 2026-11-23), nao "preapproval" - tratar so o
+    // segundo fazia o evento ser ignorado em silencio, com 200 enganoso.
+    it("trata 'subscription_preapproval', que e o tipo real enviado pelo Mercado Pago", async () => {
+      mockGetPreapproval.mockResolvedValue({ id: "mp_sub_1", status: "authorized", init_point: "", payer_email: "" });
+
+      await callWebhook({ type: "subscription_preapproval", data: { id: "mp_sub_1" } });
+
+      expect(mockGetPreapproval).toHaveBeenCalledWith("mp_sub_1");
+      expect(mockRepo.updateSubscriptionStatus).toHaveBeenCalledWith("mp_sub_1", "active", 0);
+    });
   });
 
   describe("payload inválido / falha ao buscar o recurso", () => {

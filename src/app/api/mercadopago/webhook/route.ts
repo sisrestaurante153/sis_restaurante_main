@@ -9,9 +9,18 @@ import { getPayment, getPreapproval } from "@/modules/billing/server/mercadopago
 // URL: https://<dominio>/api/mercadopago/webhook
 
 interface MercadoPagoWebhookPayload {
-  type: "payment" | "preapproval" | "subscription_authorized_payment" | string;
+  type: string;
   data: { id: string };
+  entity?: string;
 }
+
+// Confirmado via "Simular notificação" do painel (2026-11-23): eventos de
+// assinatura chegam com type "subscription_preapproval" (e entity
+// "preapproval"), não "preapproval" como assumido na implementacao inicial -
+// sem isso o evento era ignorado em silencio e a assinatura nunca mudava de
+// status. Aceitar as duas formas porque a doc cita ambas.
+const PREAPPROVAL_TYPES = ["preapproval", "subscription_preapproval"];
+const PAYMENT_TYPES = ["payment", "subscription_authorized_payment"];
 
 // O painel do Mercado Pago tem uma assinatura secreta por modo (teste e
 // producao), e ambos os modos entregam na MESMA URL - entao a rota precisa
@@ -112,7 +121,7 @@ export async function POST(request: Request) {
   const repo = getBillingRepository();
 
   try {
-    if (payload.type === "payment" || payload.type === "subscription_authorized_payment") {
+    if (PAYMENT_TYPES.includes(payload.type)) {
       const payment = await getPayment(payload.data.id);
 
       // GAP CONHECIDO (ver spec, seção de judgment calls): a API real do
@@ -190,7 +199,7 @@ export async function POST(request: Request) {
         }
       }
       // demais status (pending, in_process, etc.) são intencionalmente ignorados
-    } else if (payload.type === "preapproval") {
+    } else if (PREAPPROVAL_TYPES.includes(payload.type) || payload.entity === "preapproval") {
       const preapproval = await getPreapproval(payload.data.id);
 
       if (preapproval.status === "cancelled") {
