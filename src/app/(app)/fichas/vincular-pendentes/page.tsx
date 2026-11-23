@@ -5,12 +5,12 @@ import { PendingFichasList } from "@/modules/engineering/ui/pending-fichas-list"
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageFeedbackSnackbar } from "@/components/ui/PageFeedbackSnackbar";
 
-type SearchParams = Promise<{ linked?: string; error?: string }>;
+type SearchParams = Promise<{ linked?: string; error?: string; detail?: string }>;
 
 export default async function VincularFichasPendentesPage({ searchParams }: { searchParams?: SearchParams }) {
   const [session, params] = await Promise.all([
     requireSession(),
-    searchParams ?? Promise.resolve({} as { linked?: string; error?: string })
+    searchParams ?? Promise.resolve({} as { linked?: string; error?: string; detail?: string })
   ]);
 
   // Sempre recalculada ao vivo, sem cache - a lista reflete o estado atual
@@ -24,7 +24,12 @@ export default async function VincularFichasPendentesPage({ searchParams }: { se
     params.linked === "1"
       ? { severity: "success" as const, message: "Ficha vinculada com sucesso." }
       : params.error === "link"
-        ? { severity: "error" as const, message: "Nao foi possivel vincular a ficha. Tente novamente." }
+        ? {
+            severity: "error" as const,
+            message: params.detail
+              ? `Nao foi possivel vincular a ficha: ${params.detail.slice(0, 300)}`
+              : "Nao foi possivel vincular a ficha. Tente novamente."
+          }
         : null;
 
   return (

@@ -29,7 +29,11 @@ export async function linkFichaToPendingItemAction(formData: FormData) {
     });
   } catch (err) {
     console.error("[vincular-ficha-pendente] erro ao vincular", err);
-    redirect("/fichas/vincular-pendentes?error=link");
+    // Repassa o motivo real na faixa vermelha: o catch generico escondia a
+    // causa (P2028, FK, ciclo...) e o usuario so via "tente novamente".
+    // Truncado para nao despejar stack/SQL na URL.
+    const detail = (err instanceof Error ? err.message : String(err)).replace(/\s+/g, " ").trim().slice(0, 300);
+    redirect(`/fichas/vincular-pendentes?error=link&detail=${encodeURIComponent(detail)}`);
   }
 
   redirect("/fichas/vincular-pendentes?linked=1");

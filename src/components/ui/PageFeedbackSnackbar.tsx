@@ -26,7 +26,7 @@ export function PageFeedbackSnackbar({
   return (
     <Snackbar
       open={open}
-      autoHideDuration={4500}
+      autoHideDuration={severity === "error" ? 15000 : 4500}
       onClose={(_event, reason) => {
         if (reason !== "clickaway") {
           setOpen(false);
