@@ -2,6 +2,7 @@ import { requireSession } from "@/modules/access/server/session-cookie";
 import { getBillingRepository } from "@/modules/billing/server/billing-repository";
 import { PLANS } from "@/modules/billing/domain/plans";
 import { AtivarAssinaturaForm } from "./ativar-form";
+import { PixChargeButton } from "./pix-charge-button";
 import Link from "next/link";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -180,7 +181,7 @@ export default async function AssinaturaPage(props: {
           <p className="text-sm text-ink-500 mb-6">
             {subscription.status === "trial" && !isTrialExpired
               ? `Seu trial termina em ${trialDaysLeft} dias. Ative agora para garantir acesso contínuo.`
-              : "Informe seus dados para ativar a cobrança recorrente via Asaas."}
+              : "Informe seus dados para ativar a cobrança recorrente via Mercado Pago."}
           </p>
           <AtivarAssinaturaForm
             subscriptionId={subscription.id}
@@ -188,6 +189,10 @@ export default async function AssinaturaPage(props: {
             planLabel={plan?.label ?? "—"}
             monthlyValue={subscription.monthlyValue}
           />
+          <div className="mt-4 pt-4 border-t border-ink-100">
+            <p className="text-xs text-ink-400 mb-2">Prefere pagar via PIX manualmente este mês?</p>
+            <PixChargeButton subscriptionId={subscription.id} email={session.email} />
+          </div>
         </div>
       )}
 

@@ -5,8 +5,7 @@ import { getPrismaClient } from "@/modules/platform/infra/prisma";
 import { getServerEnv } from "@/modules/platform/server/env";
 import { signUp, signInWithPassword } from "@/modules/access/server/auth-service";
 import { getBillingRepository } from "@/modules/billing/server/billing-repository";
-import { createAsaasCustomer, createAsaasSubscription, planToAsaasDescription } from "@/modules/billing/server/asaas-client";
-import type { PaymentMethod } from "@/modules/billing/domain/plans";
+import { createPreapprovalCheckout, createPixPayment, planToDescription } from "@/modules/billing/server/mercadopago-client";
 import { PLANS } from "@/modules/billing/domain/plans";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
@@ -168,20 +167,19 @@ export async function registrarRestauranteAction(
 }
 
 // ---------------------------------------------------------------------------
-// Ativação paga — converte trial em assinatura real via Asaas
+// Ativação paga — converte trial em assinatura real via Mercado Pago (cartão)
 // ---------------------------------------------------------------------------
 
 const ativarSchema = z.object({
   subscriptionId: z.string().min(1),
   nomeCliente: z.string().min(2, "Informe o nome completo."),
-  email: z.string().email("Email inválido."),
-  cpfCnpj: z.string().min(11, "CPF ou CNPJ inválido.").max(18),
-  paymentMethod: z.enum(["CREDIT_CARD", "PIX"])
+  email: z.string().email("Email inválido.")
 });
 
 export interface AtivarAssinaturaState {
   status: "idle" | "error" | "success";
   message?: string;
+  initPoint?: string;
   errors?: Record<string, string[] | undefined>;
 }
 
@@ -192,9 +190,7 @@ export async function ativarAssinaturaAction(
   const parsed = ativarSchema.safeParse({
     subscriptionId: formData.get("subscriptionId")?.toString(),
     nomeCliente: formData.get("nomeCliente")?.toString(),
-    email: formData.get("email")?.toString(),
-    cpfCnpj: formData.get("cpfCnpj")?.toString()?.replace(/\D/g, ""),
-    paymentMethod: formData.get("paymentMethod")?.toString()
+    email: formData.get("email")?.toString()
   });
 
   if (!parsed.success) {
@@ -205,7 +201,7 @@ export async function ativarAssinaturaAction(
     };
   }
 
-  const { subscriptionId, nomeCliente, email, cpfCnpj, paymentMethod } = parsed.data;
+  const { subscriptionId, email } = parsed.data;
 
   const repo = getBillingRepository();
   const subscription = await repo.getSubscriptionById(subscriptionId);
@@ -214,41 +210,99 @@ export async function ativarAssinaturaAction(
   }
 
   try {
-    // 1. Cria o cliente no Asaas
-    const customer = await createAsaasCustomer({
-      name: nomeCliente,
+    const env = getServerEnv();
+    const backUrl = `${env.APP_URL}/assinatura`;
+
+    // Cria a cobrança recorrente (preapproval) no Mercado Pago — devolve um
+    // link de checkout hospedado onde o cliente informa o cartão. O id do
+    // cliente no Mercado Pago só fica disponível depois que o preapproval é
+    // autorizado (via webhook), então gatewayCustomerId fica igual ao
+    // gatewaySubscriptionId por ora, reconciliado quando o webhook chegar.
+    const preapproval = await createPreapprovalCheckout({
       email,
-      cpfCnpj
-    });
-
-    // 2. Cria a assinatura no Asaas
-    const nextDueDate = new Date();
-    nextDueDate.setDate(nextDueDate.getDate() + 1);
-    const nextDueDateStr = nextDueDate.toISOString().split("T")[0];
-
-    const asaasSubscription = await createAsaasSubscription({
-      customer: customer.id,
-      billingType: paymentMethod as PaymentMethod,
+      planCode: subscription.plan,
       value: subscription.monthlyValue,
-      nextDueDate: nextDueDateStr,
-      cycle: "MONTHLY",
-      description: planToAsaasDescription(subscription.plan)
+      backUrl
     });
 
-    // 3. Atualiza o banco local com os IDs do Asaas
-    await repo.updateSubscriptionAsaasIds(
+    await repo.updateGatewayIds(
       subscriptionId,
-      customer.id,
-      asaasSubscription.id,
-      new Date(asaasSubscription.nextDueDate)
+      preapproval.id,
+      preapproval.id,
+      (() => {
+        const next = new Date();
+        next.setMonth(next.getMonth() + 1);
+        return next;
+      })()
     );
 
-    return { status: "success", message: "Assinatura ativada com sucesso! O primeiro boleto/Pix será gerado em instantes." };
+    return {
+      status: "success",
+      message: "Redirecionando para o checkout do Mercado Pago...",
+      initPoint: preapproval.init_point
+    };
   } catch (err) {
     console.error("[ativar-assinatura] erro", err);
     return {
       status: "error",
       message: "Erro ao ativar a assinatura. Tente novamente ou entre em contato com o suporte."
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cobrança PIX avulsa (manual, sem recorrência nativa no Mercado Pago)
+// ---------------------------------------------------------------------------
+
+export interface GerarCobrancaPixState {
+  status: "idle" | "error" | "success";
+  message?: string;
+  qrCode?: string;
+  qrCodeBase64?: string;
+}
+
+export async function gerarCobrancaPixAction(
+  subscriptionId: string,
+  payerEmail: string
+): Promise<GerarCobrancaPixState> {
+  const repo = getBillingRepository();
+  const subscription = await repo.getSubscriptionById(subscriptionId);
+  if (!subscription) {
+    return { status: "error", message: "Assinatura não encontrada." };
+  }
+
+  try {
+    const payment = await createPixPayment({
+      amount: subscription.monthlyValue,
+      description: planToDescription(subscription.plan),
+      payerEmail
+    });
+
+    await repo.upsertPayment({
+      subscriptionId,
+      gatewayPaymentId: payment.id,
+      status: "pending",
+      paymentMethod: "PIX",
+      value: subscription.monthlyValue,
+      dueDate: new Date(),
+      paidAt: null
+    });
+
+    const qrData = payment.point_of_interaction?.transaction_data;
+    if (!qrData?.qr_code || !qrData?.qr_code_base64) {
+      return { status: "error", message: "Mercado Pago não retornou o QR code do PIX." };
+    }
+
+    return {
+      status: "success",
+      qrCode: qrData.qr_code,
+      qrCodeBase64: qrData.qr_code_base64
+    };
+  } catch (err) {
+    console.error("[gerar-cobranca-pix] erro", err);
+    return {
+      status: "error",
+      message: "Erro ao gerar a cobrança PIX. Tente novamente ou entre em contato com o suporte."
     };
   }
 }

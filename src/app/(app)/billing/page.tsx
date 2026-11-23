@@ -178,12 +178,12 @@ export default async function BillingPage() {
       <div className="bg-white rounded-2xl border border-ink-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-ink-100">
           <h2 className="font-display font-semibold text-base text-blue-900">Histórico de Pagamentos</h2>
-          <p className="text-xs text-ink-400 mt-0.5">Detalhamento de cobranças por tenant — sincronizado via webhook Asaas.</p>
+          <p className="text-xs text-ink-400 mt-0.5">Detalhamento de cobranças por tenant — sincronizado via webhook Mercado Pago.</p>
         </div>
 
         {payments.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-ink-400">
-            Nenhum pagamento registrado ainda. Os dados aparecerão aqui após a integração Asaas ser ativada.
+            Nenhum pagamento registrado ainda. Os dados aparecerão aqui após a integração Mercado Pago ser ativada.
           </div>
         ) : (
           <div className="overflow-x-auto">

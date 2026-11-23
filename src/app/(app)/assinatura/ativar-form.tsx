@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import { FormSubmitButton } from "@/modules/platform/ui/form-submit-button";
 import { ativarAssinaturaAction, type AtivarAssinaturaState } from "@/modules/billing/server/billing-actions";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 
 const initialState: AtivarAssinaturaState = { status: "idle" };
 
@@ -22,11 +21,16 @@ export function AtivarAssinaturaForm({
 }) {
   const [state, action] = useActionState(ativarAssinaturaAction, initialState);
 
+  useEffect(() => {
+    if (state.status === "success" && state.initPoint) {
+      window.location.href = state.initPoint;
+    }
+  }, [state]);
+
   if (state.status === "success") {
     return (
       <div className="flex flex-col items-center gap-4 text-center py-6">
-        <CheckCircleRoundedIcon sx={{ fontSize: 52, color: "success.main" }} />
-        <p className="font-semibold text-blue-900 text-lg">Assinatura ativada!</p>
+        <p className="font-semibold text-blue-900 text-lg">Redirecionando...</p>
         <p className="text-sm text-ink-500 max-w-xs">{state.message}</p>
       </div>
     );
@@ -62,41 +66,9 @@ export function AtivarAssinaturaForm({
         helperText={state.errors?.email?.[0]}
       />
 
-      <TextField
-        label="CPF ou CNPJ"
-        name="cpfCnpj"
-        required
-        fullWidth
-        size="small"
-        placeholder="000.000.000-00"
-        error={Boolean(state.errors?.cpfCnpj)}
-        helperText={state.errors?.cpfCnpj?.[0] ?? "Somente números"}
-      />
-
-      {/* Forma de pagamento */}
-      <div>
-        <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">
-          Forma de pagamento
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { value: "PIX", label: "Pix", desc: "Desconto de 5%" },
-            { value: "CREDIT_CARD", label: "Cartão de crédito", desc: "Até 12x" }
-          ].map((opt) => (
-            <label
-              key={opt.value}
-              className="cursor-pointer rounded-xl border border-ink-200 p-3 hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all"
-            >
-              <input type="radio" name="paymentMethod" value={opt.value} className="sr-only" defaultChecked={opt.value === "PIX"} />
-              <div className="font-semibold text-sm text-blue-900">{opt.label}</div>
-              <div className="text-xs text-ink-500 mt-0.5">{opt.desc}</div>
-            </label>
-          ))}
-        </div>
-        {state.errors?.paymentMethod && (
-          <p className="text-xs text-error mt-1">{state.errors.paymentMethod[0]}</p>
-        )}
-      </div>
+      <p className="text-xs text-ink-400">
+        Você será redirecionado ao checkout seguro do Mercado Pago para informar os dados do cartão.
+      </p>
 
       <div className="bg-ink-50 rounded-xl p-4 text-sm">
         <div className="flex justify-between text-ink-600">

@@ -50,13 +50,13 @@ export function getBillingRepository() {
         nextBillingDate: row.ts_proximo_vencimento?.toISOString().split("T")[0] ?? null,
         trialEndsAt: row.ts_trial_fim?.toISOString().split("T")[0] ?? null,
         daysOverdue: row.nr_dias_inadimplente,
-        asaasCustomerId: row.cd_asaas_customer,
-        asaasSubscriptionId: row.cd_asaas_subscription
+        gatewayCustomerId: row.cd_gateway_customer,
+        gatewaySubscriptionId: row.cd_gateway_subscription
       }));
     },
 
     async listPayments(): Promise<PaymentRecord[]> {
-      const rows = await db.pagamentoAsaas.findMany({
+      const rows = await db.pagamento.findMany({
         include: {
           assinatura: { include: { restaurante: true } }
         },
@@ -71,7 +71,7 @@ export function getBillingRepository() {
         tenant: (row as any).assinatura.restaurante.nm_restaurante,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         plan: (row as any).assinatura.tp_plano as PlanCode,
-        asaasPaymentId: row.cd_asaas_payment,
+        gatewayPaymentId: row.cd_gateway_payment,
         status: row.tp_status as PaymentStatus,
         paymentMethod: row.tp_forma_pagamento as PaymentMethod | null,
         value: Number(row.vl_pagamento),
@@ -98,8 +98,8 @@ export function getBillingRepository() {
         nextBillingDate: row.ts_proximo_vencimento?.toISOString().split("T")[0] ?? null,
         trialEndsAt: row.ts_trial_fim?.toISOString().split("T")[0] ?? null,
         daysOverdue: row.nr_dias_inadimplente,
-        asaasCustomerId: row.cd_asaas_customer,
-        asaasSubscriptionId: row.cd_asaas_subscription
+        gatewayCustomerId: row.cd_gateway_customer,
+        gatewaySubscriptionId: row.cd_gateway_subscription
       };
     },
 
@@ -121,8 +121,8 @@ export function getBillingRepository() {
         nextBillingDate: row.ts_proximo_vencimento?.toISOString().split("T")[0] ?? null,
         trialEndsAt: row.ts_trial_fim?.toISOString().split("T")[0] ?? null,
         daysOverdue: row.nr_dias_inadimplente,
-        asaasCustomerId: row.cd_asaas_customer,
-        asaasSubscriptionId: row.cd_asaas_subscription
+        gatewayCustomerId: row.cd_gateway_customer,
+        gatewaySubscriptionId: row.cd_gateway_subscription
       };
     },
 
@@ -152,22 +152,22 @@ export function getBillingRepository() {
         nextBillingDate: null,
         trialEndsAt: trialEndsAt.toISOString().split("T")[0],
         daysOverdue: 0,
-        asaasCustomerId: null,
-        asaasSubscriptionId: null
+        gatewayCustomerId: null,
+        gatewaySubscriptionId: null
       };
     },
 
-    async updateSubscriptionAsaasIds(
+    async updateGatewayIds(
       subscriptionId: string,
-      asaasCustomerId: string,
-      asaasSubscriptionId: string,
+      gatewayCustomerId: string,
+      gatewaySubscriptionId: string,
       nextBillingDate: Date
     ): Promise<void> {
       await db.assinatura.update({
         where: { cd_assinatura: subscriptionId },
         data: {
-          cd_asaas_customer: asaasCustomerId,
-          cd_asaas_subscription: asaasSubscriptionId,
+          cd_gateway_customer: gatewayCustomerId,
+          cd_gateway_subscription: gatewaySubscriptionId,
           tp_status: "active",
           ts_proximo_vencimento: nextBillingDate,
           ts_atualizacao: new Date()
@@ -176,12 +176,12 @@ export function getBillingRepository() {
     },
 
     async updateSubscriptionStatus(
-      asaasSubscriptionId: string,
+      gatewaySubscriptionId: string,
       status: SubscriptionStatus,
       daysOverdue = 0
     ): Promise<void> {
       await db.assinatura.updateMany({
-        where: { cd_asaas_subscription: asaasSubscriptionId },
+        where: { cd_gateway_subscription: gatewaySubscriptionId },
         data: {
           tp_status: status as assinatura_status,
           nr_dias_inadimplente: daysOverdue,
@@ -202,18 +202,18 @@ export function getBillingRepository() {
 
     async upsertPayment(data: {
       subscriptionId: string;
-      asaasPaymentId: string;
+      gatewayPaymentId: string;
       status: string;
       paymentMethod: string | null;
       value: number;
       dueDate: Date;
       paidAt?: Date | null;
     }): Promise<void> {
-      await db.pagamentoAsaas.upsert({
-        where: { cd_asaas_payment: data.asaasPaymentId },
+      await db.pagamento.upsert({
+        where: { cd_gateway_payment: data.gatewayPaymentId },
         create: {
           cd_assinatura: data.subscriptionId,
-          cd_asaas_payment: data.asaasPaymentId,
+          cd_gateway_payment: data.gatewayPaymentId,
           tp_status: data.status,
           tp_forma_pagamento: data.paymentMethod,
           vl_pagamento: data.value,

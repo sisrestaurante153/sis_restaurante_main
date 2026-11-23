@@ -56,8 +56,8 @@ export interface SubscriptionRecord {
   nextBillingDate: string | null;
   trialEndsAt: string | null;
   daysOverdue: number;
-  asaasCustomerId: string | null;
-  asaasSubscriptionId: string | null;
+  gatewayCustomerId: string | null;
+  gatewaySubscriptionId: string | null;
 }
 
 export interface PaymentRecord {
@@ -65,7 +65,7 @@ export interface PaymentRecord {
   subscriptionId: string;
   tenant: string;
   plan: PlanCode;
-  asaasPaymentId: string;
+  gatewayPaymentId: string;
   status: PaymentStatus;
   paymentMethod: PaymentMethod | null;
   value: number;

@@ -57,7 +57,7 @@ npm run import:legacy:load      # Load parsed data into DB
 | `import` | Legacy Excel parse → staging → conflict reconciliation |
 | `menu` | Cardápios (sales menus) and their item/price links |
 | `sales` | Vendas (sales records), CSV/Excel sales import (`/vendas/importar`), and financial return reporting |
-| `billing` | Subscription management, Asaas payment webhook |
+| `billing` | Subscription management, Mercado Pago payment webhook |
 | `audit` | Change audit log |
 
 Each module has `ui/`, `server/`, `domain/` (types, business rules). A separate
@@ -132,7 +132,7 @@ Copy `.env.example` to `.env`. Required variables:
 - `SESSION_SECRET` — 32-char hex
 - `APP_URL` — base URL (used for dynamic basePath in next.config.ts)
 - `RESEND_API_KEY` + `EMAIL_FROM` — transactional email
-- `ASAAS_API_KEY`, `ASAAS_WALLET_ID`, `ASAAS_ENV`, `ASAAS_WEBHOOK_TOKEN` — payments
+- `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET` — payments
 - `SENTRY_DSN` — error tracking (optional in dev)
 
 Bootstrap credentials after seed (email / password): `admin@sis-restaurante.local` / `admin123`, `engenharia@sis-restaurante.local` / `engenharia123`, `consulta@sis-restaurante.local` / `consulta123`.
@@ -144,10 +144,11 @@ Bootstrap credentials after seed (email / password): `admin@sis-restaurante.loca
 - **Tailwind CSS 4** + **shadcn/ui** (Radix UI) + **MUI 7** (DataGrid, DatePicker)
 - **Zod 4** (validation), **Pino** (logging), **Sentry** (error tracking)
 - **Vitest** (unit/integration), **Playwright** (e2e)
-- **Resend** (email), **Asaas** (payments), **XLSX** (Excel import)
+- **Resend** (email), **Mercado Pago** (payments), **XLSX** (Excel import)
 
 ## Known Issues / Unstable Areas
 
+- **Billing gateway migrated from Asaas to Mercado Pago (2026-10-29) — several API assumptions in `mercadopago-client.ts`/webhook route are unverified against live docs and must be validated before going live.** Migration was greenfield (zero restaurants had real Asaas subscription data), so no data migration was needed — just a schema rename (`Assinatura.cd_asaas_customer`/`cd_asaas_subscription` → `cd_gateway_customer`/`cd_gateway_subscription`; `PagamentoAsaas` → `Pagamento`, `cd_asaas_payment` → `cd_gateway_payment`) plus a full gateway swap. Known unresolved gaps, written at implementation time without access to live Mercado Pago docs: (1) `src/app/api/mercadopago/webhook/route.ts`'s `verifySignature()` HMAC manifest format (`id:<id>;request-id:<req-id>;ts:<ts>;`) is an assumption — confirm against Mercado Pago's actual `x-signature` spec before relying on it to reject bad requests. (2) The webhook's `type: "payment"` handler reads `payment.metadata.preapproval_id` to find which local subscription a recurring card payment belongs to — this field name is unverified; if wrong, recurring card payments will never update `Assinatura.tp_status`/`PagamentoAsaas` (PIX avulso payments, which don't need this field, are unaffected). (3) `createPreapprovalCheckout()`'s `POST /preapproval` body shape (`auto_recurring`, `back_url`, `payer_email`) is based on general API knowledge, not confirmed against docs. Validate all three against the real Mercado Pago API (and ideally a sandbox test) before the first real customer activates a paid subscription. Spec: `docs/superpowers/specs/2026-10-29-asaas-para-mercadopago-design.md`.
 - **Ficha técnica cost engine — don't trust `costs.perPortion`.** `catalog-prisma-mappers.ts`'s `mapCosts()` exposes both `costs.total` (matches what the ficha screen shows as "custo atual") and `costs.perPortion` (read from `calculo_execucao.js_metadados.costPerPortion`). For items whose ficha yield is measured by weight (kg) and then packaged into a sale unit (e.g. a marmitex), `costPerPortion` has been observed returning a value computed with the wrong divisor (the same divisor reused across unrelated items with different yields) — it does **not** reliably represent the cost of one sold unit. Always use `costs.total` for per-sold-unit cost (e.g. in `sales-repository.ts`'s `getFinancialReturn`); treat `perPortion` as unverified until the underlying calc-engine bug is found and fixed.
 - **`item.tp_item` is not a reliable ground truth — but neither is "it's typed `pre_preparo`, so its ficha must be wrong".** A meaningful chunk of Titan Restaurante's catalog has finished, sellable menu items (dishes, drinks, desserts) incorrectly typed as `pre_preparo` — but these mistyped items very often carry the *correct*, correctly-scaled, already-working ficha técnica; only their `tp_item` label is wrong. **Do not decide "this venda is linked to the wrong item" from type alone.** Validate with a cost/price sanity check first: `ficha.costs.total` should land roughly 10–50% of the item's typical sale price (`vl_preco_unitario` on its `venda` rows); if it's close to or above 100% of the sale price, the ficha is almost certainly scaled for a raw batch (e.g. "5kg de arroz" with no per-portion divisor) and the venda really is on the wrong item — otherwise, the right fix is to **retype the item in place** (keep its `cd_item` and ficha, just correct `tp_item`), not to move the venda to a same-named sibling. Moving vendas by name-similarity alone (as done in a first pass, Sept 2026) redirected ~900 correctly-costed vendas onto ficha-less placeholder items and had to be reverted by hand once the ratio check exposed it — treat that first instinct as the wrong one now.
 - **Some sellable-typed items also have a batch-scale ficha (separate, unresolved bug).** Even items with the *correct* `tp_item` and a ficha técnica can still fail the cost/price ratio check above — e.g. "Bife de alcatra acebolado" (`prato`) has a ficha yielding 4.527kg with zero packaging/portion-count components, so `costs.total` (R$150) is the cost of the whole batch, not one ~160g plate (real per-plate cost ≈ R$5.31). This is **not** something to silently patch — it means that ficha's rendimento/porções config needs to be fixed by whoever owns the menu data (add a portion count or packaging line so the yield represents one sold unit). When you find one, flag it rather than guessing a divisor.

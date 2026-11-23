@@ -23,3 +23,6 @@ output
 
 # scripts de teste/depuracao temporarios (nunca comitar)
 scratch-*
+
+.vercel
+.env*

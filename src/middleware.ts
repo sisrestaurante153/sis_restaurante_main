@@ -12,7 +12,7 @@ const SUBSCRIPTION_EXEMPT = [
   "/logout",
   "/forbidden",
   "/api/health",
-  "/api/asaas/webhook"
+  "/api/mercadopago/webhook"
 ];
 
 function isSubscriptionExempt(pathname: string) {

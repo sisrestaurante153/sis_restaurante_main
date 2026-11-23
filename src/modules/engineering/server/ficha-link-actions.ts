@@ -27,7 +27,8 @@ export async function linkFichaToPendingItemAction(formData: FormData) {
       sourceFichaId,
       targetItemId
     });
-  } catch {
+  } catch (err) {
+    console.error("[vincular-ficha-pendente] erro ao vincular", err);
     redirect("/fichas/vincular-pendentes?error=link");
   }
 
